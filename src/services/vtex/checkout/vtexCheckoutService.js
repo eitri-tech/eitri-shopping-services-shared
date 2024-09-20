@@ -464,80 +464,9 @@ export default class VtexCheckoutService {
 		}
 	}
 
-	static async getCart(currentPage) {
-		const cartId = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CART_KEY)
-		if (!cartId) {
-			return null
-		}
-
-		return await VtexCheckoutService.getCurrentOrCreateCart(currentPage)
-	}
-
-	static async getCurrentOrCreateCart(currentPage) {
-		try {
-			const cartId = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CART_KEY)
-			console.log('Obtendo dados do carrinho', cartId || ' - novo carrinho')
-			const path = cartId ? `api/checkout/pub/orderForm/${cartId}` : 'api/checkout/pub/orderForm'
-			const response = await VtexCaller.get(path)
-			const cart = response.data
-			if (!cart?.marketingData?.marketingTags?.includes(VtexCheckoutService.CART_MARKETING_TAGS)) {
-				await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
-					marketingTags: [VtexCheckoutService.CART_MARKETING_TAGS]
-				})
-			}
-
-			await StorageService.setStorageItem(VtexCheckoutService.VTEX_CART_KEY, cart.orderFormId)
-
-			return cart
-		} catch (e) {
-			console.error('Erro ao obter carrinho', e)
-		}
-	}
-
 	static async resolveZipCode(zipcode) {
 		const response = await VtexCaller.get(`api/checkout/pub/postal-code/BRA/${zipcode}`)
 		return response.data
 	}
 
-	static async addItem(item, currentPage) {
-		try {
-			const orderFormId = await VtexCheckoutService.getOrderFormId()
-
-			const payload = {
-				orderItems: [
-					{
-						quantity: `${item.quantity}`,
-						id: item.productId,
-						seller: item.items[0]?.sellers[0]?.sellerId
-					}
-				]
-			}
-
-			const addToCartRes = await VtexCaller.post(
-				`api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`,
-				payload
-			)
-
-			GAVtexInternalService.addItemToCart(item, addToCartRes.data, currentPage)
-
-			return addToCartRes.data
-		} catch (e) {
-			console.error('Erro ao adicionar ao carrinho', e)
-		}
-	}
-
-	static async getOrderFormId() {
-		let orderFormId = await VtexCheckoutService.getCartIdFromLocalStorage()
-
-		if (!orderFormId) {
-			const newCart = await VtexCheckoutService.getCurrentOrCreateCart()
-			orderFormId = newCart.orderFormId
-		}
-
-		return orderFormId
-	}
-
-	static async getCartIdFromLocalStorage() {
-		return await StorageService.getStorageItem(VtexCheckoutService.VTEX_CART_KEY)
-	}
 }

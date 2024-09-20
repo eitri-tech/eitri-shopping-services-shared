@@ -143,14 +143,14 @@ export default class VtexCartService {
 		}
 	}
 
-	static async changeItemQuantity(item, newQuantity, currentPage) {
+	static async changeItemQuantity(index, newQuantity, item, currentPage) {
 		try {
 			const orderFormId = await VtexCartService.getStoredOrderFormId()
 			const payload = {
 				orderItems: [
 					{
 						quantity: `${newQuantity}`,
-						index: `${item.itemIndex}`
+						index: `${index}`
 					}
 				]
 			}
@@ -165,8 +165,8 @@ export default class VtexCartService {
 		}
 	}
 
-	static async removeItem(item, currentPage) {
-		return await VtexCartService.changeItemQuantity(item, 0, currentPage)
+	static async removeItem(index, item, currentPage) {
+		return await VtexCartService.changeItemQuantity(index, 0, item, currentPage)
 	}
 
 	static async removeAllItems() {
