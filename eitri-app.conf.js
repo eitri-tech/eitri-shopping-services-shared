@@ -1,0 +1,15 @@
+module.exports = {
+  "name": "eitri-shopping-services-shared",
+  "title": "eitri-shopping-services-shared",
+  "slug": "eitri-shopping-services-shared",
+  "eitri-luminus": "1.65.5",
+  "eitri-bifrost": "2.9.0",
+  "eitri-commons": "2.1.2",
+  'version': '0.1.5',
+  "public-key": "c9cef572-196f-4950-83ac-fdf28cbb7b10",
+  "applicationId": "99c18c0a-4112-4937-b27c-802d03f4e9e9",
+  "id": "e1cf75b2-3fc7-4267-b00d-e08ac8ebe00f",
+  "organizationId": "cf5660ee-bf90-42cd-9a43-9d2c69ee3c89",
+  "organization": {},
+  'sharedVersion': 'v2',
+}

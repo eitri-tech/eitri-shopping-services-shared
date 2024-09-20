@@ -1,0 +1,543 @@
+import StorageService from '../../StorageService'
+import VtexCaller from '../_helpers/_vtexCaller'
+import Vtex from '../../Vtex'
+import Eitri from 'eitri-bifrost'
+import Logger from '../../Logger'
+import VtexCartService from '../cart/VtexCartService'
+import GAVtexInternalService from '../../tracking/GAVtexInternalService'
+import GAService from '../../tracking/GAService'
+
+export default class VtexCheckoutService {
+	static VTEX_CART_KEY = 'vtex_cart_key'
+	static CART_MARKETING_TAGS = 'eitri-shop'
+
+	static async selectPaymentOption(paymentOption) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const payload = {
+			payments: paymentOption.payments,
+			giftCards: paymentOption.giftCards
+		}
+
+		const response = await VtexCaller.post(
+			`api/checkout/pub/orderForm/${orderFormId}/attachments/paymentData`,
+			payload
+		)
+
+		return response.data
+	}
+
+	static async addShippingAddress(address) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const payload = {
+			clearAddressIfPostalCodeNotFound: true,
+			selectedAddresses: [address]
+		}
+		const response = await VtexCaller.post(
+			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
+			payload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+				}
+			}
+		)
+
+		return response.data
+	}
+
+	static async setLogisticInfo(logisticInfo) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const response = await VtexCaller.post(
+			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
+			logisticInfo,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+				}
+			}
+		)
+
+		return response.data
+	}
+
+	static async selectDeliveryOption(deliveryOption) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const payload = {
+			logisticsInfo: deliveryOption,
+			clearAddressIfPostalCodeNotFound: false
+		}
+
+		const response = await VtexCaller.post(
+			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
+			payload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+				}
+			}
+		)
+
+		return response.data
+	}
+
+	static async addPromoCode(couponCode) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const payload = { text: couponCode }
+
+		const response = await VtexCaller.post(`api/checkout/pub/orderForm/${orderFormId}/coupons`, payload)
+
+		return response.data
+	}
+
+	static async addUserData(userData) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const response = await VtexCaller.post(
+			`api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
+			userData,
+			{
+				headers: {
+					Cookie: `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+				}
+			}
+		)
+
+		return response.data
+	}
+
+	// PAGAMENTO COMEÇA AQUI //
+	static extractCookieValues(cookieString) {
+		const vtexChkoAuthRegex = /Vtex_CHKO_Auth=(.*?);/
+		const checkoutDataAccessRegex = /CheckoutDataAccess=VTEX_CHK_Order_Auth=(.*?);/
+
+		const vtexMatch = cookieString.match(vtexChkoAuthRegex)
+		const checkoutMatch = cookieString.match(checkoutDataAccessRegex)
+
+		const vtex_CHKO_Auth = vtexMatch ? vtexMatch[1] : ''
+		const checkoutDataAccess = checkoutMatch ? checkoutMatch[1] : ''
+
+		return { Vtex_CHKO_Auth: vtex_CHKO_Auth, CheckoutDataAccess: checkoutDataAccess }
+	}
+
+	static async startTransaction(orderFormId, payload) {
+		console.log('====> Iniciando transação', orderFormId)
+		Logger.log('====> Iniciando transação payload', payload)
+		console.time('startTransaction')
+
+		try {
+			const result = await VtexCaller.post(`api/checkout/pub/orderForm/${orderFormId}/transaction`, payload, {
+				headers: {
+					'accept': 'application/json, text/javascript, */*; q=0.01',
+					'content-type': 'application/json'
+				}
+			})
+
+			const transactionData = result.data
+
+			const { id, orderGroup } = transactionData
+
+			const { Vtex_CHKO_Auth, CheckoutDataAccess } = VtexCheckoutService.extractCookieValues(
+				result.headers['set-cookie']
+			)
+
+			console.timeEnd('startTransaction')
+
+			console.log('====> Transaçao finalizada com sucesso com transactionId', id)
+			Logger.log('====> Transaçao finalizada com sucesso', {
+				id,
+				orderGroup,
+				Vtex_CHKO_Auth,
+				CheckoutDataAccess
+			})
+
+			return {
+				id,
+				orderGroup,
+				Vtex_CHKO_Auth,
+				CheckoutDataAccess
+			}
+		} catch (e) {
+			console.log('erro no startPayment', e)
+		}
+	}
+
+	static async setPaymentMethod(transactionId, payload) {
+		console.log('====> Setando o método de pagamento', transactionId)
+		Logger.log('====> Setando o método de pagamento com o payload', payload)
+
+		console.time('setPaymentMethod')
+
+		try {
+			const result = await Eitri.http.post(
+				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
+				payload,
+				{
+					headers: {
+						'accept': 'application/json, text/javascript, */*; q=0.01',
+						'content-type': 'application/json',
+						'user-agent':
+							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
+					}
+				}
+			)
+
+			console.timeEnd('setPaymentMethod')
+			console.log('====> Método de pagamento definido para o transactionId', transactionId)
+		} catch (e) {
+			//TODO: se der erro aqui, será necessário matar e recriar o carrinho
+			console.log('erro no setPaymentMethod', e)
+		}
+	}
+
+	static async processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess) {
+		console.log('====> Processando o pagamento', orderGroup)
+		Logger.log('====> Processando o pagamento', { orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess })
+		console.time('processPayment')
+
+		try {
+			const result = await Eitri.http.post(
+				`${Vtex.configs.host}/api/checkout/pub/gatewayCallback/${orderGroup}`,
+				null,
+				{
+					headers: {
+						'accept': 'application/json, text/javascript, */*; q=0.01',
+						'content-type': 'application/json',
+						'user-agent':
+							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+						'Cookie': `Vtex_CHKO_Auth=${CheckoutDataAccess};CheckoutDataAccess=VTEX_CHK_Order_Auth=${Vtex_CHKO_Auth}`
+					}
+				}
+			)
+			console.timeEnd('processPayment')
+			console.log('Pagamento processado com sucesso', result.status)
+			if (result.status === 204) {
+				console.log('Pagamento processado com sucesso', orderGroup)
+				return { ok: true, orderGroup }
+			}
+		} catch (e) {
+			console.timeEnd('processPayment')
+			console.log('erro no processPayment', e)
+			if (!e.response.data) {
+				console.log('erro no processPayment', e.response)
+				throw Error(e)
+			}
+
+			if (e.response.status === 428 && e.response.data.paymentAuthorizationAppCollection[0].appPayload) {
+				console.log('Pagemento processado com sucesso para Pix', orderGroup)
+				return { pix: true, pixData: e.response.data.paymentAuthorizationAppCollection[0].appPayload }
+			} else {
+				console.log('erro no processPayment', e.response)
+				throw Error(e)
+			}
+		}
+	}
+
+	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, currentPage) {
+		console.log('==========Iniciando pagamento==========')
+		console.time('Pay total time')
+
+		const payment = cart.paymentData?.payments[0]
+
+		const paymentSystem = cart.paymentData?.paymentSystems?.find(
+			system => system.stringId === payment.paymentSystem
+		)
+
+		// Boleto bancário
+		if (paymentSystem.groupName === 'bankInvoicePaymentGroup') {
+			return await VtexCheckoutService.payBankInvoice(cart)
+		}
+
+		// Pix
+		if (paymentSystem.groupName === 'instantPaymentPaymentGroup') {
+			return await VtexCheckoutService.payInstantPayment(cart)
+		}
+
+		//Cartão de Crédito
+		if (paymentSystem.groupName === 'creditCardPaymentGroup') {
+			return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
+		}
+
+		console.time('Pay total time')
+
+		throw Error('Método de pagamento não suportado')
+	}
+
+	static async payBankInvoice(cart) {
+		console.log('===> Pagamento de boleto')
+
+		const payment = cart.paymentData?.payments[0]
+
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
+			cart.orderFormId,
+			{
+				referenceId: cart.orderFormId,
+				savePersonalData: true,
+				optinNewsLetter: false,
+				value: cart.value,
+				referenceValue: cart.value,
+				interestValue: 1
+			}
+		)
+
+		const paymentMethod = [
+			{
+				paymentSystem: payment.paymentSystem,
+				paymentSystemName: 'Boleto Bancário',
+				group: 'bankInvoicePaymentGroup',
+				installments: 1,
+				installmentsInterestRate: 0,
+				installmentsValue: cart.value,
+				value: cart.value,
+				referenceValue: cart.value,
+				id: payment.merchantSellerPayments[0].id,
+				interestRate: 0,
+				installmentValue: cart.value,
+				transaction: {
+					id: id,
+					merchantName: payment.merchantSellerPayments[0].id
+				},
+				currencyCode: 'BRL',
+				originalPaymentIndex: 0
+			}
+		]
+
+		await VtexCheckoutService.setPaymentMethod(id, paymentMethod)
+
+		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+	}
+
+	static async payInstantPayment(cart) {
+		console.log('===> Pagamento via Pix')
+
+		const payment = cart.paymentData?.payments[0]
+
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
+			cart.orderFormId,
+			{
+				referenceId: cart.orderFormId,
+				savePersonalData: true,
+				optinNewsLetter: false,
+				value: cart.value,
+				referenceValue: cart.value,
+				interestValue: 0
+			}
+		)
+
+		const paymentMethod = [
+			{
+				paymentSystem: payment.paymentSystem,
+				paymentSystemName: 'Pix',
+				group: 'instantPaymentPaymentGroup',
+				installments: 1,
+				installmentsInterestRate: 0,
+				installmentsValue: cart.value,
+				value: cart.value,
+				referenceValue: cart.value,
+				id: payment.merchantSellerPayments[0].id,
+				interestRate: 0,
+				installmentValue: cart.value,
+				transaction: {
+					id: id,
+					merchantName: payment.merchantSellerPayments[0].id
+				},
+				currencyCode: 'BRL',
+				originalPaymentIndex: 0
+			}
+		]
+
+		await VtexCheckoutService.setPaymentMethod(id, paymentMethod)
+
+		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+	}
+
+	static async payWithCard(cart, cardInfo, captchaToken, captchaSiteKey) {
+		console.log('===> Pagamento via Cartão de Crédito')
+
+		const payment = cart.paymentData?.payments[0]
+
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
+			cart.orderFormId,
+			{
+				referenceId: cart.orderFormId,
+				savePersonalData: true,
+				optinNewsLetter: false,
+				value: cart.value,
+				referenceValue: cart.value,
+				interestValue: 0,
+				recaptchaKey: captchaSiteKey,
+				recaptchaToken: captchaToken
+			}
+		)
+
+		const cardInfoFields = () => {
+			if (cardInfo.billingAddress.postalCode && cardInfo.billingAddress.city) {
+				return {
+					holderName: cardInfo.holderName,
+					cardNumber: cardInfo.cardNumber,
+					validationCode: cardInfo.securityCode,
+					dueDate: cardInfo.expirationDate.slice(0, 2) + '/' + cardInfo.expirationDate.slice(2, 4),
+					bin: cart.paymentData.payments[0].bin,
+					address: {
+						street: cardInfo.billingAddress.street,
+						complement: cardInfo.billingAddress.complement,
+						number: cardInfo.billingAddress.number,
+						city: cardInfo.billingAddress.city,
+						reference: cardInfo.billingAddress.reference,
+						neighborhood: cardInfo.billingAddress.neighborhood,
+						state: cardInfo.billingAddress.state,
+						country: cardInfo.billingAddress.country,
+						postalCode: cardInfo.billingAddress.postalCode
+					}
+				}
+			} else {
+				return {
+					holderName: cardInfo.holderName,
+					cardNumber: cardInfo.cardNumber,
+					validationCode: cardInfo.securityCode,
+					dueDate: cardInfo.expirationDate.slice(0, 2) + '/' + cardInfo.expirationDate.slice(2, 4),
+					bin: cart.paymentData.payments[0].bin,
+					addressId: cart.shippingData.address.addressId
+				}
+			}
+		}
+
+		const creditCardPaymentPayload = [
+			{
+				hasDefaultBillingAddress: true,
+				isLuhnValid: true,
+				installmentsInterestRate: payment.merchantSellerPayments[0].interestRate,
+				referenceValue: cart.value,
+				bin: payment.bin,
+				value: cart.value,
+				paymentSystem: payment.paymentSystem,
+				isBillingAddressDifferent: false,
+				fields: cardInfoFields(),
+				installments: payment.merchantSellerPayments[0].installments,
+				chooseToUseNewCard: true,
+				isRegexValid: true,
+				id: payment.merchantSellerPayments[0].id,
+				interestRate: payment.merchantSellerPayments[0].interestRate,
+				installmentValue: payment.merchantSellerPayments[0].installmentValue,
+				transaction: {
+					id: id,
+					merchantName: payment.merchantSellerPayments[0].id
+				},
+				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
+				currencyCode: 'BRL',
+				originalPaymentIndex: 0,
+				groupName: 'creditCardPaymentGroup'
+			}
+		]
+
+		await VtexCheckoutService.setPaymentMethod(id, creditCardPaymentPayload)
+
+		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+	}
+
+	static async getPixStatus(transactionId, paymentId) {
+		try {
+			const result = await Eitri.http.get(
+				`https://${Vtex.configs.account}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
+				{
+					headers: {
+						'accept': 'application/json, text/javascript, */*; q=0.01',
+						'content-type': 'application/json',
+						'user-agent':
+							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
+					}
+				}
+			)
+			return result.data
+		} catch (e) {
+			console.log('erro no getPixStatus', e)
+		}
+	}
+
+	static async getCart(currentPage) {
+		const cartId = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CART_KEY)
+		if (!cartId) {
+			return null
+		}
+
+		return await VtexCheckoutService.getCurrentOrCreateCart(currentPage)
+	}
+
+	static async getCurrentOrCreateCart(currentPage) {
+		try {
+			const cartId = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CART_KEY)
+			console.log('Obtendo dados do carrinho', cartId || ' - novo carrinho')
+			const path = cartId ? `api/checkout/pub/orderForm/${cartId}` : 'api/checkout/pub/orderForm'
+			const response = await VtexCaller.get(path)
+			const cart = response.data
+			if (!cart?.marketingData?.marketingTags?.includes(VtexCheckoutService.CART_MARKETING_TAGS)) {
+				await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
+					marketingTags: [VtexCheckoutService.CART_MARKETING_TAGS]
+				})
+			}
+
+			await StorageService.setStorageItem(VtexCheckoutService.VTEX_CART_KEY, cart.orderFormId)
+
+			return cart
+		} catch (e) {
+			console.error('Erro ao obter carrinho', e)
+		}
+	}
+
+	static async resolveZipCode(zipcode) {
+		const response = await VtexCaller.get(`api/checkout/pub/postal-code/BRA/${zipcode}`)
+		return response.data
+	}
+
+	static async addItem(item, currentPage) {
+		try {
+			const orderFormId = await VtexCheckoutService.getOrderFormId()
+
+			const payload = {
+				orderItems: [
+					{
+						quantity: `${item.quantity}`,
+						id: item.productId,
+						seller: item.items[0]?.sellers[0]?.sellerId
+					}
+				]
+			}
+
+			const addToCartRes = await VtexCaller.post(
+				`api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`,
+				payload
+			)
+
+			GAVtexInternalService.addItemToCart(item, addToCartRes.data, currentPage)
+
+			return addToCartRes.data
+		} catch (e) {
+			console.error('Erro ao adicionar ao carrinho', e)
+		}
+	}
+
+	static async getOrderFormId() {
+		let orderFormId = await VtexCheckoutService.getCartIdFromLocalStorage()
+
+		if (!orderFormId) {
+			const newCart = await VtexCheckoutService.getCurrentOrCreateCart()
+			orderFormId = newCart.orderFormId
+		}
+
+		return orderFormId
+	}
+
+	static async getCartIdFromLocalStorage() {
+		return await StorageService.getStorageItem(VtexCheckoutService.VTEX_CART_KEY)
+	}
+}
