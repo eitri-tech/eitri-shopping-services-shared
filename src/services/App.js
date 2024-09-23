@@ -1,6 +1,7 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from "./Vtex";
 import ClarityService from "./tracking/ClarityService";
+import WakeService from './WakeService';
 
 export default class App {
 
@@ -13,22 +14,41 @@ export default class App {
 	}
 
 	static tryAutoConfigure = async overwrites => {
+    let remoteConfig
 		try {
 			const _remoteConfig = await Eitri.environment.getRemoteConfigs()
+      remoteConfig = { ..._remoteConfig, ...overwrites }
+    } catch (error) {
+			console.error('[SHARED] Error getRemoteConfigs', error)
+			throw error
+		}
 
-      const remoteConfig = { ..._remoteConfig, ...overwrites }
-
+    try {
 			if (remoteConfig.ecommerceProvider === 'VTEX') {
 				console.log('[SHARED] Provider Vtex encontrado, configurando automaticamente. Account:', remoteConfig.providerInfo.account, 'Host:', remoteConfig.providerInfo.host)
         App.configs.provider = 'VTEX'
 				await Vtex.configure(remoteConfig)
-			}
+			} else if (remoteConfig.ecommerceProvider === 'WAKE') {
+        console.log('[SHARED] Provider Wake encontrado, configurando automaticamente. ', 'Host:', remoteConfig.providerInfo.host)
+        App.configs.provider = 'WAKE'
+        await WakeService.configure(remoteConfig)
+      }
+    } catch (error) {
+			console.error('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
+			throw error
+		}
 
+    try {
       if (remoteConfig.clarityId) {
         App.configs.clarityId = remoteConfig.clarityId
         ClarityService.init(remoteConfig.clarityId)
       }
+    } catch (error) {
+			console.error('[SHARED] Error clarity ', remoteConfig.ecommerceProvider, error)
+			throw error
+		}
 
+    try {
       if (remoteConfig?.appConfigs?.statusBarTextColor) {
         const color = remoteConfig.appConfigs.statusBarTextColor === 'white' ? 'setStatusBarTextWhite' : 'setStatusBarTextBlack'
         window.EITRI.connector.invokeMethod(color)
@@ -47,10 +67,10 @@ export default class App {
       console.log('[SHARED] App configurado com sucesso')
 
       return App.configs
-
-		} catch (error) {
-			console.error('Error trying to auto configure VTEX ===>', error)
+    } catch (error) {
+			console.error('[SHARED] Error App configure ', error)
 			throw error
 		}
+		
 	}
 }
