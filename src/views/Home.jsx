@@ -15,11 +15,13 @@ export default function Home() {
     Eitri.navigation.navigate({ path })
   }
 
-
 	return (
     <Window topInset bottomInset>
       <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
         <Button color='background-color' onPress={() => navigateTo('Vtex')} label='VTEX' />
+      </View>
+      <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
+        <Button color='background-color' onPress={() => navigateTo('Wake')} label='WAKE' />
       </View>
     </Window>
   )
