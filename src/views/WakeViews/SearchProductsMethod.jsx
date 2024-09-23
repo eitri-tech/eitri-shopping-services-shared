@@ -9,7 +9,6 @@ export default function SearchProductsMethod() {
     setLoading(true)
     try {
       const res = await WakeService.search.products()
-      console.log('products >>>>>>>',res)
       setProducts(res)
     } catch (e) {
       console.error(e)

@@ -51,3 +51,5 @@ Thumbs.db
 # workspaces folder
 .workspaces
 #app-config.yaml
+.workspaces/workspace
+src/folder.hash
