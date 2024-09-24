@@ -1,6 +1,6 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
-import vtexCustomerService from './../customer/vtexCustomerService'
+import vtexCustomerService from '../customer/vtexCustomerService'
 import Logger from '../../Logger'
 
 export default class VtexCaller {
