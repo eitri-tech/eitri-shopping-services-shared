@@ -1,7 +1,6 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from "./Vtex";
 import ClarityService from "./tracking/ClarityService";
-import WakeService from './WakeService';
 
 export default class App {
 

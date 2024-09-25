@@ -1,7 +1,6 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from "./Vtex";
 import ClarityService from "./tracking/ClarityService";
-import WakeService from './WakeService';
 
 export default class Cms {
 
@@ -18,15 +17,9 @@ export default class Cms {
 		}
 
     try {
-			if (remoteConfig.ecommerceProvider === 'VTEX') {
-				console.log('[SHARED] Provider Vtex encontrado, configurando automaticamente. Account:', remoteConfig.providerInfo.account, 'Host:', remoteConfig.providerInfo.host)
-        App.configs.provider = 'VTEX'
-				await Vtex.configure(remoteConfig)
-			} else if (remoteConfig.ecommerceProvider === 'WAKE') {
-        console.log('[SHARED] Provider Wake encontrado, configurando automaticamente. ', 'Host:', remoteConfig.providerInfo.host)
-        App.configs.provider = 'WAKE'
-        await WakeService.configure(remoteConfig)
-      }
+      console.log('[SHARED] Provider Vtex encontrado, configurando automaticamente. Account:', remoteConfig.providerInfo.account, 'Host:', remoteConfig.providerInfo.host)
+      App.configs.provider = 'VTEX'
+      await Vtex.configure(remoteConfig)
     } catch (error) {
 			console.error('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
 			throw error
