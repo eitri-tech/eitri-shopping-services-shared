@@ -5,38 +5,32 @@ import WakeService from './WakeService';
 
 export default class App {
 
-	static configs = {
-		verbose: false,
+  static configs = {
+    verbose: false,
     clarityId: '',
     autoTriggerGAEvents: true,
     appConfigs: {},
     provider: ''
-	}
+  }
 
-	static tryAutoConfigure = async overwrites => {
+  static tryAutoConfigure = async overwrites => {
     let remoteConfig
-		try {
-			const _remoteConfig = await Eitri.environment.getRemoteConfigs()
+    try {
+      const _remoteConfig = await Eitri.environment.getRemoteConfigs()
       remoteConfig = { ..._remoteConfig, ...overwrites }
     } catch (error) {
-			console.error('[SHARED] Error getRemoteConfigs', error)
-			throw error
-		}
+      console.error('[SHARED] Error getRemoteConfigs', error)
+      throw error
+    }
 
     try {
-			if (remoteConfig.ecommerceProvider === 'VTEX') {
-				console.log('[SHARED] Provider Vtex encontrado, configurando automaticamente. Account:', remoteConfig.providerInfo.account, 'Host:', remoteConfig.providerInfo.host)
-        App.configs.provider = 'VTEX'
-				await Vtex.configure(remoteConfig)
-			} else if (remoteConfig.ecommerceProvider === 'WAKE') {
-        console.log('[SHARED] Provider Wake encontrado, configurando automaticamente. ', 'Host:', remoteConfig.providerInfo.host)
-        App.configs.provider = 'WAKE'
-        await WakeService.configure(remoteConfig)
-      }
+      console.log('[SHARED] Provider Vtex encontrado, configurando automaticamente. Account:', remoteConfig.providerInfo.account, 'Host:', remoteConfig.providerInfo.host)
+      App.configs.provider = 'VTEX'
+      await Vtex.configure(remoteConfig)
     } catch (error) {
-			console.error('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
-			throw error
-		}
+      console.error('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
+      throw error
+    }
 
     try {
       if (remoteConfig.clarityId) {
@@ -44,9 +38,9 @@ export default class App {
         ClarityService.init(remoteConfig.clarityId)
       }
     } catch (error) {
-			console.error('[SHARED] Error clarity ', remoteConfig.ecommerceProvider, error)
-			throw error
-		}
+      console.error('[SHARED] Error clarity ', remoteConfig.ecommerceProvider, error)
+      throw error
+    }
 
     try {
       if (remoteConfig?.appConfigs?.statusBarTextColor) {
@@ -68,9 +62,9 @@ export default class App {
 
       return App.configs
     } catch (error) {
-			console.error('[SHARED] Error App configure ', error)
-			throw error
-		}
-		
-	}
+      console.error('[SHARED] Error App configure ', error)
+      throw error
+    }
+
+  }
 }
