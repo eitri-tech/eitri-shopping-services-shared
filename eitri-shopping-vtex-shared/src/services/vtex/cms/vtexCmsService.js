@@ -5,11 +5,11 @@ import VtexCaller from '../_helpers/_vtexCaller'
 export default class VtexCmsService {
 
 	static async getAllContentTypes(projectId) {
-		const { cmsUrl, account } = Vtex.configs
+		const { account, vtexCmsUrl } = Vtex.configs
 
 		let BASE_URL = `https://${account}.myvtex.com`
-		if (cmsUrl) {
-			BASE_URL = cmsUrl
+		if (vtexCmsUrl) {
+			BASE_URL = vtexCmsUrl
 		}
 
 		const result = await VtexCaller.get(`/_v/cms/api/${projectId}`, {}, BASE_URL)
@@ -17,11 +17,11 @@ export default class VtexCmsService {
 	}
 
 	static async getPagesByContentTypes(projectId, contentTypeId, options) {
-		const { cmsUrl, account } = Vtex.configs
+		const { vtexCmsUrl, account } = Vtex.configs
 
 		let BASE_URL = `https://${account}.myvtex.com`
-		if (cmsUrl) {
-			BASE_URL = cmsUrl
+		if (vtexCmsUrl) {
+			BASE_URL = vtexCmsUrl
 		}
 
 		const queryString = objectToQueryString(options)
@@ -30,11 +30,11 @@ export default class VtexCmsService {
 	}
 
 	static async getCmsPage(projectId, contentTypeId, documentId, options) {
-		const { cmsUrl, account } = Vtex.configs
+		const { vtexCmsUrl, account } = Vtex.configs
 
 		let BASE_URL = `https://${account}.myvtex.com`
-		if (cmsUrl) {
-			BASE_URL = cmsUrl
+		if (vtexCmsUrl) {
+			BASE_URL = vtexCmsUrl
 		}
 
 		const queryString = objectToQueryString(options)

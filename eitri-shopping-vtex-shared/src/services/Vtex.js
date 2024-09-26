@@ -12,6 +12,7 @@ export default class Vtex {
 		account: '',
 		api: '',
 		host: '',
+		vtexCmsUrl: '',
 		searchOptions: {},
 		segments: null
 	}
@@ -19,7 +20,7 @@ export default class Vtex {
 	static configure = async remoteConfig => {
 		const { providerInfo, segments, searchOptions, marketingTag } = remoteConfig
 
-    const { account, host, faststore } = providerInfo
+    const { account, host, faststore, vtexCmsUrl } = providerInfo
 
 		let _host = host
 		if (_host && !_host.startsWith('https://')) {
@@ -33,6 +34,7 @@ export default class Vtex {
 			searchOptions,
 			segments,
 			faststore,
+			vtexCmsUrl,
 			marketingTag: marketingTag ?? 'eitri-shop'
 		}
 
