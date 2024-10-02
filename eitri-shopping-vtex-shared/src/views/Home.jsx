@@ -9,10 +9,11 @@ export default function Home() {
 
   const init = async () => {
     const configs = await App.tryAutoConfigure({ verbose: true })
+    navigateTo('Vtex')
   }
 
   const navigateTo = async (path) => {
-    Eitri.navigation.navigate({ path })
+    Eitri.navigation.navigate({ path, replace: true })
   }
 
 	return (

@@ -115,45 +115,54 @@ export default class VtexCartService {
 		return cartId
 	}
 
+  /**
+   * @deprecated Esta função será removida na próxima versão.
+   */
 	static async addItems(items, currentPage) {
-		const { account, bindingId } = Vtex.configs
+      await VtexCartService.addItem({ item: items[0], currentPage })
+	}
+
+  /**
+   * Adiciona um item ao carrinho ou a um canal de vendas.
+   *
+   * @param {Object} params - Os parâmetros para adicionar o item.
+   * @param {Object} params.item - O item a ser adicionado, pode ser o item do produto ou payload da api da vtex.
+   * @param {string} params.salesChannel - O canal de vendas onde o item será adicionado.
+   * @param {number} params.quantity - A quantidade do item a ser adicionada.
+   * @param {string} params.seller - O ID do vendedor.
+   * @param {string} params.currentPage - A página atual no contexto da operação.
+   * @returns {Promise<void>} - Uma promessa que resolve quando o item for adicionado.
+   */
+	static async addItem({ item, salesChannel, quantity, seller, currentPage }) {
 
 		try {
+      const itemToSend = {
+        id: item?.itemId ?? item?.id,
+        quantity: parseInt(item?.quantity) ?? parseInt(quantity) ?? 1,
+        seller: item?.seller ?? seller ?? item?.sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers[0].sellerId ?? "1",
+      }
+
 			let orderFormId = await VtexCartService.getStoredOrderFormId()
 			if (!orderFormId) {
 				const cart = await VtexCartService.generateNewCart()
 				orderFormId = cart.orderFormId
 			}
 
-			Logger.info('===> Adicionando itens no carrinho', orderFormId)
+      const payload = {
+        orderItems: [itemToSend],
+        salesChannel: 6
+      }
 
-			if (account === 'shopclubbr') {
-				const addToCartRes = await VtexCartService.addItemsShopclub(items[0], orderFormId, bindingId)
-				GAVtexInternalService.addItemToCart(items, addToCartRes?.data?.addToCart)
-				return addToCartRes?.data?.addToCart
-			} else if (account === 'rihappynovo') {
-				const addToCartRes = await VtexCartService.addItemsRiHappy(items[0], orderFormId, bindingId)
-				GAVtexInternalService.addItemToCart(items, addToCartRes?.data?.addToCart, currentPage)
-				return addToCartRes?.data?.addToCart
-			} else {
-				try {
-					const payload = {
-						orderItems: items
-					}
+      let url = `api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`
+      if (salesChannel) {
+        url += `&sc=${salesChannel}`
+      }
 
-					const addToCartRes = await VtexCaller.post(
-						`api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`,
-						payload
-					)
+      const addToCartRes = await VtexCaller.post(url, payload)
 
-					GAVtexInternalService.addItemToCart(items, addToCartRes.data, currentPage)
+      GAVtexInternalService.addItemToCart([itemToSend], addToCartRes.data, currentPage)
 
-					return addToCartRes.data
-				} catch (e) {
-					console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
-					throw e
-				}
-			}
+      return addToCartRes.data
 
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
@@ -278,7 +287,8 @@ export default class VtexCartService {
 						'Accept': 'application/json',
 						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
 					}
-				}
+				},
+        "https://www.shopclub.com.br"
 			)
 			return response?.data
 		} catch (error) {
