@@ -133,7 +133,7 @@ export default class VtexCartService {
 				return addToCartRes?.data?.addToCart
 			} else if (account === 'rihappynovo') {
 				const addToCartRes = await VtexCartService.addItemsRiHappy(items[0], orderFormId, bindingId)
-				GAVtexInternalService.addItemToCart(items, addToCartRes?.data?.addToCart)
+				GAVtexInternalService.addItemToCart(items, addToCartRes?.data?.addToCart, currentPage)
 				return addToCartRes?.data?.addToCart
 			} else {
 				try {
@@ -146,8 +146,8 @@ export default class VtexCartService {
 						payload
 					)
 	
-					GAVtexInternalService.addItemToCart(items, addToCartRes.data)
-	
+					GAVtexInternalService.addItemToCart(items, addToCartRes.data, currentPage)
+
 					return addToCartRes.data
 				} catch (e) {
 					console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
@@ -212,7 +212,7 @@ export default class VtexCartService {
 			})
 			return response?.data
 		} catch (error) {
-			console.error('erro ao adicionar item no carrinho', error)
+			console.error('erro ao adicionar item no carrinho RiHappy', error)
 			throw error
 		}
 	}
@@ -276,7 +276,7 @@ export default class VtexCartService {
 			})
 			return response?.data
 		} catch (error) {
-			console.error('erro ao adicionar item no carrinho', error)
+			console.error('erro ao adicionar item no carrinho ShopClub', error)
 			throw error
 		}
 	}
