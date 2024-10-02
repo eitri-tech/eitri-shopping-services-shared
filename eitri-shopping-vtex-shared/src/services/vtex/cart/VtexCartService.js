@@ -476,8 +476,12 @@ export default class VtexCartService {
 		return response.data
 	}
 
-	static async simulateCart(payload) {
-		const response = await VtexCaller.post(`api/checkout/pub/orderForms/simulation`, payload)
+	static async simulateCart(payload, salesChannel) {
+    let path = `api/checkout/pub/orderForms/simulation`
+    if (salesChannel) {
+        path = `api/checkout/pub/orderForms/simulation?sc=${salesChannel}`
+    }
+		const response = await VtexCaller.post(path, payload)
 		return response.data
 	}
 
