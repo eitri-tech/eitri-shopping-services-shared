@@ -140,12 +140,12 @@ export default class VtexCartService {
 					const payload = {
 						orderItems: items
 					}
-	
+
 					const addToCartRes = await VtexCaller.post(
 						`api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`,
 						payload
 					)
-	
+
 					GAVtexInternalService.addItemToCart(items, addToCartRes.data, currentPage)
 
 					return addToCartRes.data
@@ -187,7 +187,6 @@ export default class VtexCartService {
 				)
 			}
 
-			const baseUrl = 'https://www.rihappy.com.br/_v/segment/graphql/v1';
 			let params = new URLSearchParams({
 				workspace,
 				maxAge,
@@ -203,13 +202,17 @@ export default class VtexCartService {
 				extensions: extensions
 			}
 
-			const response = await Eitri.http.post(`${baseUrl}?${params.toString()}`, payload, {
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json',
-					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+			const response = await VtexCaller.post(
+				`/_v/segment/graphql/v1?${params.toString()}`,
+				payload,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+					}
 				}
-			})
+			)
 			return response?.data
 		} catch (error) {
 			console.error('erro ao adicionar item no carrinho RiHappy', error)
@@ -251,7 +254,6 @@ export default class VtexCartService {
 				)
 			}
 
-			const baseUrl = 'https://www.shopclub.com.br/_v/private/graphql/v1'
 			let params = new URLSearchParams({
 				workspace,
 				maxAge,
@@ -267,13 +269,17 @@ export default class VtexCartService {
 				extensions: extensions
 			}
 
-			const response = await Eitri.http.post(`${baseUrl}?${params.toString()}`, payload, {
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json',
-					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+			const response = await VtexCaller.post(
+				`/_v/segment/graphql/v1?${params.toString()}`,
+				payload,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+					}
 				}
-			})
+			)
 			return response?.data
 		} catch (error) {
 			console.error('erro ao adicionar item no carrinho ShopClub', error)
