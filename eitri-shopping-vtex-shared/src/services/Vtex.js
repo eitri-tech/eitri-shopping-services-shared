@@ -20,7 +20,7 @@ export default class Vtex {
 	static configure = async remoteConfig => {
 		const { providerInfo, segments, searchOptions, marketingTag } = remoteConfig
 
-    const { account, host, faststore, vtexCmsUrl, bindingId } = providerInfo
+		const { account, host, faststore, vtexCmsUrl, bindingId, salesChannel } = providerInfo
 
 		let _host = host
 		if (_host && !_host.startsWith('https://')) {
@@ -36,11 +36,12 @@ export default class Vtex {
 			faststore,
 			bindingId,
 			vtexCmsUrl,
+			salesChannel,
 			marketingTag: marketingTag ?? 'eitri-shop'
 		}
 
-    const session = await Vtex.getSession(segments)
-    Vtex.configs.session = session
+		const session = await Vtex.getSession(segments)
+		Vtex.configs.session = session
 	}
 
 	static getSession = async (segments) => {
@@ -58,10 +59,10 @@ export default class Vtex {
 
 				return result.data
 			}
-      return null
+			return null
 		} catch (e) {
 			console.error('Error configuring segments', e)
-      return null
+			return null
 		}
 	}
 
