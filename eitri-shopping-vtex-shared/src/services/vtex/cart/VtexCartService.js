@@ -149,13 +149,15 @@ export default class VtexCartService {
 			}
 
       const payload = {
-        orderItems: [itemToSend],
-        salesChannel: 6
+        orderItems: [itemToSend]
       }
 
       let url = `api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`
-      if (salesChannel) {
-        url += `&sc=${salesChannel}`
+
+      const _salesChannel = salesChannel ?? Vtex.configs.salesChannel
+
+      if (_salesChannel) {
+        url += `&sc=${_salesChannel}`
       }
 
       const addToCartRes = await VtexCaller.post(url, payload)
