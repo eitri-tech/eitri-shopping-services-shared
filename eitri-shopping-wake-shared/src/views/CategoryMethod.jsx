@@ -51,7 +51,7 @@ export default function CategoryMethod() {
           }
 
           <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
-            <Button wide backgroundColor='secondary-100' color='background-color' onPress={back} label='Voltar' />
+            <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label='Voltar' />
           </View>
         </>
       )}

@@ -16,7 +16,7 @@ export default class WakeCaller {
 		const headers = {
 			'Content-Type': 'application/json',
 			'Accept': '*/*',
-			'TCS-Access-Token': `${'tcs_shopf_29a1f7bee4a84f0f8acd13ba65a173bf' || configs.tcs_account}`
+			'TCS-Access-Token': configs.tcs_account
 		}
 
 		return headers
@@ -39,7 +39,7 @@ export default class WakeCaller {
 	}
 
 	static async post(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || WakeService.configs.api
+		const _baseUrl = baseUrl || WakeService.configs.graphqlApi
 		const url = WakeCaller._mountUrl(_baseUrl, path)
 		const headers = await WakeCaller._getHeaders()
 

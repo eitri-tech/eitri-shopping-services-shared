@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "eitri-bifrost": [
+        "/tmp/eitri-shopping-wake-shared/node_modules/eitri-bifrost"
+      ],
+      "eitri-luminus": [
+        "/tmp/eitri-shopping-wake-shared/node_modules/eitri-app-components"
+      ]
+    }
+  },
+  "include": [
+    "./**/*"
+  ]
+}

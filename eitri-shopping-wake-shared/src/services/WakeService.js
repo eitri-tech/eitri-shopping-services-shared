@@ -2,33 +2,40 @@ import Eitri from 'eitri-bifrost'
 import ProductService from "./ProductService"
 import GraphqlService from './GraphqlService'
 import CategoryService from './CategoryService'
+import CartService from './CartService'
 
 export default class WakeService {
 	static graphQl = GraphqlService
 	static product = ProductService
 	static category = CategoryService
+	static cart = CartService
 	
 
 	static configs = {
 		provider: 'WAKE',
 		account: '',
 		tcs_account: '',
-		api: '',
+		graphqlApi: '',
 		host: '',
+		cartHost: '',
 		searchOptions: {},
 		segments: null
 	}
 
 	static configure = async remoteConfig => {
-		const { providerInfo, segments, searchOptions, marketingTag } = remoteConfig
+		const { providerInfo, segments, searchOptions, marketingTag, appConfigs } = remoteConfig
 
 		if (providerInfo.host && !providerInfo.host.startsWith('https://')) {
 			providerInfo.host = 'https://' + providerInfo.host
 		}
+		if (providerInfo.cartHost && !providerInfo.cartHost.startsWith('https://')) {
+			providerInfo.cartHost = 'https://' + providerInfo.cartHost
+		}
 
 		WakeService.configs = {
 			...providerInfo,
-			api: `https://storefront-api.fbits.net/graphql`,
+			...appConfigs,
+			graphqlApi: `https://storefront-api.fbits.net/graphql`,
 			searchOptions,
 			segments,
 			marketingTag: marketingTag ?? 'eitri-shop'
@@ -63,7 +70,7 @@ export default class WakeService {
 			throw error
 		}
 
-		console.log('[SHARED] App WAKE configurado com sucesso')
+		console.log(`[SHARED] App WAKE ${WakeService.configs.account} configurado com sucesso`)
 		return WakeService.configs
 	}
 

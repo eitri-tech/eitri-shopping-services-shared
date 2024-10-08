@@ -8,7 +8,7 @@ export default function Home(props) {
     }, [])
 
     const init = async () => {
-        const configs = await WakeService.tryAutoConfigure({ verbose: true })
+        await WakeService.tryAutoConfigure()
     }
 
     const navigateTo = async (path) => {
@@ -27,6 +27,10 @@ export default function Home(props) {
             
             <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
                 <Button wide color='background-color' onPress={() => navigateTo('CategoryMethod')} label='Categorias' />
+            </View>
+
+            <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
+                <Button wide color='background-color' onPress={() => navigateTo('cartMethod')} label='Carrinho' />
             </View>
         </Window>
     )
