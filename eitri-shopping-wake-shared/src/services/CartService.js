@@ -2,7 +2,7 @@ import Eitri from 'eitri-bifrost'
 import WakeService from './WakeService'
 import StorageService from './StorageService'
 import GraphqlService from './GraphqlService'
-import { queryAddItem, queryGetCheckout, queryRemoveItem } from 'src/queries/Cart'
+import { queryAddItem, queryGetCheckout, queryRemoveItem } from '../queries/Cart'
 // import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 
 export default class CartService {
@@ -43,7 +43,7 @@ export default class CartService {
 					Cookie: cartCookie
 				}
 			})
-			if (cart?.data?.Id) StorageService.setStorageItem(CartService.CART_KEY, cart?.data?.Id)
+			if (cart?.data?.Id) await StorageService.setStorageItem(CartService.CART_KEY, cart.data.Id)
 			return cart?.data
 		} catch (e) {
 			console.error('[SHARED] [getCartById] Erro ao obter carrinho', cartId, e)
@@ -60,7 +60,7 @@ export default class CartService {
 		try {
 			console.log('Gerando novo carrinho', WakeService.configs.cartHost)
 			const cart = await Eitri.http.get(WakeService.configs.cartHost)
-			if (cart?.data?.Id) StorageService.setStorageItem(CartService.CART_KEY, cart?.data?.Id)
+			if (cart?.data?.Id) await StorageService.setStorageItem(CartService.CART_KEY, cart.data.Id)
 			return cart?.data
 		} catch (e) {
 			console.error('[SHARED] [generateNewCart] Erro ao gerar novo carrinho', e)
@@ -74,7 +74,7 @@ export default class CartService {
 	* @see {@link getCheckout} Idem ao getCheckout.
 	*/
 	static async getFullCart() {
-		return getCheckout()
+		return CartService.getCheckout()
 	}
 
 	/**
