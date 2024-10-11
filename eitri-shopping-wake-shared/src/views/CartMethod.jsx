@@ -20,6 +20,7 @@ export default function CartMethod() {
 
   const getCheckout = async () => {
     let _fullCart = await WakeService.cart.getCheckout()
+    console.log('_fullCart >>', _fullCart)
     setFullCart(_fullCart)
     setLoading(false)
   }
@@ -31,14 +32,15 @@ export default function CartMethod() {
 
   const addItemCart = async () => {
     setLoading(true)
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 339849, quantity: 1 }])
+    //337013, 340789, 341041, 343687
+    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 337013, quantity: 1 }])
     setFullCart(_fullCart)
     setLoading(false)
   }
 
   const removeItemCart = async () => {
     setLoading(true)
-    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 339849, quantity: 1 }])
+    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 343687, quantity: 1 }])
     setFullCart(_fullCart)
     setLoading(false)
   }

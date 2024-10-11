@@ -10,11 +10,14 @@ export default class CartService {
 
 	/**
 	* Pega carrinho na memória ou gera um novo se não existir.
+	* @param {cartId} - Id do carrinho, se não existir procura no Storage.
 	* @returns {SimpleCart} {cartId: string, quantity: number} - O objeto de carrinho simples com id e quantidade de itens
 	* @see {@link getCheckout} para objeto completo de carrinho.
 	*/
-	static async getCurrentOrCreateCart() {
-		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+	static async getCurrentOrCreateCart(cartId) {
+		if (!cartId) {
+			cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+		}
 
 		let cart
 		if (cartId) {
@@ -70,29 +73,38 @@ export default class CartService {
 
 	/**
 	* Pega carrinho de compras completo
+	* @param {cartId} - Id do carrinho, se não existir procura no Storage.
 	* @returns {CheckoutObject} Objeto de carrinho completo
 	* @see {@link getCheckout} Idem ao getCheckout.
 	*/
-	static async getFullCart() {
-		return CartService.getCheckout()
+	static async getFullCart(cartId) {
+		return CartService.getCheckout(cartId)
 	}
 
 	/**
 	* Pega carrinho de compras completo
+	* @param {cartId} - Id do carrinho, se não existir procura no Storage.
 	* @returns {CheckoutObject} Objeto de carrinho completo
 	*/
-	static async getCheckout() {
-		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
-		try {
-			const response = await GraphqlService.query(queryGetCheckout, {
-				"checkoutId": cartId
-			})
-			// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
-			return response.data
-		} catch (e) {
-			console.error('[SHARED] [getCheckout] Erro ao pegar itens do carrinho', e)
-			throw e
+	static async getCheckout(cartId) {
+		if (!cartId) {
+			cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 		}
+
+		if (cartId) {
+			try {
+				const response = await GraphqlService.query(queryGetCheckout, {
+					"checkoutId": cartId
+				})
+				// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
+				return response.data
+			} catch (e) {
+				console.error('[SHARED] [getCheckout] Erro ao pegar itens do carrinho', e)
+				throw e
+			}
+		}
+
+		return null
 	}
 
 	/**
