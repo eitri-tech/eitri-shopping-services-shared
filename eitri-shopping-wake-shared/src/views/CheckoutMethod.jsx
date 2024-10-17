@@ -1,0 +1,148 @@
+import Eitri from 'eitri-bifrost'
+import WakeService from "../services/WakeService"
+
+const cartId = '75a1e20b-e486-4bfd-baea-ff539b39acf8'
+export default function CheckoutMethod() {
+
+  const [loading, setLoading] = useState(true)
+  const [cart, setCart] = useState({})
+  const [fullCart, setFullCart] = useState(null)
+
+  useEffect(() => {
+    getCart()
+  }, [])
+
+  const getCart = async () => {
+    const _cart = await WakeService.cart.getCurrentOrCreateCart()
+    console.log('_cart >>', _cart)
+    setCart(_cart)
+    setLoading(false)
+  }
+
+  const getCheckout = async () => {
+    let _fullCart = await WakeService.cart.getCheckout()
+    console.log('_fullCart >>', _fullCart)
+    setFullCart(_fullCart)
+    setLoading(false)
+  }
+
+  const addItemCart = async () => {
+    setLoading(true)
+    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 343045, quantity: 1 }])
+    setFullCart(_fullCart)
+    setLoading(false)
+  }
+
+  const customerAssociate = async () => {
+    const response = await WakeService.checkout.checkoutCustomerAssociate()
+    console.log('response >>', response)
+  }
+
+  const addressAssociate = async () => {
+    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDA5fQ==")
+    console.log('response >>', response)
+  }
+
+  const getShippingQuotes = async () => {
+    const response = await WakeService.checkout.shippingQuotes()
+    console.log('response >>', response)
+  }
+
+  const setShippingQuotes = async () => {
+    const response = await WakeService.checkout.checkoutSelectShippingQuote("4efe9344-aa55-4e26-9535-56dfe1db7fc0")
+    console.log('response >>', response)
+  }
+
+  const getPaymentMethods = async () => {
+    const response = await WakeService.checkout.paymentMethods()
+    console.log('response >>', response)
+  }
+
+  const setPaymentMethod = async () => {
+    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
+    console.log('response >>', response)
+  }
+
+  const checkoutComplete = async () => {
+    //number=5511%206033%203083%201381&name=Wendell%20Lira&month=05&year=2026&expiry=05%2F2026&cvc=261&cpf=17744421086&telefone=21993774635&bandeira=mastercard&finger_print=7859779622c6a446b01587d50c23e13d9f548a46
+    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
+    console.log('response >>', response)
+  }
+
+  const back = () => {
+    Eitri.navigation.back()
+  }
+
+  return (
+    <Window topInset bottomInset>
+      <View margin='large'>
+        {loading ? (
+          <Text marginTop='small'>buscando ...</Text>
+        ) : (
+          <View>
+
+            <View direction='column'>
+              <Text>
+                Carrinho no Storage: {cart.cartId}
+              </Text>
+              <Text>
+                Total de Produtos: {cart.quantity || '0'}
+              </Text>
+            </View>
+
+            {fullCart &&
+              <View direction='column'>
+                <Text>Checkout value: {fullCart.total || '0'}</Text>
+                {fullCart.products?.map((product, idx) => (
+                  <Text paddingLeft='small' key={`p_${idx}`}>
+                    {product.quantity} {product.name}
+                  </Text>
+                ))}
+              </View>
+            }
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={getCart} label={`Get Cart`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={addItemCart} label={`Add Item to Cart`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={customerAssociate} label={`Associa usuário ao carrinho`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={addressAssociate} label={`Associa endereço ao carrinho`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={getShippingQuotes} label={`Opções de frete`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={setShippingQuotes} label={`Selecionar frete`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={getPaymentMethods} label={`Formas de pagamento`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={setPaymentMethod} label={`Setar forma de pagamento`} />
+            </View>
+
+            <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
+              <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label='Voltar' />
+            </View>
+
+            <View>
+
+            </View>
+          </View>
+        )}
+      </View>
+    </Window>
+  )
+}

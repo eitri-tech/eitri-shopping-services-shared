@@ -9,9 +9,10 @@ export default class GraphqlService {
 		}
 
 		const response = await HttpService.post('', data)
-		if (response.errors?.lenght > 0 ) {
-			throw new Error(response.errors)
+		if (response?.data?.errors?.length > 0 ) {
+			throw new Error(JSON.stringify(response?.data?.errors))
 		}
+
 		return response.data.data || null
 	}
 

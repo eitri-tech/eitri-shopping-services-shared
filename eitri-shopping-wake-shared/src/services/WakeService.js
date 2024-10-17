@@ -3,13 +3,17 @@ import ProductService from "./ProductService"
 import GraphqlService from './GraphqlService'
 import CategoryService from './CategoryService'
 import CartService from './CartService'
+import CustomerService from "./CustomerService";
+import CheckoutService from "./CheckoutService";
 
 export default class WakeService {
 	static graphQl = GraphqlService
 	static product = ProductService
 	static category = CategoryService
 	static cart = CartService
-	
+	static customer = CustomerService
+	static checkout = CheckoutService
+
 
 	static configs = {
 		provider: 'WAKE',

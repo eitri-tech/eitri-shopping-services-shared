@@ -18,6 +18,12 @@ export default function CartMethod() {
     setLoading(false)
   }
 
+  const newCart = async () => {
+    const _cart = await WakeService.cart.generateNewCart()
+    setCart(_cart)
+    setLoading(false)
+  }
+
   const getCheckout = async () => {
     let _fullCart = await WakeService.cart.getCheckout()
     console.log('_fullCart >>', _fullCart)
@@ -79,6 +85,10 @@ export default function CartMethod() {
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
               <Button wide color='background-color' onPress={getCart} label={`Get SimpleCart`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={newCart} label={`Generate new cart`} />
             </View>
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
