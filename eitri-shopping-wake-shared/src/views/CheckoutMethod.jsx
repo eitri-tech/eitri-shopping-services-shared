@@ -28,7 +28,7 @@ export default function CheckoutMethod() {
 
   const addItemCart = async () => {
     setLoading(true)
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 343045, quantity: 1 }])
+    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 231030, quantity: 1 }])
     setFullCart(_fullCart)
     setLoading(false)
   }
@@ -39,7 +39,7 @@ export default function CheckoutMethod() {
   }
 
   const addressAssociate = async () => {
-    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDA5fQ==")
+    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6MjI3OTUzNH0=")
     console.log('response >>', response)
   }
 
@@ -49,7 +49,7 @@ export default function CheckoutMethod() {
   }
 
   const setShippingQuotes = async () => {
-    const response = await WakeService.checkout.checkoutSelectShippingQuote("4efe9344-aa55-4e26-9535-56dfe1db7fc0")
+    const response = await WakeService.checkout.checkoutSelectShippingQuote("021f03f5-f2ca-4f4d-bc15-97c59b31a4ff")
     console.log('response >>', response)
   }
 
@@ -59,13 +59,13 @@ export default function CheckoutMethod() {
   }
 
   const setPaymentMethod = async () => {
-    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
+    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjQxOTd9")
     console.log('response >>', response)
   }
 
   const checkoutComplete = async () => {
     //number=5511%206033%203083%201381&name=Wendell%20Lira&month=05&year=2026&expiry=05%2F2026&cvc=261&cpf=17744421086&telefone=21993774635&bandeira=mastercard&finger_print=7859779622c6a446b01587d50c23e13d9f548a46
-    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
+    const response = await WakeService.checkout.checkoutComplete("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
     console.log('response >>', response)
   }
 
@@ -131,6 +131,10 @@ export default function CheckoutMethod() {
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
               <Button wide color='background-color' onPress={setPaymentMethod} label={`Setar forma de pagamento`} />
+            </View>
+
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+              <Button wide color='background-color' onPress={checkoutComplete} label={`Completar pagamento`} />
             </View>
 
             <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>

@@ -3,7 +3,7 @@ import GraphqlService from './GraphqlService'
 import {queryCreateCustomer, queryCustomer, queryCustomerAccessTokenRenew, queryLogin} from "../queries/Customer";
 import StorageService from "./StorageService";
 import {
-  queryCheckoutAddressAssociate,
+  queryCheckoutAddressAssociate, queryCheckoutComplete,
   queryCheckoutCustomerAssociate, queryCheckoutSelectPaymentMethod,
   queryCheckoutSelectShippingQuote, queryPaymentMethods,
   queryShippingQuotes
@@ -11,6 +11,7 @@ import {
 import WakeService from "./WakeService";
 import CartService from "./CartService";
 import CustomerService from "./CustomerService";
+import objectToQueryString from "../utils/objectToQueryString";
 
 export default class CheckoutService {
 
@@ -138,20 +139,32 @@ export default class CheckoutService {
     }
   }
 
-  static async checkoutComplete(paymentMethodId) {
+  static async checkoutComplete(paymentData, comments) {
     try {
-      const cart = await CartService.getCurrentOrCreateCart()
+
+      const [cart, token] = await Promise.all([
+        CartService.getCurrentOrCreateCart(),
+        CustomerService.getCustomerToken()
+      ])
+
+      if (!token) {
+        return null
+      }
 
       const cartId = cart?.cartId
 
-      const response = await GraphqlService.query(queryCheckoutSelectPaymentMethod, {
+      const _paymentData = objectToQueryString(paymentData)
+
+      const response = await GraphqlService.query(queryCheckoutComplete, {
+        paymentData: _paymentData,
+        comments: comments ?? '',
         checkoutId: cartId,
-        paymentMethodId
+        customerAccessToken: token
       })
 
       return response
     } catch (e) {
-      console.error('[SHARED] [checkoutSelectPaymentMethod] Erro ao setar forma de pagamento', e)
+      console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
       throw e
     }
   }

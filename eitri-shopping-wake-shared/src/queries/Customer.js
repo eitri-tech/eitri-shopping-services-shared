@@ -37,3 +37,4 @@ mutation ($input: CustomerCreateInput) {
     customerType
   }
 }`
+

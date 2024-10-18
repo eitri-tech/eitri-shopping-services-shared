@@ -8,32 +8,32 @@ export default function CustomerMethod() {
 
   const create = async () => {
     const customer = {
-      "address": "Rua Paula Brito",
+      "address": "Rua Marechal Castelo Branco",
       "addressComplement": "Casa 03",
       "addressNumber": "792",
       "birthDate": "1986-08-07T00:00:00",
-      "cep": "20541-195",
-      "city": "Rio de Janeiro",
-      "cpf": "109.372.557-50",
+      "cep": "74675-540",
+      "city": "Goiânia",
+      "cpf": "630.110.560-56",
       "customerType": "PERSON",
-      "email": "wagnerfq@gmail.com",
-      "fullName": "Wagner Quirino",
+      "email": "takev76224@angewy.com",
+      "fullName": "Alice Agatha da Cunha",
       "gender": "MALE",
-      "neighborhood": "Andaraí",
+      "neighborhood": "Vila dos Subtenentes e Sargentos",
       "newsletter": false,
-      "password": "Abcd1234",
-      "passwordConfirmation": "Abcd1234",
-      "primaryPhoneAreaCode": "21",
-      "primaryPhoneNumber": "99122-6186",
-      "receiverName": "Wagner Quirino",
-      "state": "RJ"
+      "password": "8nBDIY6zB2",
+      "passwordConfirmation": "8nBDIY6zB2",
+      "primaryPhoneAreaCode": "97",
+      "primaryPhoneNumber": "98775-1482",
+      "receiverName": "Alice Agatha da Cunha",
+      "state": "GO"
     }
     const result = await WakeService.customer.createCustomer(customer)
     console.log('create >>', result)
   }
 
   const login = async () => {
-    const logged = await WakeService.customer.customerAuthenticatedLogin("wagnerfq@gmail.com", "Abcd1234")
+    const logged = await WakeService.customer.customerAuthenticatedLogin("takev76224@angewy.com", "8nBDIY6zB2")
     console.log('logged >>', logged)
   }
 
@@ -46,7 +46,7 @@ export default function CustomerMethod() {
     setLoading(true)
     //337013, 340789, 341041, 343687
     console.log('addItemCart')
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 231466, quantity: 1 }])
+    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 231030, quantity: 1 }])
     setFullCart(_fullCart)
     setLoading(false)
   }
