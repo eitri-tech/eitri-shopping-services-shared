@@ -19,10 +19,43 @@ mutation ($customerAccessToken:String!) {
 export const queryCustomer = `
 query ($customerAccessToken:String!) {
   customer(customerAccessToken:$customerAccessToken) {
+    addresses {
+      address
+      address2
+      addressDetails
+      addressNumber
+      cep
+      city
+      country
+      email
+      id
+      neighborhood
+      phone
+      receiverName
+      referencePoint
+      state
+      
+    }
+    birthDate
+    businessPhoneNumber
+    checkingAccountBalance
+    checkingAccountHistory {
+      date
+      historic
+      type
+      value
+    }
+    cnpj
+    companyName
+    cpf
+    creationDate
+    customerId
     customerName
     customerType
     companyName
-    partners {
+    email
+    gender
+    partners { 
       name
       partnerAccessToken
     }

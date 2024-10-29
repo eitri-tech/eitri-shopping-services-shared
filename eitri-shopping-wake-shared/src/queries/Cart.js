@@ -1,6 +1,6 @@
 export const queryGetCheckout = `
-query Checkout($checkoutId: String!) {
-  data: checkout(checkoutId:$checkoutId) {
+query Checkout($checkoutId: String!, $customerAccessToken: String) {
+  data: checkout(checkoutId:$checkoutId, customerAccessToken: $customerAccessToken) {
     checkoutId
     url
     products {

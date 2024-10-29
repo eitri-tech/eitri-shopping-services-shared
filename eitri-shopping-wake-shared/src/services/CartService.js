@@ -3,6 +3,7 @@ import WakeService from './WakeService'
 import StorageService from './StorageService'
 import GraphqlService from './GraphqlService'
 import { queryAddItem, queryGetCheckout, queryRemoveItem } from '../queries/Cart'
+import CustomerService from "./CustomerService";
 // import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 
 export default class CartService {
@@ -87,14 +88,17 @@ export default class CartService {
 	* @returns {CheckoutObject} Objeto de carrinho completo
 	*/
 	static async getCheckout(cartId) {
-		if (!cartId) {
+    if (!cartId) {
 			cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 		}
 
 		if (cartId) {
 			try {
-				const response = await GraphqlService.query(queryGetCheckout, {
-					"checkoutId": cartId
+        const token = await CustomerService.getCustomerToken()
+
+        const response = await GraphqlService.query(queryGetCheckout, {
+					"checkoutId": cartId,
+          customerAccessToken: token ?? ''
 				})
 				// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
 				return response.data
