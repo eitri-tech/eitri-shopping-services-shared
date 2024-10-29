@@ -71,3 +71,48 @@ mutation ($input: CustomerCreateInput) {
   }
 }`
 
+export const queryCreateAddress = `
+mutation ($customerAccessToken: String!, $address: CreateCustomerAddressInput! ) {
+  customerAddressCreate(address: $address, customerAccessToken: $customerAccessToken) {
+    addressDetails
+    addressNumber
+    cep
+    city
+    country
+    email
+    id
+    name
+    neighborhood
+    phone
+    state
+    street
+    referencePoint
+  }
+}`
+
+export const queryUpdateAddress = `
+mutation ($customerAccessToken: String!, $address: UpdateCustomerAddressInput!, $id: ID! ) {
+  customerAddressUpdate(address: $address, customerAccessToken: $customerAccessToken, id: $id) {
+    addressDetails
+    addressNumber
+    cep
+    city
+    country
+    email
+    id
+    name
+    neighborhood
+    phone
+    state
+    street
+    referencePoint
+  }
+}`
+
+export const queryRemoveAddress = `
+mutation ($customerAccessToken: String!, $id: ID! ) {
+  customerAddressRemove(customerAccessToken: $customerAccessToken, id: $id) {
+    isSuccess
+  }
+}`
+

@@ -9,15 +9,8 @@ export default function CheckoutMethod() {
   const [fullCart, setFullCart] = useState(null)
 
   useEffect(() => {
-    getCart()
+    getCheckout()
   }, [])
-
-  const getCart = async () => {
-    const _cart = await WakeService.cart.getCurrentOrCreateCart()
-    console.log('_cart >>', _cart)
-    setCart(_cart)
-    setLoading(false)
-  }
 
   const getCheckout = async () => {
     let _fullCart = await WakeService.cart.getCheckout()
@@ -102,7 +95,7 @@ export default function CheckoutMethod() {
             }
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getCart} label={`Get Cart`} />
+              <Button wide color='background-color' onPress={getCheckout} label={`Get Checkout`} />
             </View>
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >

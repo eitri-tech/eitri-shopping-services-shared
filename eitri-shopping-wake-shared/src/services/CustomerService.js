@@ -1,6 +1,12 @@
 import Eitri from 'eitri-bifrost'
 import GraphqlService from './GraphqlService'
-import {queryCreateCustomer, queryCustomer, queryCustomerAccessTokenRenew, queryLogin} from "../queries/Customer";
+import {
+  queryCreateAddress,
+  queryCreateCustomer,
+  queryCustomer,
+  queryCustomerAccessTokenRenew,
+  queryLogin, queryRemoveAddress, queryUpdateAddress
+} from "../queries/Customer";
 import StorageService from "./StorageService";
 
 export default class CustomerService {
@@ -91,6 +97,64 @@ export default class CustomerService {
 
     } else {
       return loginData.token
+    }
+  }
+
+  static async createAddress(address) {
+    try {
+      const savedToken = await CustomerService.getCustomerToken()
+      if (!savedToken) {
+        return null
+      }
+
+      const response = await GraphqlService.query(queryCreateAddress, {
+        address,
+        customerAccessToken: savedToken
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [createAddress] Erro ao criar endereço', e)
+      throw e
+    }
+  }
+
+  static async updateAddress(addressId, address) {
+    try {
+      const savedToken = await CustomerService.getCustomerToken()
+      if (!savedToken) {
+        return null
+      }
+
+      const response = await GraphqlService.query(queryUpdateAddress, {
+        address,
+        customerAccessToken: savedToken,
+        id: addressId
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [createAddress] Erro ao criar endereço', e)
+      throw e
+    }
+  }
+
+  static async removeAddress(addressId) {
+    try {
+      const savedToken = await CustomerService.getCustomerToken()
+      if (!savedToken) {
+        return null
+      }
+
+      const response = await GraphqlService.query(queryRemoveAddress, {
+        customerAccessToken: savedToken,
+        id: addressId
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [removeAddress] Erro ao remover endereço', e)
+      throw e
     }
   }
 

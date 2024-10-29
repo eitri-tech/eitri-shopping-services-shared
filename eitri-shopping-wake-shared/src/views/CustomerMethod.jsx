@@ -33,7 +33,7 @@ export default function CustomerMethod() {
   }
 
   const login = async () => {
-    const logged = await WakeService.customer.customerAuthenticatedLogin("takev76224@angewy.com", "8nBDIY6zB2")
+    const logged = await WakeService.customer.customerAuthenticatedLogin("", "")
     console.log('logged >>', logged)
   }
 
@@ -42,20 +42,47 @@ export default function CustomerMethod() {
     console.log('customer >>', customer)
   }
 
-  const addItemCart = async () => {
-    setLoading(true)
-    //337013, 340789, 341041, 343687
-    console.log('addItemCart')
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 231030, quantity: 1 }])
-    setFullCart(_fullCart)
-    setLoading(false)
+  const addAddress = async () => {
+    const address = {
+      addressNumber: "572",
+      addressDetails: "Casa",
+      cep: "69445970",
+      city: "Anamã",
+      country: "BR",
+      receiverName: "Wagner",
+      neighborhood: "Centro",
+      phone: "991226186",
+      state: "AM",
+      address: "Rua Alvaro Maia"
+    }
+
+    // const address = {
+    //   "street": "Rua Paula Brito",
+    //   "addressNumber": "792",
+    //   "addressDetails": "Casa",
+    //   "cep": "20541195",
+    //   "city": "Rio de Janeiro",
+    //   "country": "Brasil",
+    //   "neighborhood": "Andarai",
+    //   "receiverName": "",
+    //   "referencePoint": "",
+    //   "state": "RJ"
+    // }
+    const _fullCart = await WakeService.customer.createAddress(address)
+    console.log('result', _fullCart)
   }
 
-  const removeItemCart = async () => {
-    setLoading(true)
-    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 343687, quantity: 1 }])
-    setFullCart(_fullCart)
-    setLoading(false)
+  const updateAddress = async () => {
+    const address = {
+      city: "Anamã"
+    }
+    const _fullCart = await WakeService.customer.updateAddress('eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDIzfQ==', address)
+    console.log('result', _fullCart)
+  }
+
+  const removeAddress = async () => {
+    const _fullCart = await WakeService.customer.removeAddress('eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDIzfQ==')
+    console.log('result', _fullCart)
   }
 
   const back = () => {
@@ -79,11 +106,15 @@ export default function CustomerMethod() {
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-          <Button wide color='background-color' onPress={addItemCart} label={`addItemCart`} />
+          <Button wide color='background-color' onPress={addAddress} label={`Adiciona endereço`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-          <Button wide color='background-color' onPress={removeItemCart} label={`removeItemCart`} />
+          <Button wide color='background-color' onPress={updateAddress} label={`Atualiza endereço`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={removeAddress} label={`Remove endereço`} />
         </View>
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
