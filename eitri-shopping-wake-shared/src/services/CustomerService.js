@@ -5,7 +5,7 @@ import {
   queryCreateCustomer,
   queryCustomer,
   queryCustomerAccessTokenRenew,
-  queryLogin, queryRemoveAddress, queryUpdateAddress
+  queryLogin, queryRemoveAddress, querySimpleCustomer, queryUpdateAddress
 } from "../queries/Customer";
 import StorageService from "./StorageService";
 
@@ -30,7 +30,7 @@ export default class CustomerService {
 
       return data
     } catch (e) {
-      console.error('[SHARED] [customerAuthenticatedLogin] Erro ao adicionar itens ao carrinho', e)
+      console.error('[SHARED] [customerAuthenticatedLogin] Falha ao realizar login', e)
       throw e
     }
   }
@@ -45,6 +45,24 @@ export default class CustomerService {
       return response
     } catch (e) {
       console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+      throw e
+    }
+  }
+
+  static async getSimpleCustomer() {
+    try {
+      const savedToken = await CustomerService.getCustomerToken()
+      if (!savedToken) {
+        return null
+      }
+
+      const response = await GraphqlService.query(querySimpleCustomer, {
+        customerAccessToken: savedToken
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [getCustomer] Erro ao busca customer', e)
       throw e
     }
   }
@@ -87,7 +105,7 @@ export default class CustomerService {
 
         const data = response.data
 
-        CustomerService.saveCustomerTokenOnStorage({ ...loginData, ...data})
+        CustomerService.saveCustomerTokenOnStorage({ ...loginData, ...data })
 
         return response.data.token
 
@@ -159,7 +177,16 @@ export default class CustomerService {
   }
 
   static async isLoggedIn() {
+    const savedToken = await CustomerService.getCustomerToken()
+    if (savedToken) {
+      return true
+    }
+    return false
+  }
 
+  static async logout() {
+    await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
+    return true
   }
 
 }

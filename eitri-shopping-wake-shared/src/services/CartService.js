@@ -84,7 +84,7 @@ export default class CartService {
 
 	/**
 	* Pega carrinho de compras completo
-	* @param {cartId} - Id do carrinho, se não existir procura no Storage.
+	* @param {cartId} Id do carrinho, se não existir procura no Storage.
 	* @returns {CheckoutObject} Objeto de carrinho completo
 	*/
 	static async getCheckout(cartId) {
@@ -114,13 +114,14 @@ export default class CartService {
 	/**
 	* Atualiza o carrinho de compras com novos produtos.
 	* @param {Array<{productVariantId: number, quantity: number}>} products - A lista de produtos a serem adicionados ao carrinho.
+	* @param {cartId} - Id do carrinho, se não for passado pegará do Storage
 	* @returns {CheckoutObject} O objeto de checkout atualizado.
 	*/
-	static async addItems(products) {
-		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+	static async addItems(products, cartId) {
+		const _cartId = cartId || await StorageService.getStorageItem(CartService.CART_KEY)
 		try {
 			const response = await GraphqlService.query(queryAddItem, {
-				"checkoutId": cartId,
+				"checkoutId": _cartId,
 				"products": products
 			})
 			// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
@@ -134,13 +135,14 @@ export default class CartService {
 	/**
 	* Remove uma quantidade de produto do carrinho de compras.
 	* @param {Array<{productVariantId: number, quantity: number}>} products - A lista de produtos a serem removidos do carrinho.
+	* @param {cartId} Id do carrinho, se não for passado pegará do Storage
 	* @returns {CheckoutObject} O objeto de checkout atualizado.
 	*/
-	static async removeItems(products) {
-		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+	static async removeItems(products, cartId) {
+		const _cartId = cartId || await StorageService.getStorageItem(CartService.CART_KEY)
 		try {
 			const response = await GraphqlService.query(queryRemoveItem, {
-				"checkoutId": cartId,
+				"checkoutId": _cartId,
 				"products": products
 			})
 			// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)

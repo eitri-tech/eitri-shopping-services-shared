@@ -3,12 +3,22 @@
     "baseUrl": ".",
     "paths": {
       "eitri-luminus": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-wake-shared/node_modules/eitri-app-components"
+        "/tmp/eitri-shopping-wake-shared/node_modules/eitri-app-components"
+      ],
+      "react": [
+        "/tmp/eitri-shopping-wake-shared/node_modules/react"
       ],
       "eitri-bifrost": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-wake-shared/node_modules/eitri-bifrost"
+        "/tmp/eitri-shopping-wake-shared/node_modules/eitri-bifrost"
+      ],
+      "react/jsx-runtime": [
+        "/tmp/eitri-shopping-wake-shared/node_modules/react/jsx-dev-runtime"
       ]
-    }
+    },
+    "target": "ESNext",
+    "module": "CommonJS",
+    "jsx": "react-native",
+    "resolveJsonModule": true
   },
   "include": [
     "./**/*"

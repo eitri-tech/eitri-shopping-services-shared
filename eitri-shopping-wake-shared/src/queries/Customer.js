@@ -16,6 +16,22 @@ mutation ($customerAccessToken:String!) {
   }
 }`
 
+export const querySimpleCustomer = `
+query ($customerAccessToken:String!) {
+  customer(customerAccessToken:$customerAccessToken) {
+    birthDate
+    cnpj
+    companyName
+    cpf
+    creationDate
+    customerId
+    customerName
+    customerType
+    companyName
+    email
+  }
+}`
+
 export const queryCustomer = `
 query ($customerAccessToken:String!) {
   customer(customerAccessToken:$customerAccessToken) {

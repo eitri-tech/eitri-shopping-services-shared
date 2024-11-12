@@ -37,9 +37,25 @@ export default function CustomerMethod() {
     console.log('logged >>', logged)
   }
 
+  const isLoggedIn = async () => {
+    const logged = await WakeService.customer.isLoggedIn()
+    console.log('isLoggedIn >>', logged)
+  }
+
+  const logout = async () => {
+    await WakeService.customer.logout()
+    console.log('logout executado')
+  }
+
+
   const getLoggedCustomer = async () => {
     const customer = await WakeService.customer.getCustomer()
     console.log('customer >>', customer)
+  }
+  
+  const getSimpleLoggedCustomer = async () => {
+    const customer = await WakeService.customer.getSimpleCustomer()
+    console.log('Simple customer >>', customer)
   }
 
   const addAddress = async () => {
@@ -99,6 +115,18 @@ export default function CustomerMethod() {
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={login} label={`Login`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={isLoggedIn} label={`IsLoggedIn`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={logout} label={`Logout`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={getSimpleLoggedCustomer} label={`Get Simple logged customer`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
