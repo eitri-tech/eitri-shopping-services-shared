@@ -1,16 +1,26 @@
 import Eitri from 'eitri-bifrost'
 import GraphqlService from './GraphqlService'
 import {
+  queryAddWishlistProduct,
   queryCreateAddress,
   queryCreateCustomer,
   queryCustomer,
   queryCustomerAccessTokenRenew,
-  queryLogin, queryRemoveAddress, querySimpleCustomer, queryUpdateAddress
+  queryGetCustomerWishlist,
+  queryLogin, 
+  queryRemoveAddress, 
+  queryRemoveWishlistProduct, 
+  querySimpleCustomer, 
+  queryUpdateAddress,
 } from "../queries/Customer";
 import StorageService from "./StorageService";
-
+import { ApiError } from './Api';
 export default class CustomerService {
   static STORAGE_USER_TOKEN_KEY = 'user_key'
+
+  static MSG_ERROR = {
+    "INVALID_LOGIN": "Invalid login"
+  }
 
   /**
    * Faz login do usuário.
@@ -187,6 +197,36 @@ export default class CustomerService {
   static async logout() {
     await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
     return true
+  }
+
+  static async getWishList() {
+    const token = await CustomerService.getCustomerToken()
+    if (!token) {
+      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+    }
+
+    const response = await Wake.graphQl.query(queryGetCustomerWishlist, { customerAccessToken: token })
+    return response
+  }
+
+  static async addWishlistProduct(productId) {
+    const token = await CustomerService.getCustomerToken()
+    if (!token) {
+      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+    }
+
+    const response = await Wake.graphQl.query(queryAddWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
+    return response
+  }
+
+  static async removeWishlistProduct(productId) {
+    const token = await CustomerService.getCustomerToken()
+    if (!token) {
+      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+    }
+
+    const response = await Wake.graphQl.query(queryRemoveWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
+    return response
   }
 
 }
