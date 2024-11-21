@@ -18,7 +18,7 @@ export default class Vtex {
 	}
 
 	static configure = async remoteConfig => {
-		const { providerInfo, segments, searchOptions, marketingTag } = remoteConfig
+		const { providerInfo, segments, searchOptions, marketingTag, storePreferences } = remoteConfig
 
 		const { account, host, faststore, vtexCmsUrl, bindingId, salesChannel } = providerInfo
 
@@ -37,6 +37,7 @@ export default class Vtex {
 			bindingId,
 			vtexCmsUrl,
 			salesChannel,
+      storePreferences,
 			marketingTag: marketingTag ?? 'eitri-shop'
 		}
 
