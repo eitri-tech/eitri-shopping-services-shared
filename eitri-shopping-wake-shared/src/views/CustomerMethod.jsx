@@ -5,6 +5,9 @@ export default function CustomerMethod() {
 
   const [loading, setLoading] = useState(true)
   const [fullCart, setFullCart] = useState(null)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [logged, setLogged] = useState(false)
 
   const create = async () => {
     const customer = {
@@ -33,18 +36,22 @@ export default function CustomerMethod() {
   }
 
   const login = async () => {
-    const logged = await WakeService.customer.customerAuthenticatedLogin("", "")
+    const logged = await WakeService.customer.customerAuthenticatedLogin(email, password)
     console.log('logged >>', logged)
+    setLogged(logged.token)
   }
 
   const isLoggedIn = async () => {
     const logged = await WakeService.customer.isLoggedIn()
     console.log('isLoggedIn >>', logged)
+    setLogged(logged)
   }
 
   const logout = async () => {
     await WakeService.customer.logout()
     console.log('logout executado')
+    setLogged(false)
+
   }
 
 
@@ -114,6 +121,9 @@ export default function CustomerMethod() {
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Input type='text' value={email} onChange={value => setEmail(value)} placeholder='Email' />
+          <Input type='text' value={password} onChange={value => setPassword(value)} placeholder='Senha' />
+          <Text>{logged ? 'Logado' : 'Não logado'}</Text>
           <Button wide color='background-color' onPress={login} label={`Login`} />
         </View>
 

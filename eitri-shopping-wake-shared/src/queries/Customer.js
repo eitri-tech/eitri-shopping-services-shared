@@ -159,8 +159,8 @@ export const queryGetCustomerWishlist = `query Wishlist($customerAccessToken: St
   }
 }`
 
-export const queryAddWishlistProduct = `mutation {
-  wishlistAddProduct(customerAccessToken:"accessToken", productId:222) {
+export const queryAddWishlistProduct = `mutation  ($customerAccessToken: String!, $productId: Long! ){
+  wishlistAddProduct(customerAccessToken:$customerAccessToken, productId:$productId) {
     productId
     productName
   }

@@ -205,7 +205,7 @@ export default class CustomerService {
       throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
     }
 
-    const response = await Wake.graphQl.query(queryGetCustomerWishlist, { customerAccessToken: token })
+    const response = await GraphqlService.query(queryGetCustomerWishlist, { customerAccessToken: token })
     return response
   }
 
@@ -215,7 +215,7 @@ export default class CustomerService {
       throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
     }
 
-    const response = await Wake.graphQl.query(queryAddWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
+    const response = await GraphqlService.query(queryAddWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
     return response
   }
 
@@ -225,7 +225,7 @@ export default class CustomerService {
       throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
     }
 
-    const response = await Wake.graphQl.query(queryRemoveWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
+    const response = await GraphqlService.query(queryRemoveWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
     return response
   }
 
