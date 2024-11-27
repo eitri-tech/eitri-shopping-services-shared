@@ -3,9 +3,6 @@ import WakeService from "../services/WakeService"
 
 export default function CustomerMethod() {
 
-  const [loading, setLoading] = useState(true)
-  const [fullCart, setFullCart] = useState(null)
-
   const create = async () => {
     const customer = {
       "address": "Rua Marechal Castelo Branco",
@@ -28,12 +25,55 @@ export default function CustomerMethod() {
       "receiverName": "Alice Agatha da Cunha",
       "state": "GO"
     }
-    const result = await WakeService.customer.createCustomer(customer)
+    const simpleCustomer = {
+      "birthDate": "1986-08-07T00:00:00",
+      "cpf": "999.296.360-30",
+      "customerType": "PERSON",
+      "email": "siconix488@jonespal.com",
+      "fullName": "Alice Agatha da Cunha",
+      "gender": "MALE",
+      "newsletter": false,
+      "password": "8nBDIY6zB2",
+      "passwordConfirmation": "8nBDIY6zB2",
+      "primaryPhoneAreaCode": "97",
+      "primaryPhoneNumber": "98775-1482"
+    }
+    const result = await WakeService.customer.createCustomer(simpleCustomer)
+    console.log('create >>', result)
+  }
+
+  const simpleLogin = async () => {
+    const result = await WakeService.customer.customerSimpleLoginStart('neposod158@nozamas.com')
+    console.log('create >>', result)
+  }
+
+  const completeRegistration = async () => {
+    const token = "gCxlWVnAbxXE9RIcSjWgw+kV/lwtXjdui94PFM6Rzzniiqm0TqVIcBAK1hHmM+b3M8Ey5TPxyfez2Gc5Ejm5yT1ljv5q64P7bLngL30VUxovIrwQ3rx53i22d2mT/EtVr+B6v2l+0pY/CpkUkz4rsRqf5ghNmGCxrR1PYYboFmMsyMzkUFlWkkwBUOG7LZhb4PkE0Putlzrw1bUEtSowgGsMYemMQ16Whu/3X1mXanLe5L6Pko78B6OG2A3+CLJf5fnDnOt6wulO68fUP5jiOA=="
+    const customer = {
+      "birthDate": "1986-08-07T00:00:00",
+      "cpf": "582.277.180-78",
+      "customerType": "PERSON",
+      "email": "neposod158@nozamas.com",
+      "fullName": "Alice Agatha da Cunha",
+      "gender": "MALE",
+      "newsletter": false,
+      "password": "8nBDIY6zB2",
+      "passwordConfirmation": "8nBDIY6zB2",
+      "primaryPhoneAreaCode": "97",
+      "primaryPhoneNumber": "98775-1482"
+    }
+    const result = await WakeService.customer.customerCompletePartialRegistration(token, customer)
+    console.log('create >>', result)
+  }
+
+  const passwordChange = async () => {
+    const token = "/Udy3ZilZ8BGEwE6khHpRhPMI4CfUERCoXmKVVxCPrIzWYV2Gipx0Aa7Sq9xrAcsNomY13rB2+5buY3mLXdLpzgA0O8kWhYNqlfh31jgu7FtSF/Rlnjyv9H1g2PrYH/EPjr+yRLb1WtFhoWFExUWBOBD8oxgZobJMlnjNCSYZlyHW6E60WwbwQaMRn8vuz5ahWmoO2OpWeTEASbMMhtrLXjFEOzOpcJHmrhOx0yg1MLPZLv0+EuD6XmMOPn3MwYx"
+    const result = await WakeService.customer.customerPasswordChange(token, "" , "8nBDIY6zB2")
     console.log('create >>', result)
   }
 
   const login = async () => {
-    const logged = await WakeService.customer.customerAuthenticatedLogin("", "")
+    const logged = await WakeService.customer.customerAuthenticatedLogin("neposod158@nozamas.com", "8nBDIY6zB2")
     console.log('logged >>', logged)
   }
 
@@ -47,12 +87,11 @@ export default function CustomerMethod() {
     console.log('logout executado')
   }
 
-
   const getLoggedCustomer = async () => {
     const customer = await WakeService.customer.getCustomer()
     console.log('customer >>', customer)
   }
-  
+
   const getSimpleLoggedCustomer = async () => {
     const customer = await WakeService.customer.getSimpleCustomer()
     console.log('Simple customer >>', customer)
@@ -101,6 +140,11 @@ export default function CustomerMethod() {
     console.log('result', _fullCart)
   }
 
+  const getAddressByZipCode = async () => {
+    const result = await WakeService.customer.getAddressByZipCode('20541195')
+    console.log('result', result)
+  }
+
   const back = () => {
     Eitri.navigation.back()
   }
@@ -114,11 +158,23 @@ export default function CustomerMethod() {
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={simpleLogin} label={`Simple Login`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={completeRegistration} label={`Complete Registration`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={login} label={`Login`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={isLoggedIn} label={`IsLoggedIn`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={passwordChange} label={`Password Change`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
@@ -143,6 +199,10 @@ export default function CustomerMethod() {
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={removeAddress} label={`Remove endereço`} />
+        </View>
+
+        <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
+          <Button wide color='background-color' onPress={getAddressByZipCode} label='Busca CEP' />
         </View>
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>

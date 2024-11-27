@@ -4,10 +4,11 @@ import {
   queryCreateAddress,
   queryCreateCustomer,
   queryCustomer,
-  queryCustomerAccessTokenRenew,
-  queryLogin, queryRemoveAddress, querySimpleCustomer, queryUpdateAddress
+  queryCustomerAccessTokenRenew, queryCustomerCompletePartialRegistration, queryCustomerPasswordChange,
+  queryLogin, queryRemoveAddress, querySimpleCustomer, querySimpleLogin, queryUpdateAddress
 } from "../queries/Customer";
 import StorageService from "./StorageService";
+import {Wake} from "../export";
 
 export default class CustomerService {
   static STORAGE_USER_TOKEN_KEY = 'user_key'
@@ -45,6 +46,54 @@ export default class CustomerService {
       return response
     } catch (e) {
       console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+      throw e
+    }
+  }
+
+  static async customerSimpleLoginStart(email) {
+    try {
+
+      const response = await GraphqlService.query(querySimpleLogin, {
+        input: email
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+      throw e
+    }
+  }
+
+  static async customerCompletePartialRegistration(customerAccessToken, input) {
+    try {
+
+      const response = await GraphqlService.query(queryCustomerCompletePartialRegistration, {
+        customerAccessToken,
+        input
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+      throw e
+    }
+  }
+
+  static async customerPasswordChange(customerAccessToken, currentPassword, newPassword) {
+    try {
+
+      const response = await GraphqlService.query(queryCustomerPasswordChange, {
+        customerAccessToken,
+        input: {
+          currentPassword,
+          newPasswordConfirmation: newPassword,
+          newPassword
+        }
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [customerPasswordChange] Erro ao mudar senha', e)
       throw e
     }
   }
@@ -187,6 +236,16 @@ export default class CustomerService {
   static async logout() {
     await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
     return true
+  }
+
+  static async getAddressByZipCode(zipCode) {
+    try {
+      const response = await Eitri.http.get(`${Wake.configs.apiHost}/Login/Cadastro/BuscaEnderecoPorCep?cep=${zipCode}`)
+      return response.data
+    } catch (e) {
+      console.error('[SHARED] [getAddressByZipCode] Erro ao buscar endereço pelo CEP', e)
+      throw e
+    }
   }
 
 }
