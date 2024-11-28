@@ -257,7 +257,7 @@ export default class CustomerService {
     }
 
     const response = await GraphqlService.query(queryGetCustomerWishlist, { customerAccessToken: token })
-    return response
+    return response?.customer?.wishlist?.products || null
   }
 
   static async addWishlistProduct(productId) {
@@ -267,7 +267,7 @@ export default class CustomerService {
     }
 
     const response = await GraphqlService.query(queryAddWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
-    return response
+    return response?.wishlistAddProduct || null
   }
 
   static async removeWishlistProduct(productId) {
@@ -277,7 +277,7 @@ export default class CustomerService {
     }
 
     const response = await GraphqlService.query(queryRemoveWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
-    return response
+    return response?.wishlistRemoveProduct || null
   }
 
   static async getAddressByZipCode(zipCode) {
