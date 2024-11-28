@@ -87,6 +87,43 @@ mutation ($input: CustomerCreateInput) {
   }
 }`
 
+export const querySimpleLogin = `
+mutation ($input: String) {
+  data: customerSimpleLoginStart(input: $input) {
+    customerAccessToken {
+      token
+      type
+      validUntil
+    }
+    type
+    question {
+      questionId
+      question
+      answers {
+        id
+        value
+      }
+    }
+  }
+}`
+
+export const queryCustomerCompletePartialRegistration = `
+mutation ($customerAccessToken: String!, $input: CustomerSimpleCreateInputGraphInput! ) {
+  customerCompletePartialRegistration(input: $input, customerAccessToken: $customerAccessToken) {
+    isMaster
+    token
+    type
+    validUntil
+  }
+}`
+
+export const queryCustomerPasswordChange = `
+mutation ($customerAccessToken: String!, $input: CustomerPasswordChangeInput! ) {
+  customerPasswordChange(input: $input, customerAccessToken: $customerAccessToken) {
+    isSuccess
+  }
+}`
+
 export const queryCreateAddress = `
 mutation ($customerAccessToken: String!, $address: CreateCustomerAddressInput! ) {
   customerAddressCreate(address: $address, customerAccessToken: $customerAccessToken) {
