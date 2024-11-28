@@ -155,6 +155,16 @@ export default function CustomerMethod() {
     console.log('result', result)
   }
 
+  const customerPasswordRecovery = async () => {
+    const result = await WakeService.customer.customerPasswordRecovery('wagnerfq@gmail.com')
+    console.log('result', result)
+  }
+
+  const customerPasswordChangeByRecovery = async () => {
+    const result = await WakeService.customer.customerPasswordChangeByRecovery()
+    console.log('result', result)
+  }
+
   const back = () => {
     Eitri.navigation.back()
   }
@@ -216,6 +226,14 @@ export default function CustomerMethod() {
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
           <Button wide color='background-color' onPress={getAddressByZipCode} label='Busca CEP' />
+        </View>
+
+        <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
+          <Button wide color='background-color' onPress={customerPasswordRecovery} label='Email recuperar senha' />
+        </View>
+
+        <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
+          <Button wide color='background-color' onPress={customerPasswordChangeByRecovery} label='Nova senha por recuperação' />
         </View>
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>

@@ -290,4 +290,43 @@ export default class CustomerService {
     }
   }
 
+  static async customerPasswordRecovery(email) {
+    try {
+      const response = await GraphqlService.query(`
+          mutation ($input: String! ) {
+            customerPasswordRecovery(input: $input) {
+              isSuccess
+            }
+          }`, {
+        input: email
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [customerPasswordRecovery] Erro ao solicitar email', e)
+      throw e
+    }
+  }
+
+  static async customerPasswordChangeByRecovery(key, newPassword) {
+    try {
+      const response = await GraphqlService.query(`
+          mutation ($input: CustomerPasswordChangeByRecoveryInputGraphInput!){
+            customerPasswordChangeByRecovery(input: $input) {
+              isSuccess
+            }
+          }`,{
+          key,
+          newPassword,
+          newPasswordConfirmation: newPassword
+        }
+      )
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [customerPasswordChangeByRecovery] Erro ao recuperar senha', e)
+      throw e
+    }
+  }
+
 }
