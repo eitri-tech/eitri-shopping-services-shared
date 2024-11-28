@@ -21,7 +21,7 @@ export default function WishListMethod() {
     resetView()
     try{
       const res = await WakeService.customer.getWishList()
-      setWishlistProducts(res?.customer?.wishlist?.products)
+      setWishlistProducts(res)
     } catch (e) {
       console.error(e)
     }
@@ -73,10 +73,6 @@ export default function WishListMethod() {
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Input type='text' value={productToBeAdded} onChange={value => setProductToBeAdded(value)} placeholder='Id a ser adicionado' />
           <Button wide color='background-color' onPress={addWishList} label={`AddProduct`} />
-        </View>
-
-        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-          <Button wide color='background-color' onPress={removeWishList} label={`RemoveProduct`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
