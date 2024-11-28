@@ -80,7 +80,7 @@ export default function WishListMethod() {
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-          <Button wide color='background-color' onPress={back} label={`Voltar`} />
+          <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label={`Voltar`} />
         </View>
 
          { wishlistProducts && wishlistProducts.length > 0 && (

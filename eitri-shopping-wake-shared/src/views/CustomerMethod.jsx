@@ -177,7 +177,7 @@ export default function CustomerMethod() {
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Input type='text' value={email} onChange={value => setEmail(value)} placeholder='Email' />
-          <Input type='text' value={password} onChange={value => setPassword(value)} placeholder='Senha' />
+          <Input type='password' value={password} onChange={value => setPassword(value)} placeholder='Senha' />
           <Text>{logged ? 'Logado' : 'Não logado'}</Text>
           <Button wide color='background-color' onPress={login} label={`Login`} />
         </View>
