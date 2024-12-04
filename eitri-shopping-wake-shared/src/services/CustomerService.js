@@ -1,17 +1,29 @@
-import Eitri from 'eitri-bifrost'
 import GraphqlService from './GraphqlService'
+import StorageService from "./StorageService";
+import { ApiError } from './Api';
 import {
+  queryAddWishlistProduct,
   queryCreateAddress,
   queryCreateCustomer,
   queryCustomer,
-  queryCustomerAccessTokenRenew, queryCustomerCompletePartialRegistration, queryCustomerPasswordChange,
-  queryLogin, queryRemoveAddress, querySimpleCustomer, querySimpleLogin, queryUpdateAddress
+  queryCustomerAccessTokenRenew,
+  queryGetCustomerWishlist,
+  queryLogin,
+  queryRemoveAddress,
+  queryRemoveWishlistProduct,
+  querySimpleCustomer,
+  queryUpdateAddress,
+  queryCustomerCompletePartialRegistration,
+  queryCustomerPasswordChange,
+  querySimpleLogin
 } from "../queries/Customer";
-import StorageService from "./StorageService";
-import {Wake} from "../export";
 
 export default class CustomerService {
   static STORAGE_USER_TOKEN_KEY = 'user_key'
+
+  static MSG_ERROR = {
+    "INVALID_LOGIN": "Invalid login"
+  }
 
   /**
    * Faz login do usuário.
@@ -236,6 +248,36 @@ export default class CustomerService {
   static async logout() {
     await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
     return true
+  }
+
+  static async getWishList() {
+    const token = await CustomerService.getCustomerToken()
+    if (!token) {
+      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+    }
+
+    const response = await GraphqlService.query(queryGetCustomerWishlist, { customerAccessToken: token })
+    return response?.customer?.wishlist?.products || null
+  }
+
+  static async addWishlistProduct(productId) {
+    const token = await CustomerService.getCustomerToken()
+    if (!token) {
+      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+    }
+
+    const response = await GraphqlService.query(queryAddWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
+    return response?.wishlistAddProduct || null
+  }
+
+  static async removeWishlistProduct(productId) {
+    const token = await CustomerService.getCustomerToken()
+    if (!token) {
+      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+    }
+
+    const response = await GraphqlService.query(queryRemoveWishlistProduct, { customerAccessToken: token, productId: parseInt(productId) })
+    return response?.wishlistRemoveProduct || null
   }
 
   static async getAddressByZipCode(zipCode) {

@@ -169,4 +169,43 @@ mutation ($customerAccessToken: String!, $id: ID! ) {
   }
 }`
 
+export const queryGetCustomerWishlist = `query Wishlist($customerAccessToken: String!, $productsIds: [Long]) {
+  customer(customerAccessToken: $customerAccessToken){
+    wishlist(productsIds: $productsIds){
+    	products {
+    	  available
+        collection
+        condition
+        display
+        freeShipping
+        productId
+        productName
+        productVariantId
+        sku
+        variantName
+        images {
+          url
+        }
+        prices {
+          listPrice
+          price
+          discountPercentage
+        }
+    	}
+    }
+  }
+}`
 
+export const queryAddWishlistProduct = `mutation  ($customerAccessToken: String!, $productId: Long! ){
+  wishlistAddProduct(customerAccessToken:$customerAccessToken, productId:$productId) {
+    productId
+    productName
+  }
+}`
+
+export const queryRemoveWishlistProduct = `mutation ($customerAccessToken: String!, $productId: Long! ) {
+  wishlistRemoveProduct(customerAccessToken:$customerAccessToken, productId: $productId) {
+    productId
+    productName
+  }
+}`

@@ -2,17 +2,17 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-wake-shared/node_modules/react"
-      ],
-      "eitri-luminus": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-wake-shared/node_modules/eitri-app-components"
-      ],
       "react/jsx-runtime": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-wake-shared/node_modules/react/jsx-dev-runtime"
+        "/tmp/eitri-shopping-wake-shared/node_modules/react/jsx-dev-runtime"
+      ],
+      "react": [
+        "/tmp/eitri-shopping-wake-shared/node_modules/react"
       ],
       "eitri-bifrost": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-wake-shared/node_modules/eitri-bifrost"
+        "/tmp/eitri-shopping-wake-shared/node_modules/eitri-bifrost"
+      ],
+      "eitri-luminus": [
+        "/tmp/eitri-shopping-wake-shared/node_modules/eitri-app-components"
       ]
     },
     "target": "ESNext",

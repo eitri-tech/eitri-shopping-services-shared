@@ -34,12 +34,16 @@ export default function Home(props) {
             </View>
 
             <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
-              <Button wide color='background-color' onPress={() => navigateTo('CheckoutMethod')} label='Checkout' />
+                <Button wide color='background-color' onPress={() => navigateTo('CheckoutMethod')} label='Checkout' />
             </View>
 
-          <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
-            <Button wide color='background-color' onPress={() => navigateTo('CustomerMethod')} label='Customer' />
-          </View>
+            <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
+                <Button wide color='background-color' onPress={() => navigateTo('CustomerMethod')} label='Customer' />
+            </View>
+
+            <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
+                <Button wide color='background-color' onPress={() => navigateTo('WishListMethod')} label='WishList' />
+            </View>
         </Window>
     )
 }

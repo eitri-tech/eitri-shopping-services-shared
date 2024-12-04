@@ -3,6 +3,12 @@ import WakeService from "../services/WakeService"
 
 export default function CustomerMethod() {
 
+  const [loading, setLoading] = useState(true)
+  const [fullCart, setFullCart] = useState(null)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [logged, setLogged] = useState(false)
+
   const create = async () => {
     const customer = {
       "address": "Rua Marechal Castelo Branco",
@@ -68,23 +74,27 @@ export default function CustomerMethod() {
 
   const passwordChange = async () => {
     const token = "/Udy3ZilZ8BGEwE6khHpRhPMI4CfUERCoXmKVVxCPrIzWYV2Gipx0Aa7Sq9xrAcsNomY13rB2+5buY3mLXdLpzgA0O8kWhYNqlfh31jgu7FtSF/Rlnjyv9H1g2PrYH/EPjr+yRLb1WtFhoWFExUWBOBD8oxgZobJMlnjNCSYZlyHW6E60WwbwQaMRn8vuz5ahWmoO2OpWeTEASbMMhtrLXjFEOzOpcJHmrhOx0yg1MLPZLv0+EuD6XmMOPn3MwYx"
-    const result = await WakeService.customer.customerPasswordChange(token, "" , "8nBDIY6zB2")
+    const result = await WakeService.customer.customerPasswordChange(token, "", "8nBDIY6zB2")
     console.log('create >>', result)
   }
 
   const login = async () => {
-    const logged = await WakeService.customer.customerAuthenticatedLogin("wagnerfq@gmail.com", "Abcd@1234")
+    const logged = await WakeService.customer.customerAuthenticatedLogin(email, password)
     console.log('logged >>', logged)
+    setLogged(logged.token)
   }
 
   const isLoggedIn = async () => {
     const logged = await WakeService.customer.isLoggedIn()
     console.log('isLoggedIn >>', logged)
+    setLogged(logged)
   }
 
   const logout = async () => {
     await WakeService.customer.logout()
     console.log('logout executado')
+    setLogged(false)
+
   }
 
   const getLoggedCustomer = async () => {
@@ -176,6 +186,9 @@ export default function CustomerMethod() {
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Input type='text' value={email} onChange={value => setEmail(value)} placeholder='Email' />
+          <Input type='password' value={password} onChange={value => setPassword(value)} placeholder='Senha' />
+          <Text>{logged ? 'Logado' : 'Não logado'}</Text>
           <Button wide color='background-color' onPress={login} label={`Login`} />
         </View>
 

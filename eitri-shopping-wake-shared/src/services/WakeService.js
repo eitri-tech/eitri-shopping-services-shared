@@ -47,6 +47,7 @@ export default class WakeService {
 			segments,
 			marketingTag: marketingTag ?? 'eitri-shop'
 		}
+
 	}
 
 	static tryAutoConfigure = async overwrites => {
