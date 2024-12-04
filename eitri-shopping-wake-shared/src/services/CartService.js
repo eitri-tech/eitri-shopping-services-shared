@@ -119,7 +119,8 @@ export default class CartService {
 	*/
 	static async addItems(products, cartId) {
 		const _cartId = cartId || await StorageService.getStorageItem(CartService.CART_KEY)
-		try {
+
+    try {
 			const response = await GraphqlService.query(queryAddItem, {
 				"checkoutId": _cartId,
 				"products": products

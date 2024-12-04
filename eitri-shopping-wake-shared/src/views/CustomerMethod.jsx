@@ -73,7 +73,7 @@ export default function CustomerMethod() {
   }
 
   const login = async () => {
-    const logged = await WakeService.customer.customerAuthenticatedLogin("", "")
+    const logged = await WakeService.customer.customerAuthenticatedLogin("wagnerfq@gmail.com", "Abcd@1234")
     console.log('logged >>', logged)
   }
 
