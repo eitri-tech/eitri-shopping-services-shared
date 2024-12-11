@@ -8,9 +8,15 @@ export default function CheckoutMethod() {
   const [cart, setCart] = useState({})
   const [fullCart, setFullCart] = useState(null)
 
-  useEffect(() => {
-    getCheckout()
-  }, [])
+  const newCart = async () => {
+    const _cart = await WakeService.cart.generateNewCart()
+    console.log('_cart >>', _cart)
+  }
+
+  const login = async () => {
+    const result = await WakeService.customer.customerAuthenticatedLogin('', '')
+    console.log('create >>', result)
+  }
 
   const getCheckout = async () => {
     let _fullCart = await WakeService.cart.getCheckout()
@@ -20,10 +26,14 @@ export default function CheckoutMethod() {
   }
 
   const addItemCart = async () => {
-    setLoading(true)
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 231030, quantity: 1 }])
-    setFullCart(_fullCart)
-    setLoading(false)
+    try {
+      console.log('add item cart')
+      const _fullCart = await WakeService.cart.addItems([{ productVariantId: 346119, quantity: 1 }])
+      console.log('add item cart result >>', _fullCart)
+      setFullCart(_fullCart)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const customerAssociate = async () => {
@@ -32,17 +42,19 @@ export default function CheckoutMethod() {
   }
 
   const addressAssociate = async () => {
-    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6MjI3OTUzNH0=")
+    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDM1fQ==")
     console.log('response >>', response)
   }
 
+  let shippingQuote = ''
   const getShippingQuotes = async () => {
     const response = await WakeService.checkout.shippingQuotes()
+    shippingQuote = response.shippingQuotes[0].shippingQuoteId
     console.log('response >>', response)
   }
 
   const setShippingQuotes = async () => {
-    const response = await WakeService.checkout.checkoutSelectShippingQuote("021f03f5-f2ca-4f4d-bc15-97c59b31a4ff")
+    const response = await WakeService.checkout.checkoutSelectShippingQuote(shippingQuote)
     console.log('response >>', response)
   }
 
@@ -52,13 +64,13 @@ export default function CheckoutMethod() {
   }
 
   const setPaymentMethod = async () => {
-    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjQxOTd9")
+    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
     console.log('response >>', response)
   }
 
   const checkoutComplete = async () => {
     //number=5511%206033%203083%201381&name=Wendell%20Lira&month=05&year=2026&expiry=05%2F2026&cvc=261&cpf=17744421086&telefone=21993774635&bandeira=mastercard&finger_print=7859779622c6a446b01587d50c23e13d9f548a46
-    const response = await WakeService.checkout.checkoutComplete("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
+    const response = await WakeService.checkout.checkoutComplete("")
     console.log('response >>', response)
   }
 
@@ -69,76 +81,75 @@ export default function CheckoutMethod() {
   return (
     <Window topInset bottomInset>
       <View margin='large'>
-        {loading ? (
-          <Text marginTop='small'>buscando ...</Text>
-        ) : (
-          <View>
 
-            <View direction='column'>
-              <Text>
-                Carrinho no Storage: {cart.cartId}
+        <View direction='column'>
+          <Text>
+            Checkout id: {fullCart?.checkoutId}
+          </Text>
+          <Text>
+            Total de Produtos: {cart.quantity || '0'}
+          </Text>
+        </View>
+
+        {fullCart &&
+          <View direction='column'>
+            <Text>Checkout value: {fullCart.total || '0'}</Text>
+            {fullCart.products?.map((product, idx) => (
+              <Text paddingLeft='small' key={`p_${idx}`}>
+                {product.quantity} {product.name}
               </Text>
-              <Text>
-                Total de Produtos: {cart.quantity || '0'}
-              </Text>
-            </View>
-
-            {fullCart &&
-              <View direction='column'>
-                <Text>Checkout value: {fullCart.total || '0'}</Text>
-                {fullCart.products?.map((product, idx) => (
-                  <Text paddingLeft='small' key={`p_${idx}`}>
-                    {product.quantity} {product.name}
-                  </Text>
-                ))}
-              </View>
-            }
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getCheckout} label={`Get Checkout`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={addItemCart} label={`Add Item to Cart`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={customerAssociate} label={`Associa usuário ao carrinho`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={addressAssociate} label={`Associa endereço ao carrinho`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getShippingQuotes} label={`Opções de frete`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={setShippingQuotes} label={`Selecionar frete`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getPaymentMethods} label={`Formas de pagamento`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={setPaymentMethod} label={`Setar forma de pagamento`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={checkoutComplete} label={`Completar pagamento`} />
-            </View>
-
-            <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
-              <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label='Voltar' />
-            </View>
-
-            <View>
-
-            </View>
+            ))}
           </View>
-        )}
+        }
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={newCart} label={`Cria novo carrinho`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={login} label={`Login`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={getCheckout} label={`Get Checkout`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={addItemCart} label={`Add Item to Cart`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={customerAssociate} label={`Associa usuário ao carrinho`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={addressAssociate} label={`Associa endereço ao carrinho`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={getShippingQuotes} label={`Opções de frete`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={setShippingQuotes} label={`Selecionar frete`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={getPaymentMethods} label={`Formas de pagamento`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={setPaymentMethod} label={`Setar forma de pagamento`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={checkoutComplete} label={`Completar pagamento`} />
+        </View>
+
+        <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
+          <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label='Voltar' />
+        </View>
+
       </View>
     </Window>
   )

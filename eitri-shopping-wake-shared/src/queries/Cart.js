@@ -20,6 +20,9 @@ const checkoutModel = `
     customizationValue
     discount
     login
+    kits {
+      name
+    }
     metadata {
       key
       value
@@ -32,8 +35,63 @@ const checkoutModel = `
       minimumProductQuantityMessage
     }
     orders {
+      adjustments {
+        name
+        type
+        value
+      }
+      date
+      discountValue
+      interestValue
       orderId
       orderStatus
+      products {
+        adjustments {
+          name
+          additionalInformation
+          type
+          value
+        }
+        attributes {
+          name
+          value
+        }
+        imageUrl
+        name
+        productVariantId
+        quantity
+        value
+      }
+      shippingValue
+      totalValue
+      delivery {
+        address {
+          address
+          cep
+          city
+          complement
+          name
+          isPickupStore
+          neighborhood
+          pickupStoreText
+        }
+        cost
+        deliveryTime
+        name
+      }
+      dispatchTimeText
+      payment {
+        invoice {
+          digitableLine
+          paymentLink
+        }
+        name
+        pix {
+          qrCode
+          qrCodeExpirationDate
+          qrCodeUrl
+        }
+      }
     }
     paymentFees
     selectedPaymentMethod {

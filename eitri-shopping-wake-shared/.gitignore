@@ -8,6 +8,6 @@ folder.hash
 /.dccache
 teste
 
-/jsconfig.json
+jsconfig.json
 /**/.workspaces
 /.release
