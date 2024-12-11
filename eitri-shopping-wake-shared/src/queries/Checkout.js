@@ -1,32 +1,191 @@
+const checkoutModel = `
+    cep
+    checkingAccountActive
+    checkingAccountValue
+    checkoutId
+    completed
+    coupon
+    couponDiscount
+    customer {
+      checkingAccountBalance
+      cnpj
+      cpf
+      creditLimit
+      creditLimitBalance
+      customerId
+      customerName
+      email
+      phoneNumber
+    }
+    customizationValue
+    discount
+    login
+    kits {
+      name
+    }
+    metadata {
+      key
+      value
+    }
+    minimumRequirements {
+      isMinimumOrderValueReached
+      isMinimumProductQuantityReached
+      minimumOrderValue
+      minimumProductQuantity
+      minimumProductQuantityMessage
+    }
+    orders {
+      adjustments {
+        name
+        type
+        value
+      }
+      date
+      discountValue
+      interestValue
+      orderId
+      orderStatus
+      products {
+        adjustments {
+          name
+          additionalInformation
+          type
+          value
+        }
+        attributes {
+          name
+          value
+        }
+        imageUrl
+        name
+        productVariantId
+        quantity
+        value
+      }
+      shippingValue
+      totalValue
+      delivery {
+        address {
+          address
+          cep
+          city
+          complement
+          name
+          isPickupStore
+          neighborhood
+          pickupStoreText
+        }
+        cost
+        deliveryTime
+        name
+      }
+      dispatchTimeText
+      payment {
+        invoice {
+          digitableLine
+          paymentLink
+        }
+        name
+        pix {
+          qrCode
+          qrCodeExpirationDate
+          qrCodeUrl
+        }
+      }
+    }
+    paymentFees
+    selectedPaymentMethod {
+      html
+      id
+      installments {
+        adjustment
+        number
+        total
+        value
+      }
+      paymentMethodId
+      scripts
+      selectedInstallment {
+        adjustment
+        number
+        total
+        value
+      }
+      suggestedCards {
+        brand
+        key
+        name
+        number
+      }
+    }
+    updateDate
+    completed
+    checkoutId
+    url
+    products {
+      name
+      productAttributes {
+        name
+        value
+        type
+      }
+      listPrice
+      price
+      ajustedPrice
+      productId
+      productVariantId
+      imageUrl
+      quantity
+      customization{
+        id
+        values{
+          cost
+          name
+          value
+        }
+      }
+    }
+    selectedAddress {
+      addressNumber
+      cep
+      cep
+      city
+      complement
+      id
+      neighborhood
+      receiverName
+      referencePoint
+      state
+      street
+    }
+    shippingFee
+    subtotal
+    total
+    totalDiscount
+    selectedShipping {
+      deadline
+      deadlineInHours
+      deliverySchedule {
+        date
+        endDateTime
+        endTime
+        startDateTime
+        startTime
+      }
+      name
+      shippingQuoteId
+      type
+      value
+    }
+`
+
 export const queryCheckoutCustomerAssociate = `
 mutation($customerAccessToken: String!, $checkoutId: Uuid!) {
   checkoutCustomerAssociate(
     customerAccessToken: $customerAccessToken
     checkoutId: $checkoutId
   ) {
-  cep
-  checkoutId
-  customer {
-    cnpj
-    cpf
-    creditLimit
-    creditLimitBalance
-    customerId
-    customerName
-    email
-    phoneNumber
-  }
-  selectedAddress {
-    addressNumber
-    cep
-    city
-    complement
-    id
-    neighborhood
-    referencePoint
-    state
-    street
-  }
+    ${checkoutModel}
 }
 }`
 
@@ -37,10 +196,7 @@ mutation($customerAccessToken: String!, $addressId: ID!, $checkoutId: Uuid!) {
     addressId: $addressId
     checkoutId: $checkoutId
   ) {
-    cep
-    checkoutId
-    url
-    updateDate
+      ${checkoutModel}
   }
 }`
 
@@ -65,31 +221,13 @@ mutation(
   $shippingQuoteId: Uuid!
   $additionalInformation: InStorePickupAdditionalInformationInput
 ) {
-  checkoutSelectShippingQuote(
+checkoutSelectShippingQuote(
     checkoutId: $checkoutId
     shippingQuoteId: $shippingQuoteId
     additionalInformation: $additionalInformation
   ) {
-  cep
-  checkoutId
-  shippingFee
-  total
-  subtotal
-  selectedShipping {
-    deadline
-    name
-    shippingQuoteId
-    type
-    value
-    deliverySchedule {
-      date
-      endDateTime
-      endTime
-      startDateTime
-      startTime
+    ${checkoutModel}
     }
-  }
-}
 }`
 
 export const queryPaymentMethods = `
@@ -107,24 +245,7 @@ mutation($checkoutId: Uuid!, $paymentMethodId: ID!) {
     checkoutId: $checkoutId
     paymentMethodId: $paymentMethodId
   ) {
-  checkoutId
-  total
-  subtotal
-  selectedPaymentMethod {
-    id
-    installments {
-      adjustment
-      number
-      total
-      value
-    }
-    selectedInstallment {
-      adjustment
-      number
-      total
-      value
-    }
-  }
+    ${checkoutModel}
 }
 }`
 
@@ -141,66 +262,6 @@ mutation (
     comments: $comments
     customerAccessToken: $customerAccessToken
   ) {
-  checkoutId
-  completed
-  orders {
-    adjustments {
-      name
-      type
-      value
-    }
-    date
-    discountValue
-    interestValue
-    orderId
-    orderStatus
-    products {
-      adjustments {
-        name
-        additionalInformation
-        type
-        value
-      }
-      attributes {
-        name
-        value
-      }
-      imageUrl
-      name
-      productVariantId
-      quantity
-      value
-    }
-    shippingValue
-    totalValue
-    delivery {
-      address {
-        address
-        cep
-        city
-        complement
-        name
-        isPickupStore
-        neighborhood
-        pickupStoreText
-      }
-      cost
-      deliveryTime
-      name
-    }
-    dispatchTimeText
-    payment {
-      invoice {
-        digitableLine
-        paymentLink
-      }
-      name
-      pix {
-        qrCode
-        qrCodeExpirationDate
-        qrCodeUrl
-      }
-    }
+  ${checkoutModel}
   }
-}
 }`
