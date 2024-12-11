@@ -1,3 +1,4 @@
+import Eitri from 'eitri-bifrost'
 import GraphqlService from './GraphqlService'
 import StorageService from "./StorageService";
 import { ApiError } from './Api';
@@ -17,6 +18,7 @@ import {
   queryCustomerPasswordChange,
   querySimpleLogin
 } from "../queries/Customer";
+import {Wake} from "../export";
 
 export default class CustomerService {
   static STORAGE_USER_TOKEN_KEY = 'user_key'
