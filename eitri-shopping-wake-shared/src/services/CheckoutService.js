@@ -4,7 +4,7 @@ import {queryCreateCustomer, queryCustomer, queryCustomerAccessTokenRenew, query
 import StorageService from "./StorageService";
 import {
   queryCheckoutAddressAssociate, queryCheckoutComplete,
-  queryCheckoutCustomerAssociate, queryCheckoutSelectPaymentMethod,
+  queryCheckoutCustomerAssociate, queryCheckoutSelectInstallment, queryCheckoutSelectPaymentMethod,
   queryCheckoutSelectShippingQuote, queryPaymentMethods,
   queryShippingQuotes
 } from "../queries/Checkout";
@@ -165,6 +165,28 @@ export default class CheckoutService {
       return response
     } catch (e) {
       console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
+      throw e
+    }
+  }
+
+  static async checkoutSelectInstallment(selectedPaymentMethodId, installmentNumber) {
+    try {
+
+      const [cart] = await Promise.all([
+        CartService.getCurrentOrCreateCart()
+      ])
+
+      const cartId = cart?.cartId
+
+      const response = await GraphqlService.query(queryCheckoutSelectInstallment, {
+        selectedPaymentMethodId,
+        installmentNumber,
+        checkoutId: cartId
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [checkoutSelectInstallment] Erro ao definir parcelas pagamento', e)
       throw e
     }
   }

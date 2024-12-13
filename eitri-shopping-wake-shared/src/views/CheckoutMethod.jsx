@@ -42,7 +42,7 @@ export default function CheckoutMethod() {
   }
 
   const addressAssociate = async () => {
-    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDM1fQ==")
+    const response = await WakeService.checkout.checkoutAddressAssociate("eyJFbnRpdHkiOiJDdXN0b21lckFkZHJlc3MiLCJJZCI6NzQ4NDU2fQ==")
     console.log('response >>', response)
   }
 
@@ -64,7 +64,12 @@ export default function CheckoutMethod() {
   }
 
   const setPaymentMethod = async () => {
-    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
+    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjk3MTl9")
+    console.log('response >>', response)
+  }
+
+  const setInstallments = async () => {
+    const response = await WakeService.checkout.checkoutSelectInstallment("7c3c7576-9aa3-48c0-8192-955e25500aea", 3)
     console.log('response >>', response)
   }
 
@@ -140,6 +145,10 @@ export default function CheckoutMethod() {
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={setPaymentMethod} label={`Setar forma de pagamento`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={setInstallments} label={`Definir parcelas cartão`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
