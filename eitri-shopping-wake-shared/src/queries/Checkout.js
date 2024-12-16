@@ -265,3 +265,18 @@ mutation (
   ${checkoutModel}
   }
 }`
+
+export const queryCheckoutSelectInstallment = `
+mutation (
+  $checkoutId: Uuid!
+  $selectedPaymentMethodId: Uuid!
+  $installmentNumber: Int!
+) {
+  checkoutSelectInstallment(
+    checkoutId: $checkoutId
+    selectedPaymentMethodId: $selectedPaymentMethodId
+    installmentNumber: $installmentNumber
+  ) {
+  ${checkoutModel}
+  }
+}`
