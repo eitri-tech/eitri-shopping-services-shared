@@ -133,13 +133,15 @@ export default class VtexCartService {
    * @param {string} params.currentPage - A página atual no contexto da operação.
    * @returns {Promise<void>} - Uma promessa que resolve quando o item for adicionado.
    */
-	static async addItem({ item, salesChannel, quantity, seller, currentPage }) {
+	static async addItem({ id, item, itemId, salesChannel, quantity, seller, sellers, currentPage }) {
+
+    const _quantity = item?.quantity ?? quantity ?? 1
 
 		try {
       const itemToSend = {
-        id: item?.itemId ?? item?.id,
-        quantity: parseInt(item?.quantity) ?? parseInt(quantity) ?? 1,
-        seller: item?.seller ?? seller ?? item?.sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers[0].sellerId ?? "1",
+        id: id ?? itemId ?? item?.itemId ?? item?.id,
+        quantity: parseInt(_quantity),
+        seller: item?.seller ?? seller ?? sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers[0].sellerId ?? "1",
       }
 
 			let orderFormId = await VtexCartService.getStoredOrderFormId()
@@ -169,133 +171,6 @@ export default class VtexCartService {
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
 			throw e
-		}
-	}
-
-	static async addItemsRiHappy(item, orderFormId, bindingId) {
-		try {
-			const workspace = 'master'
-			const maxAge = 'medium'
-			const appsEtag = 'remove'
-			const domain = 'store'
-			const locale = 'pt-BR'
-			const operationName = 'addToCart'
-
-			const items = [{ ...item, id: +item?.id, quantity: +item.quantity, options: [{ assemblyId: '' }] }]
-
-			const extensions = {
-				persistedQuery: {
-					version: 1,
-					sha256Hash: '6e4a14a8ceb5161a8f185869e3ddc5d6110aec08500964fe3dc8940c3806cb89',
-					sender: 'vtex.checkout-resources@0.x',
-					provider: 'vtex.checkout-graphql@0.x'
-				},
-				variables: btoa(
-					JSON.stringify({
-						items: items,
-						allowedOutdatedData: ['paymentData']
-					})
-				)
-			}
-
-			let params = new URLSearchParams({
-				workspace,
-				maxAge,
-				appsEtag,
-				domain,
-				locale,
-				__bindingId: bindingId
-			})
-
-			let payload = {
-				operationName: operationName,
-				variables: {},
-				extensions: extensions
-			}
-
-			const response = await VtexCaller.post(
-				`/_v/segment/graphql/v1?${params.toString()}`,
-				payload,
-				{
-					headers: {
-						'Content-Type': 'application/json',
-						'Accept': 'application/json',
-						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-					}
-				}
-			)
-			return response?.data
-		} catch (error) {
-			console.error('erro ao adicionar item no carrinho RiHappy', error)
-			throw error
-		}
-	}
-
-	static async addItemsShopclub(item, orderFormId, bindingId) {
-		try {
-			const workspace = 'master'
-			const maxAge = 'long'
-			const appsEtag = 'remove'
-			const domain = 'store'
-			const locale = 'pt-BR'
-			const operationName = 'addToCart'
-
-			const items = [{ ...item, id: +item?.id, quantity: +item.quantity, options: [{ assemblyId: '' }] }]
-
-			const extensions = {
-				persistedQuery: {
-					version: 1,
-					sha256Hash: '4d50e6fdc0aae45bf199a59e67922d4d98cbf9da8c1f69b46c873e146e62fc12',
-					sender: 'vtex.checkout-resources@0.x',
-					provider: 'vtex.checkout-graphql@0.x'
-				},
-				variables: btoa(
-					JSON.stringify({
-						items: items,
-						marketingData: {
-							utmSource: 'afilio',
-							utmMedium: 'afiliados',
-							utmCampaign: 'shopclub',
-							utmiPage: '',
-							utmiPart: '',
-							utmiCampaign: ''
-						},
-						allowedOutdatedData: ['paymentData']
-					})
-				)
-			}
-
-			let params = new URLSearchParams({
-				workspace,
-				maxAge,
-				appsEtag,
-				domain,
-				locale,
-				__bindingId: bindingId
-			})
-
-			let payload = {
-				operationName: operationName,
-				variables: {},
-				extensions: extensions
-			}
-
-			const response = await VtexCaller.post(
-				`/_v/segment/graphql/v1?${params.toString()}`,
-				payload,
-				{
-					headers: {
-						'Content-Type': 'application/json',
-						'Accept': 'application/json',
-						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-					}
-				},
-        "https://www.shopclub.com.br"
-			)
-			return response?.data
-		} catch (error) {
-			console.error('erro ao adicionar item no carrinho ShopClub', error)
-			throw error
 		}
 	}
 

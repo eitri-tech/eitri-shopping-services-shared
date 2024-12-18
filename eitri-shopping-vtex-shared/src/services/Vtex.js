@@ -2,10 +2,10 @@ import VtexCatalogService from './vtex/catalog/vtexCatalogService'
 import VtexCustomerService from './vtex/customer/vtexCustomerService'
 import VtexCheckoutService from './vtex/checkout/vtexCheckoutService'
 import VtexCartService from './vtex/cart/VtexCartService'
-import VtexIntelligentSearchService from './vtex/intelligentSearch/vtexIntelligentSearchService'
 import VtexCmsService from './vtex/cms/vtexCmsService'
 import VtexWishlistService from './vtex/wishlist/vtexWishlistService'
 import VtexCaller from './vtex/_helpers/_vtexCaller'
+import App from "./App";
 
 export default class Vtex {
 	static configs = {
@@ -67,12 +67,14 @@ export default class Vtex {
 		}
 	}
 
+  static tryAutoConfigure = async (overwrites) => {
+    return await App.tryAutoConfigure(overwrites)
+  }
 
 	static catalog = VtexCatalogService
 	static checkout = VtexCheckoutService
 	static customer = VtexCustomerService
 	static cart = VtexCartService
-	static intelligentSearch = VtexIntelligentSearchService
 	static cms = VtexCmsService
 	static wishlist = VtexWishlistService
 }
