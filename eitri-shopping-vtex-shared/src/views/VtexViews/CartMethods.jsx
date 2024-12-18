@@ -8,11 +8,12 @@ export default function CartMethods() {
 
   const addToCart = async () => {
     const item = {
-        "id": "100329818",
+        "id": "2143621557",
         "quantity": 1,
         "seller": "1",
       }
-    const cart = await Vtex.cart.addItem({ item, salesChannel: "1" })
+
+    const cart = await Vtex.cart.addItem(item)
   }
 
   const simulateCart = async () => {

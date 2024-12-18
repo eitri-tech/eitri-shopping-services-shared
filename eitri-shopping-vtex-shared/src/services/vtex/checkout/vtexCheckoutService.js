@@ -8,8 +8,6 @@ import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import GAService from '../../tracking/GAService'
 
 export default class VtexCheckoutService {
-	static VTEX_CART_KEY = 'vtex_cart_key'
-	static CART_MARKETING_TAGS = 'eitri-shop'
 
 	static async selectPaymentOption(paymentOption) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()

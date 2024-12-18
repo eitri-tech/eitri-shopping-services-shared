@@ -1,5 +1,4 @@
 import GAService from './GAService'
-import Tracking from '../Tracking'
 
 export default class GAVtexInternalService {
 

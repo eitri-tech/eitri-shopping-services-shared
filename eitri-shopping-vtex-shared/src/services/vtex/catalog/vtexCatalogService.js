@@ -9,16 +9,16 @@ export default class VtexCatalogService {
 		return Vtex.configs.searchOptions
 	}
 
+  static filterAvailableProductsOnly = products => {
+    if (!products && products.length === 0) return []
+    return products.filter(product =>
+      product?.items?.some(item => item.sellers.some(seller => seller.commertialOffer?.AvailableQuantity > 0))
+    )
+  }
+
 	static async getProductById(productId) {
 		const result = await VtexCaller.get(`api/catalog_system/pub/products/search?fq=productId:${productId}`)
 		return Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null
-	}
-
-	static filterAvailableProductsOnly = products => {
-		if (!products && products.length === 0) return []
-		return products.filter(product =>
-			product?.items?.some(item => item.sellers.some(seller => seller.commertialOffer?.AvailableQuantity > 0))
-		)
 	}
 
 	static async searchProduct(text, options = {}, currentPage = null) {
@@ -69,41 +69,18 @@ export default class VtexCatalogService {
 		return availableProducts
 	}
 
+  static async legacySearch(search, currentPage) {
+    let url = `api/catalog_system/pub/products/search/${search}`
+    const result = await VtexCaller.get(url)
+    GAVtexInternalService.viewItemList(result.data, 'products_search', search, currentPage)
+    return result.data
+  }
+
+  /*
+    @deprecated Esta função será removida
+  */
 	static async getSearchProducts(search, currentPage) {
-		let url = `api/catalog_system/pub/products/search/${search}`
-
-		const result = await VtexCaller.get(url)
-
-		GAVtexInternalService.viewItemList(result.data, 'products_search', search, currentPage)
-		return result.data
-	}
-
-	static async getContent(template, path, blockId) {
-		const { bindingId, host } = Vtex.configs
-		console.log('Obtendo conteúdo do graphql', bindingId, host)
-		const result = await Eitri.http.post(
-			`https://${host}/_v/segment/graphql/v1?workspace=master&maxAge=short&appsEtag=remove&domain=store&locale=pt-BR`,
-			{
-				query: 'query($template: String!, $treePath: String!, $pageContext: PageContextInput!, $blockId: String!) { listContentWithSchema(template: $template, treePath: $treePath, pageContext: $pageContext, blockId: $blockId)  @context(provider: "vtex.pages - graphql@2.116.14")  { content { contentId contentJSON label origin condition { id } } schemaJSON } }',
-				variables: {
-					template: template,
-					treePath: path,
-					blockId: blockId,
-					pageContext: {
-						id: 'store.home',
-						type: 'route'
-					},
-					bindingId: bindingId || ''
-				}
-			},
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json'
-				}
-			}
-		)
-		return result?.data
+		return await VtexCatalogService.legacySearch(search, currentPage)
 	}
 
 	static async getWhoSawAlsoSaw(productId, currentPage) {

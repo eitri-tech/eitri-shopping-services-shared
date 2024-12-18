@@ -23,7 +23,9 @@ export default class App {
     }
 
     try {
-      console.log('[SHARED] Provider Vtex encontrado, configurando automaticamente. Account:', remoteConfig.providerInfo.account, 'Host:', remoteConfig.providerInfo.host)
+      console.log('[SHARED] ********* Config Vtex encontrada, configurando automaticamente *******')
+      console.log('[SHARED] Account ======>', remoteConfig.providerInfo.account)
+      console.log('[SHARED] Host ======>', remoteConfig.providerInfo.host)
       App.configs.provider = 'VTEX'
       await Vtex.configure(remoteConfig)
     } catch (error) {
@@ -57,7 +59,7 @@ export default class App {
         },
       }
 
-      console.log('[SHARED] App configurado com sucesso')
+      console.log('[SHARED] *********** App configurado com sucesso ************')
 
       return App.configs
     } catch (error) {
