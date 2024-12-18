@@ -133,15 +133,15 @@ export default class VtexCartService {
    * @param {string} params.currentPage - A página atual no contexto da operação.
    * @returns {Promise<void>} - Uma promessa que resolve quando o item for adicionado.
    */
-	static async addItem({ id, item, salesChannel, quantity, seller, currentPage }) {
+	static async addItem({ id, item, itemId, salesChannel, quantity, seller, sellers, currentPage }) {
 
     const _quantity = item?.quantity ?? quantity ?? 1
 
 		try {
       const itemToSend = {
-        id: id ?? item?.itemId ?? item?.id,
+        id: id ?? itemId ?? item?.itemId ?? item?.id,
         quantity: parseInt(_quantity),
-        seller: item?.seller ?? seller ?? item?.sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers[0].sellerId ?? "1",
+        seller: item?.seller ?? seller ?? sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers[0].sellerId ?? "1",
       }
 
 			let orderFormId = await VtexCartService.getStoredOrderFormId()
