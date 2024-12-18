@@ -209,3 +209,145 @@ export const queryRemoveWishlistProduct = `mutation ($customerAccessToken: Strin
     productName
   }
 }`
+
+export const queryCustomerOrders = `
+query ($customerAccessToken:String!) {
+  customer(customerAccessToken:$customerAccessToken) {
+    orders {
+    items {
+      checkingAccount
+      checkoutId
+      coupon
+      date
+      deliveryAddress {
+        addressNumber
+        cep
+        city
+        complement
+        country
+        neighboorhood
+        receiverName
+        referencePoint
+        state
+        street
+      }
+      discount
+      interestFee
+      invoices {
+        accessKey
+        invoiceCode
+        serialDigit
+        url
+      }
+      kits {
+        alias
+        imageUrl
+        kitGroupId
+        kitId
+        listPrice
+        name
+        price
+        products {
+          productVariantId
+        }
+        quantity
+        totalListPrice
+      }
+      notes {
+        date
+        note
+        user
+      }
+      orderId
+      paymentDate
+      payments {
+        additionalInfo {
+          key
+          value
+        }
+        boleto {
+          digitableLine
+          paymentLink
+        }
+        card {
+          brand
+          maskedNumber
+        }
+        discount
+        fees
+        installmentValue
+        installments
+        message
+        paymentOption
+        pix {
+          qrCode
+          qrCodeExpirationDate
+          qrCodeUrl
+        }
+        status
+        total
+      }
+      products {
+        productVariantId
+        name
+        quantity
+        salePrice
+        sku
+        image
+        trackings {
+          code
+          url
+        }
+      }
+      promotions
+      shippingFee
+      shippings {
+        deadline
+        deadlineInHours
+        deadlineText
+        distributionCenterId
+        pickUpId
+        products {
+          distributionCenterId
+          price
+          productVariantId
+          quantity
+        }
+        promotion
+        refConnector
+        scheduleFrom
+        shippingFee
+        shippingName
+        shippingTableId
+        total
+        volume
+        weight
+      }
+      status {
+        changeDate
+        status
+        statusId
+      }
+      statusHistory {
+        changeDate
+        status
+        statusId
+      }
+      subscriptions {
+        recurringDays
+        recurringName
+        subscriptionGroupId
+        subscriptionId
+        subscriptionOrderId
+        value
+      }
+      subtotal
+      total
+      trackings {
+        code
+        url
+      }
+    }
+  }
+  }
+}`

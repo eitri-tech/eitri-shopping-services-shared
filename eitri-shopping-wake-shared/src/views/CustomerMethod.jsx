@@ -165,6 +165,11 @@ export default function CustomerMethod() {
     console.log('result', result)
   }
 
+  const customerOrders = async () => {
+    const result = await WakeService.customer.getCustomerOrders()
+    console.log('result', result)
+  }
+
   const back = () => {
     Eitri.navigation.back()
   }
@@ -234,6 +239,10 @@ export default function CustomerMethod() {
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
           <Button wide color='background-color' onPress={customerPasswordChangeByRecovery} label='Nova senha por recuperação' />
+        </View>
+
+        <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
+          <Button wide color='background-color' onPress={customerOrders} label='Meus pedidos' />
         </View>
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
