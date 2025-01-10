@@ -88,4 +88,10 @@ export default class VtexCatalogService {
 		GAVtexInternalService.viewItemList({ products: result?.data }, 'whosawalsosaw', productId, currentPage)
 		return result?.data
 	}
+
+	static async getCategoryTree(categoryLevels) {
+		const result = await VtexCaller.get(`api/catalog_system/pub/category/tree/${categoryLevels}`)
+		return result?.data
+	}
+
 }
