@@ -35,9 +35,9 @@ export default class WakeService {
 		if (providerInfo.cartHost && !providerInfo.cartHost.startsWith('https://')) {
 			providerInfo.cartHost = 'https://' + providerInfo.cartHost
 		}
-    if (providerInfo.apiHost && !providerInfo.apiHost.startsWith('https://')) {
-      providerInfo.apiHost = 'https://' + providerInfo.apiHost
-    }
+		if (providerInfo.apiHost && !providerInfo.apiHost.startsWith('https://')) {
+			providerInfo.apiHost = 'https://' + providerInfo.apiHost
+		}
 
 		WakeService.configs = {
 			...providerInfo,
@@ -65,6 +65,17 @@ export default class WakeService {
 			await WakeService.configure(remoteConfig)
 		} catch (error) {
 			console.error('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
+			throw error
+		}
+
+		try {
+			const environment = await Eitri.environment.getName()
+			if (remoteConfig.clarityId && environment === 'prod') {
+				WakeService.configs.clarityId = remoteConfig.clarityId
+				await Eitri.clarity.init(remoteConfig.clarityId)
+			}
+		} catch (error) {
+			console.error('[SHARED] Error clarity ', remoteConfig.clarityId, error)
 			throw error
 		}
 
