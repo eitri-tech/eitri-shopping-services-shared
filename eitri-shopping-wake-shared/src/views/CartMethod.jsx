@@ -46,7 +46,7 @@ export default function CartMethod() {
 
   const removeItemCart = async () => {
     setLoading(true)
-    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 343687, quantity: 1 }])
+    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 343687, quantity: 1}], {products: [{ productVariantId: 343687, quantity: 1, name: 'Teste', price: 59.90 }]})
     setFullCart(_fullCart)
     setLoading(false)
   }

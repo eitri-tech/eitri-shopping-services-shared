@@ -4,7 +4,8 @@ import StorageService from './StorageService'
 import GraphqlService from './GraphqlService'
 import { queryAddItem, queryGetCheckout, queryRemoveItem } from '../queries/Cart'
 import CustomerService from "./CustomerService";
-// import GAVtexInternalService from '../../tracking/GAVtexInternalService'
+import GAVtexInternalService from './tracking/GAVtexInternalService'
+import GAService from './tracking/GAService'
 
 export default class CartService {
 	static CART_KEY = 'cart_key'
@@ -125,7 +126,9 @@ export default class CartService {
 				"checkoutId": _cartId,
 				"products": products
 			})
-			// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
+
+			GAVtexInternalService.addItemToCart(products, response.data)
+
 			return response.data
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
@@ -136,20 +139,22 @@ export default class CartService {
 	/**
 	* Remove uma quantidade de produto do carrinho de compras.
 	* @param {Array<{productVariantId: number, quantity: number}>} products - A lista de produtos a serem removidos do carrinho.
-	* @param {cartId} Id do carrinho, se não for passado pegará do Storage
+	* @param {cart} carrinho - O carrinho de compras atual.
 	* @returns {CheckoutObject} O objeto de checkout atualizado.
 	*/
-	static async removeItems(products, cartId) {
-		const _cartId = cartId || await StorageService.getStorageItem(CartService.CART_KEY)
+	static async removeItems(products, cart) {
+		const _cartId = cart?.checkoutId || await StorageService.getStorageItem(CartService.CART_KEY)
+
 		try {
 			const response = await GraphqlService.query(queryRemoveItem, {
 				"checkoutId": _cartId,
 				"products": products
 			})
-			// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
+
+			GAVtexInternalService.removeItemFromCart(products, cart)
 			return response.data
 		} catch (e) {
-			console.error('[SHARED] [removeItems] Erro ao remover itens ao carrinho', e)
+			GAService.logError('Error on removeItemFromCart', e)
 			throw e
 		}
 	}

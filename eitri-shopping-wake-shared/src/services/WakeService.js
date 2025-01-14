@@ -5,6 +5,7 @@ import CategoryService from './CategoryService'
 import CartService from './CartService'
 import CustomerService from "./CustomerService";
 import CheckoutService from "./CheckoutService";
+import ClarityService from './tracking/ClarityService'
 
 export default class WakeService {
 	static graphQl = GraphqlService
@@ -16,6 +17,9 @@ export default class WakeService {
 
 
 	static configs = {
+		verbose: false,
+		autoTriggerGAEvents: true,
+		clarityId: '',
 		provider: 'WAKE',
 		account: '',
 		tcs_account: '',
@@ -42,6 +46,8 @@ export default class WakeService {
 		WakeService.configs = {
 			...providerInfo,
 			...appConfigs,
+			verbose: remoteConfig.verbose ?? false,
+			autoTriggerGAEvents: remoteConfig?.autoTriggerGAEvents ?? true,
 			graphqlApi: `https://storefront-api.fbits.net/graphql`,
 			searchOptions,
 			segments,
@@ -88,6 +94,16 @@ export default class WakeService {
 			console.error('[SHARED] Error App configure ', error)
 			throw error
 		}
+
+		try {
+			if (remoteConfig.clarityId) {
+			  WakeService.configs.clarityId = remoteConfig.clarityId
+			  ClarityService.init(remoteConfig.clarityId)
+			}
+		  } catch (error) {
+			console.error('[SHARED] Error clarity ', remoteConfig.ecommerceProvider, error)
+			throw error
+		  }
 
 		console.log(`[SHARED] App WAKE ${WakeService.configs.account} configurado com sucesso`)
 		return WakeService.configs
