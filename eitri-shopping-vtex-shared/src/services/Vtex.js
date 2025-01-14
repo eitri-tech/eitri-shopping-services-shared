@@ -18,7 +18,7 @@ export default class Vtex {
 	}
 
 	static configure = async remoteConfig => {
-		const { providerInfo, segments, searchOptions, marketingTag, storePreferences } = remoteConfig
+		const { appConfigs, providerInfo, segments, searchOptions, marketingTag, storePreferences } = remoteConfig
 
 		const { account, host, faststore, vtexCmsUrl, bindingId, salesChannel } = providerInfo
 
@@ -29,6 +29,7 @@ export default class Vtex {
 
 		Vtex.configs = {
 			account,
+      appConfigs,
 			api: `https://${account}.vtexcommercestable.com.br`,
 			host: _host,
 			searchOptions,

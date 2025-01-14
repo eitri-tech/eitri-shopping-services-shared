@@ -8,11 +8,11 @@
       "eitri-bifrost": [
         "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-vtex-shared/node_modules/eitri-bifrost"
       ],
-      "eitri-luminus": [
-        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-vtex-shared/node_modules/eitri-app-components"
-      ],
       "react/jsx-runtime": [
         "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-vtex-shared/node_modules/react/jsx-dev-runtime"
+      ],
+      "eitri-luminus": [
+        "/var/folders/tp/mgwmq3416rx3zs9gwl3w4lcc0000gn/T/eitri-shopping-vtex-shared/node_modules/eitri-app-components"
       ]
     },
     "target": "ESNext",
