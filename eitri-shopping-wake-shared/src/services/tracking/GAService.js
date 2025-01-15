@@ -28,7 +28,6 @@ export default class GAService {
 
 			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logEvent) {
 				Eitri.exposedApis.fb.logEvent({ eventName: event, data: params })
-        console.log('[Analytics]', '[logEvent]', WakeService.configs)
         if (WakeService.configs.gaVerbose) {
           console.log('[Analytics]', '[logEvent]', { eventName: event, data: params })
         }

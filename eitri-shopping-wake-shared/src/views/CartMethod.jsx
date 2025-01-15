@@ -17,6 +17,7 @@ export default function CartMethod() {
       const _cart = await WakeService.cart.getCart()
       console.log('_cart >>', _cart)
       setCart(_cart)
+      setLoading(false)
     } catch (e) {
       setLoading(false)
     }

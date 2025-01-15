@@ -32,7 +32,6 @@ export default class CartService {
 
   /**
    * Pega carrinho de compras completo
-   * @param {cartId} Id do carrinho, se não existir procura no Storage.
    * @returns {CheckoutObject} Objeto de carrinho completo
    */
   static async getCheckout() {
