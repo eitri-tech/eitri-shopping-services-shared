@@ -97,6 +97,8 @@ export default class CartService {
 
       CartService.CACHED_CART = response?.data
 
+      await StorageService.setStorageItem(CartService.CART_KEY, response.data.checkoutId)
+
 			return response?.data
 		} catch (e) {
 			console.error('[SHARED] [generateNewCart] Erro ao gerar novo carrinho', e)

@@ -113,81 +113,26 @@ export default class GAWakeInternalService {
 		}
 	}
 
-	static addPaymentInfo = (cart, currentPage = null) => {
+	static addPaymentInfo = (cart) => {
 		try {
-			const items = cart.items.map((addedItem, index) => {
-				const item = cart.items.find(i => i.id === addedItem.id)
-				if (!item) {
-					return null
-				}
+      const items = cart.products.map(product => {
+        return {
+          item_id: product.productVariantId,
+          item_name: product.name,
+          price: product.price,
+          quantity: product.quantity
+        }
+      })
 
-				return {
-					item_id: item.id,
-					item_name: item.skuName,
-					item_brand: item.additionalInfo?.brandName,
-					price: item.price / 100,
-					quantity: item.quantity
-				}
-			})
+      const params = {
+        currency: 'BRL',
+        value: cart?.total,
+        items: items
+      }
 
-			let shippingSelected = cart?.shipping?.options.find(item => item.isCurrent === true)
-
-			const params = {
-				currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-				value: cart?.value / 100,
-				coupon: cart?.marketingData?.coupon,
-				shipping_tier: shippingSelected?.label,
-				payment_type: cart?.payments[0].name,
-				items: items
-			}
-
-			GAService.logEvent('add_payment_info', currentPage, params)
+			GAService.logEvent('add_payment_info', params)
 		} catch (error) {
 			GAService.logError('Error on begin checkout', error, currentPage)
-		}
-	}
-
-	static viewItemList = (items, origin, search, currentPage) => {
-		try {
-			const listItems = items.products.map(item => {
-
-				return {
-					item_id: item.productId,
-					item_name: item.productName,
-					item_brand: item.brand,
-					price: item.items[0].sellers[0].commertialOffer.Price
-				}
-			})
-			const params = {
-				item_list_id: search,
-				item_list_name: origin,
-				items: listItems
-			}
-
-			GAService.logEvent('view_item_list', currentPage, params)
-		} catch (error) {
-			GAService.logError('Error on viewItemList', error, currentPage)
-		}
-	}
-
-	static sendViewItem = (product, currentPage) => {
-		try {
-			const params = {
-				currency: 'BRL',
-				value: product?.items[0]?.sellers[0]?.commertialOffer?.Price,
-				items: [
-					{
-						item_id: product.productId,
-						item_name: product.productName,
-						item_brand: product.brand,
-						price: product.items[0].sellers[0].commertialOffer.Price
-					}
-				]
-			}
-
-			GAService.logEvent('view_item', currentPage, params)
-		} catch (error) {
-			GAService.logError('Error on sendViewItem', error, currentPage)
 		}
 	}
 
@@ -206,7 +151,7 @@ export default class GAWakeInternalService {
         currency: 'BRL',
         value: cart?.total,
         transaction_id: "T_12345",
-        shipping: cart?.shippingFee,
+        shipping: cart?.orders?.[0]?.orderId,
         items: items
       }
 

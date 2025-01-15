@@ -18,7 +18,7 @@ export default class WakeService {
 
 	static configs = {
 		verbose: false,
-    gaVerbose: true,
+    gaVerbose: false,
 		autoTriggerGAEvents: true,
 		clarityId: '',
 		provider: 'WAKE',
