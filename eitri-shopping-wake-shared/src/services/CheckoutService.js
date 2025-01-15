@@ -1,33 +1,29 @@
-import Eitri from 'eitri-bifrost'
 import GraphqlService from './GraphqlService'
-import {queryCreateCustomer, queryCustomer, queryCustomerAccessTokenRenew, queryLogin} from "../queries/Customer";
-import StorageService from "./StorageService";
 import {
   queryCheckoutAddressAssociate, queryCheckoutComplete,
   queryCheckoutCustomerAssociate, queryCheckoutSelectInstallment, queryCheckoutSelectPaymentMethod,
   queryCheckoutSelectShippingQuote, queryPaymentMethods,
   queryShippingQuotes
 } from "../queries/Checkout";
-import WakeService from "./WakeService";
 import CartService from "./CartService";
 import CustomerService from "./CustomerService";
 import objectToQueryString from "../utils/objectToQueryString";
+import StorageService from "./StorageService";
+import GAWakeInternalService from "./tracking/GAWakeInternalService";
 
 export default class CheckoutService {
 
   static async checkoutCustomerAssociate() {
     try {
 
-      const [cart, token] = await Promise.all([
-        CartService.getCurrentOrCreateCart(),
+      const [cartId, token] = await Promise.all([
+        StorageService.getStorageItem(CartService.CART_KEY),
         CustomerService.getCustomerToken()
       ])
 
-      if (!token) {
+      if (!cartId || !token) {
         return null
       }
-
-      const cartId = cart?.cartId
 
       const response = await GraphqlService.query(queryCheckoutCustomerAssociate, {
         customerAccessToken: token,
@@ -44,16 +40,14 @@ export default class CheckoutService {
   static async checkoutAddressAssociate(addressId) {
     try {
 
-      const [cart, token] = await Promise.all([
-        CartService.getCurrentOrCreateCart(),
+      const [cartId, token] = await Promise.all([
+        StorageService.getStorageItem(CartService.CART_KEY),
         CustomerService.getCustomerToken()
       ])
 
-      if (!token) {
+      if (!cartId || !token) {
         return null
       }
-
-      const cartId = cart?.cartId
 
       const response = await GraphqlService.query(queryCheckoutAddressAssociate, {
         customerAccessToken: token,
@@ -70,9 +64,11 @@ export default class CheckoutService {
 
   static async shippingQuotes(useSelectedAddress = true) {
     try {
-      const cart = await CartService.getCurrentOrCreateCart()
+      const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
-      const cartId = cart?.cartId
+      if (!cartId) {
+        return null
+      }
 
       const response = await GraphqlService.query(queryShippingQuotes, {
         checkoutId: cartId
@@ -87,15 +83,20 @@ export default class CheckoutService {
 
   static async checkoutSelectShippingQuote(shippingQuoteId, additionalInformation) {
     try {
-      const cart = await CartService.getCurrentOrCreateCart()
 
-      const cartId = cart?.cartId
+      const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+      if (!cartId) {
+        return null
+      }
 
       const response = await GraphqlService.query(queryCheckoutSelectShippingQuote, {
         checkoutId: cartId,
         shippingQuoteId: shippingQuoteId,
         additionalInformation: additionalInformation
       })
+
+      GAWakeInternalService.addShippingInfo(response.checkoutSelectShippingQuote)
 
       return response
     } catch (e) {
@@ -106,9 +107,11 @@ export default class CheckoutService {
 
   static async paymentMethods() {
     try {
-      const cart = await CartService.getCurrentOrCreateCart()
+      const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
-      const cartId = cart?.cartId
+      if (!cartId) {
+        return null
+      }
 
       const response = await GraphqlService.query(queryPaymentMethods, {
         checkoutId: cartId
@@ -123,14 +126,18 @@ export default class CheckoutService {
 
   static async checkoutSelectPaymentMethod(paymentMethodId) {
     try {
-      const cart = await CartService.getCurrentOrCreateCart()
+      const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
-      const cartId = cart?.cartId
+      if (!cartId) {
+        return null
+      }
 
       const response = await GraphqlService.query(queryCheckoutSelectPaymentMethod, {
         checkoutId: cartId,
         paymentMethodId
       })
+
+      console.log('[SHARED]:', response)
 
       return response
     } catch (e) {
@@ -142,16 +149,14 @@ export default class CheckoutService {
   static async checkoutComplete(paymentData, comments) {
     try {
 
-      const [cart, token] = await Promise.all([
-        CartService.getCurrentOrCreateCart(),
+      const [cartId, token] = await Promise.all([
+        StorageService.getStorageItem(CartService.CART_KEY),
         CustomerService.getCustomerToken()
       ])
 
-      if (!token) {
+      if (!cartId || !token) {
         return null
       }
-
-      const cartId = cart?.cartId
 
       const _paymentData = objectToQueryString(paymentData)
 
@@ -161,6 +166,8 @@ export default class CheckoutService {
         checkoutId: cartId,
         customerAccessToken: token
       })
+
+      GAWakeInternalService.purchase(response.checkoutComplete)
 
       return response
     } catch (e) {
@@ -172,11 +179,11 @@ export default class CheckoutService {
   static async checkoutSelectInstallment(selectedPaymentMethodId, installmentNumber) {
     try {
 
-      const [cart] = await Promise.all([
-        CartService.getCurrentOrCreateCart()
-      ])
+      const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
-      const cartId = cart?.cartId
+      if (!cartId) {
+        return null
+      }
 
       const response = await GraphqlService.query(queryCheckoutSelectInstallment, {
         selectedPaymentMethodId,

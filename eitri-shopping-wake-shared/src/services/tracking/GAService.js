@@ -1,31 +1,41 @@
 import Eitri from 'eitri-bifrost'
 import Logger from '../Logger'
+import WakeService from "../WakeService";
 
 export default class GAService {
 	static logScreenView = (currentPage, pageClass = '') => {
 		try {
-			Logger.log('[Analytics]', '[logScreenView]', { screen: currentPage, screenClass: pageClass })
 
 			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logScreenView) {
 				Eitri.exposedApis.fb.logScreenView({ screen: currentPage, screenClass: pageClass })
 			}
+
+      if (WakeService.configs.gaVerbose) {
+        console.log('[Analytics]', '[logScreenView]', { screen: currentPage, screenClass: pageClass })
+      }
 		} catch (error) {
 			this.logError('logScreenView', error.message)
 		}
 	}
 
-	static logEvent = (event, currentPage, data) => {
+	static logEvent = (event, data) => {
 		let params = {
-			screen: currentPage,
+			screen: document.title,
 			...data
 		}
 
 		try {
-			Logger.log('[Analytics]', '[logEvent]', { eventName: event, data: params })
 
 			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logEvent) {
 				Eitri.exposedApis.fb.logEvent({ eventName: event, data: params })
-			}
+        console.log('[Analytics]', '[logEvent]', WakeService.configs)
+        if (WakeService.configs.gaVerbose) {
+          console.log('[Analytics]', '[logEvent]', { eventName: event, data: params })
+        }
+			} else {
+        console.error('[Analytics] Eitri.exposedApis.fb.logEvent not available')
+      }
+
 		} catch (error) {
 			this.logError('logEvent', error.message)
 		}
@@ -38,13 +48,18 @@ export default class GAService {
 			...error
 		}
 		try {
-			Logger.log('[Analytics]', '[logError]', { message: params })
 
 			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logError) {
 				Eitri.exposedApis.fb.logError({ message: params })
 			}
-		} catch (error) {
+
+      if (WakeService.configs.gaVerbose) {
+        console.log('[Analytics]', '[logError]', { message: params })
+      }
+
+    } catch (error) {
 			console.error('logError', error.message)
 		}
 	}
+
 }

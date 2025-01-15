@@ -1,57 +1,62 @@
 import GAService from './GAService'
-import Tracking from '../Tracking'
 
-export default class GAVtexInternalService {
-	static addItemToCart = (addedItems, cart, currentPage = null) => {
+export default class GAWakeInternalService {
+	static addItemToCart = (addedItems, cart) => {
 		try {
-			let items = []
-			items = addedItems.map((addedItem, index) => {
+			let items = addedItems.map((addedItem) => {
 				const item = cart.products.find(i => i.productVariantId === addedItem.productVariantId)
-				if (!item) {
+
+        if (!item) {
 					return null
 				}
 
 				return {
 					item_id: item.productVariantId,
 					item_name: item.name,
-					item_brand: item?.additionalInfo?.brandName,
 					price: item.price,
-					quantity: item.quantity
+					quantity: addedItem.quantity
 				}
-			})
-
-			const params = {
-				currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-				value: items[0]?.price,
-				items: items
-			}
-			GAService.logEvent('add_to_cart', currentPage, params)
-		} catch (e) {
-			GAService.logError('Error on addItemToCart', e, currentPage)
-		}
-	}
-
-	static removeItemFromCart = (itemRemoved, cart, currentPage = null) => {
-		try {
-
-			let removedProduct = cart.products.find(item => item.productVariantId === itemRemoved[0].productVariantId)
-
-			let item = {
-				item_id: removedProduct.productVariantId,
-				item_name: removedProduct.name,
-				price: removedProduct.price,
-				quantity: itemRemoved[0].quantity
-			}
+			}).filter(item => !!item)
 
 			const params = {
 				currency: 'BRL',
-				value: removedProduct.price,
-				items: [item]
+				value: items.reduce((acc, curr) => acc + curr.price * curr.quantity, 0),
+				items: items
 			}
 
-			GAService.logEvent('remove_from_cart', currentPage, params)
+			GAService.logEvent('add_to_cart', params)
 		} catch (e) {
-			GAService.logError('Error on removeItemToCart', e, currentPage)
+			GAService.logError('Error on addItemToCart', e)
+		}
+	}
+
+	static removeItemFromCart = (itemsRemoved, cart) => {
+		try {
+
+      let items = itemsRemoved.map((removedItem) => {
+        const item = cart.products.find(i => i.productVariantId === removedItem.productVariantId)
+
+        if (!item) {
+          return null
+        }
+
+        return {
+          item_id: item.productVariantId,
+          item_name: item.name,
+          price: item.price,
+          quantity: removedItem.quantity
+        }
+      }).filter(item => !!item)
+
+      const params = {
+        currency: 'BRL',
+        value: items.reduce((acc, curr) => acc + curr.price * curr.quantity, 0),
+        items: items
+      }
+
+			GAService.logEvent('remove_from_cart', params)
+		} catch (e) {
+			GAService.logError('Error on removeItemToCart', e)
 		}
 	}
 
@@ -84,37 +89,27 @@ export default class GAVtexInternalService {
 		}
 	}
 
-	static addShippingInfo = (cart, currentPage = null) => {
+	static addShippingInfo = (cart) => {
 		try {
-			const items = cart.items.map((addedItem, index) => {
-				const item = cart.items.find(i => i.id === addedItem.id)
-				if (!item) {
-					return null
-				}
-
-
+			const items = cart.products.map(product => {
 				return {
-					item_id: item.id,
-					item_name: item.skuName,
-					item_brand: item.additionalInfo?.brandName,
-					price: item.price / 100,
-					quantity: item.quantity
+					item_id: product.productVariantId,
+					item_name: product.name,
+					price: product.price,
+					quantity: product.quantity
 				}
 			})
 
-			let shippingSelected = cart?.shipping?.options.find(item => item.isCurrent === true)
-
 			const params = {
-				currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-				value: cart?.value / 100,
-				coupon: cart?.marketingData?.coupon,
-				shipping_tier: shippingSelected?.label,
-				items: items
+				currency: 'BRL',
+				value: cart?.total,
+        shipping_tier: cart?.selectedShipping?.name,
+        items: items
 			}
 
-			GAService.logEvent('add_shipping_info', currentPage, params)
+			GAService.logEvent('add_shipping_info', params)
 		} catch (error) {
-			GAService.logError('Error on begin checkout', error, currentPage)
+			GAService.logError('Error on add shipping info', error)
 		}
 	}
 
@@ -194,5 +189,30 @@ export default class GAVtexInternalService {
 		} catch (error) {
 			GAService.logError('Error on sendViewItem', error, currentPage)
 		}
+	}
+
+	static purchase = (cart) => {
+    try {
+      const items = cart.products.map(product => {
+        return {
+          item_id: product.productVariantId,
+          item_name: product.name,
+          price: product.price,
+          quantity: product.quantity
+        }
+      })
+
+      const params = {
+        currency: 'BRL',
+        value: cart?.total,
+        transaction_id: "T_12345",
+        shipping: cart?.shippingFee,
+        items: items
+      }
+
+      GAService.logEvent('purchase', params)
+    } catch (error) {
+      GAService.logError('Error on purchase', error)
+    }
 	}
 }

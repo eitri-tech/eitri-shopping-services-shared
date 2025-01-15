@@ -18,6 +18,7 @@ export default class WakeService {
 
 	static configs = {
 		verbose: false,
+    gaVerbose: true,
 		autoTriggerGAEvents: true,
 		clarityId: '',
 		provider: 'WAKE',
@@ -44,6 +45,7 @@ export default class WakeService {
 		}
 
 		WakeService.configs = {
+      ...WakeService.configs,
 			...providerInfo,
 			...appConfigs,
 			verbose: remoteConfig.verbose ?? false,
