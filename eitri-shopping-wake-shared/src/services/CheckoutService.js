@@ -13,6 +13,8 @@ import GAWakeInternalService from "./tracking/GAWakeInternalService";
 
 export default class CheckoutService {
 
+  static PAYMENT_METHODS = null
+
   static async checkoutCustomerAssociate() {
     try {
 
@@ -117,6 +119,8 @@ export default class CheckoutService {
         checkoutId: cartId
       })
 
+      CheckoutService.PAYMENT_METHODS = response.paymentMethods
+
       return response
     } catch (e) {
       console.error('[SHARED] [paymentMethods] Erro ao buscar formas de pagamento', e)
@@ -137,7 +141,7 @@ export default class CheckoutService {
         paymentMethodId
       })
 
-      console.log('[SHARED]:', response)
+      GAWakeInternalService.addPaymentInfo(response.checkoutSelectPaymentMethod, CheckoutService.PAYMENT_METHODS)
 
       return response
     } catch (e) {

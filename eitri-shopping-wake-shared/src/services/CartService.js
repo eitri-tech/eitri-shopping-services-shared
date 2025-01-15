@@ -7,7 +7,6 @@ import CustomerService from "./CustomerService";
 import GAWakeInternalService from './tracking/GAWakeInternalService'
 import GAService from './tracking/GAService'
 
-
 export default class CartService {
 	static CART_KEY = 'cart_key'
   static CACHED_CART = null

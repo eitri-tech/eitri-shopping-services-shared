@@ -40,9 +40,9 @@ export default class GAService {
 		}
 	}
 
-	static logError = (event, error, currentPage = null) => {
+	static logError = (event, error) => {
 		let params = {
-			currentPage,
+			currentPage: document.title,
 			event,
 			...error
 		}

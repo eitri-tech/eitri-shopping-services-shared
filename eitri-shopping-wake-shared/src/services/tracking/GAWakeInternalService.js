@@ -113,7 +113,7 @@ export default class GAWakeInternalService {
 		}
 	}
 
-	static addPaymentInfo = (cart) => {
+	static addPaymentInfo = (cart, paymentMethods) => {
 		try {
       const items = cart.products.map(product => {
         return {
@@ -124,9 +124,12 @@ export default class GAWakeInternalService {
         }
       })
 
+      const selectedPaymentMethod = paymentMethods?.find(method => method.id === cart?.selectedPaymentMethod?.paymentMethodId)
+
       const params = {
         currency: 'BRL',
         value: cart?.total,
+        payment_type: selectedPaymentMethod?.name ?? '',
         items: items
       }
 
@@ -150,8 +153,7 @@ export default class GAWakeInternalService {
       const params = {
         currency: 'BRL',
         value: cart?.total,
-        transaction_id: "T_12345",
-        shipping: cart?.orders?.[0]?.orderId,
+        transaction_id: cart?.orders?.[0]?.orderId,
         items: items
       }
 
