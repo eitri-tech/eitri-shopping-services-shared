@@ -8,7 +8,7 @@ export default function Home(props) {
     }, [])
 
     const init = async () => {
-        await WakeService.tryAutoConfigure({ gaVerbose: true })
+        await WakeService.tryAutoConfigure({ gaVerbose: true, verbose: true })
     }
 
     const navigateTo = async (path) => {

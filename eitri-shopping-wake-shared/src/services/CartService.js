@@ -6,6 +6,7 @@ import {queryAddItem, queryCreteCheckout, queryGetCheckout, queryRemoveItem} fro
 import CustomerService from "./CustomerService";
 import GAWakeInternalService from './tracking/GAWakeInternalService'
 import GAService from './tracking/GAService'
+import Logger from "./Logger";
 
 export default class CartService {
 	static CART_KEY = 'cart_key'
@@ -90,8 +91,11 @@ export default class CartService {
 	*/
 	static async generateNewCart() {
 		try {
+      Logger.log('====> [addItems] Gerando novo carrinho')
 
       const response = await GraphqlService.query(queryCreteCheckout)
+
+      Logger.log('====> [addItems] Novo carrinho gerado', response.data.checkoutId)
 
       CartService.CACHED_CART = response?.data
 
@@ -111,17 +115,38 @@ export default class CartService {
 	* @returns {CheckoutObject} O objeto de checkout atualizado.
 	*/
 	static async addItems(products) {
-		const _cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+    if (CartService.CACHED_CART && CartService.CACHED_CART.orders && CartService.CACHED_CART.orders.length > 0) {
+      Logger.log('====> [addItems] Cart já possui itens, limpando...')
+      await CartService.clearCart()
+    }
+
+		let _cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+    if (!_cartId) {
+      Logger.log('====> [addItems] CartId não encontrado')
+      const newCart = await CartService.generateNewCart()
+      _cartId = newCart.checkoutId
+    }
+
+    if (!_cartId) {
+      throw new Error('Cart not found')
+    }
 
     try {
+      Logger.log('====> [addItems] Adicionando itens ao carrinho', _cartId, products)
 			const response = await GraphqlService.query(queryAddItem, {
 				"checkoutId": _cartId,
 				"products": products
 			})
 
-			GAWakeInternalService.addItemToCart(products, response.data)
-
       CartService.CACHED_CART = response.data
+
+      GAWakeInternalService.addItemToCart(products, response.data)
+
+      const allAdded = products.every(addedProduct => response.data.products.some(productInCart => productInCart.productVariantId === addedProduct.productVariantId))
+      if (!allAdded) {
+        throw new Error('Not all products were added to the cart')
+      }
 
 			return response.data
 		} catch (e) {
