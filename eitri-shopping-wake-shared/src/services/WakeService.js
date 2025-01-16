@@ -18,6 +18,7 @@ export default class WakeService {
 
 	static configs = {
 		verbose: false,
+    gaVerbose: false,
 		autoTriggerGAEvents: true,
 		clarityId: '',
 		provider: 'WAKE',
@@ -31,7 +32,7 @@ export default class WakeService {
 	}
 
 	static configure = async remoteConfig => {
-		const { providerInfo, segments, searchOptions, marketingTag, appConfigs } = remoteConfig
+		const { providerInfo, marketingTag, ...rest } = remoteConfig
 
 		if (providerInfo.host && !providerInfo.host.startsWith('https://')) {
 			providerInfo.host = 'https://' + providerInfo.host
@@ -44,13 +45,12 @@ export default class WakeService {
 		}
 
 		WakeService.configs = {
+      ...WakeService.configs,
 			...providerInfo,
-			...appConfigs,
+			...rest,
 			verbose: remoteConfig.verbose ?? false,
 			autoTriggerGAEvents: remoteConfig?.autoTriggerGAEvents ?? true,
 			graphqlApi: `https://storefront-api.fbits.net/graphql`,
-			searchOptions,
-			segments,
 			marketingTag: marketingTag ?? 'eitri-shop'
 		}
 

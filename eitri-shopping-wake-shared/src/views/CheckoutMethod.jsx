@@ -64,7 +64,7 @@ export default function CheckoutMethod() {
   }
 
   const setPaymentMethod = async () => {
-    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjk3MTl9")
+    const response = await WakeService.checkout.checkoutSelectPaymentMethod("eyJFbnRpdHkiOiJQYXltZW50TWV0aG9kIiwiSWQiOjkwNDN9")
     console.log('response >>', response)
   }
 

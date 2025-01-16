@@ -13,42 +13,48 @@ export default function CartMethod() {
   }, [])
 
   const getCart = async () => {
-    const _cart = await WakeService.cart.getCurrentOrCreateCart()
-    setCart(_cart)
-    setLoading(false)
+    try {
+      const _cart = await WakeService.cart.getCart()
+      console.log('_cart >>', _cart)
+      setCart(_cart)
+      setLoading(false)
+    } catch (e) {
+      setLoading(false)
+    }
   }
 
   const newCart = async () => {
     const _cart = await WakeService.cart.generateNewCart()
+    console.log('_new_cart >>', _cart)
     setCart(_cart)
     setLoading(false)
   }
 
-  const getCheckout = async () => {
-    let _fullCart = await WakeService.cart.getCheckout()
-    console.log('_fullCart >>', _fullCart)
-    setFullCart(_fullCart)
-    setLoading(false)
-  }
-
   const getCartById = async () => {
-    const _cart = await WakeService.cart.getCartById(cartId)
+    const cartId = '75a1e20b-e486-4bfd-baea-ff539b39acf8'
+    await WakeService.cart.forceCartId(cartId)
+    const _cart = await WakeService.cart.getCart()
+    console.log('_cart >>', _cart)
     setLoading(false)
   }
 
   const addItemCart = async () => {
     setLoading(true)
-    //337013, 340789, 341041, 343687
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 337013, quantity: 1 }])
+    //337013, 340789, 341041, 343687, 344094
+    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 346845, quantity: 1 }, { productVariantId: 344094, quantity: 1 }])
     setFullCart(_fullCart)
     setLoading(false)
   }
 
   const removeItemCart = async () => {
     setLoading(true)
-    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 343687, quantity: 1}], {products: [{ productVariantId: 343687, quantity: 1, name: 'Teste', price: 59.90 }]})
+    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 346845, quantity: 1}])
     setFullCart(_fullCart)
     setLoading(false)
+  }
+
+  const cleanCart = async () => {
+    await WakeService.cart.clearCart()
   }
 
   const back = () => {
@@ -56,7 +62,7 @@ export default function CartMethod() {
   }
 
   return (
-    <Window topInset bottomInset>
+    <Window topInset bottomInset title='CartMethod'>
       <View margin='large'>
         {loading ? (
           <Text marginTop='small'>buscando ...</Text>
@@ -65,10 +71,10 @@ export default function CartMethod() {
 
             <View direction='column'>
               <Text>
-                Carrinho no Storage: {cart.cartId}
+                Carrinho no Storage: {cart?.checkoutId}
               </Text>
               <Text>
-                Total de Produtos: {cart.quantity || '0'}
+                Total de Produtos: {cart?.quantity || '0'}
               </Text>
             </View>
 
@@ -84,7 +90,7 @@ export default function CartMethod() {
             }
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getCart} label={`Get SimpleCart`} />
+              <Button wide color='background-color' onPress={getCart} label={`Get Cart`} />
             </View>
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
@@ -92,27 +98,19 @@ export default function CartMethod() {
             </View>
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getCartById} label={`Get ${cartId}`} />
+              <Button wide color='background-color' onPress={addItemCart} label={`Adiciona item ao carrinho`} />
             </View>
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getCheckout} label={`Get fullCart`} />
+              <Button wide color='background-color' onPress={removeItemCart} label={`Remove item do carrinho`} />
             </View>
 
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={addItemCart} label={`addItemCart`} />
-            </View>
-
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={removeItemCart} label={`removeItemCart`} />
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10}>
+              <Button wide color='background-color' onPress={cleanCart} label='Limpa carrinho' />
             </View>
 
             <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
               <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label='Voltar' />
-            </View>
-
-            <View>
-
             </View>
           </View>
         )}

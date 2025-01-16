@@ -199,3 +199,10 @@ mutation RemoveFromCart($checkoutId:Uuid!, $products:[CheckoutProductItemInput]!
     ${checkoutModel}
   }
 }`
+
+export const queryCreteCheckout = `
+mutation {
+  data: createCheckout() {
+    ${checkoutModel}
+  }
+}`

@@ -2,13 +2,15 @@ import Eitri from 'eitri-bifrost'
 import WakeService from './WakeService'
 import StorageService from './StorageService'
 import GraphqlService from './GraphqlService'
-import { queryAddItem, queryGetCheckout, queryRemoveItem } from '../queries/Cart'
+import {queryAddItem, queryCreteCheckout, queryGetCheckout, queryRemoveItem} from '../queries/Cart'
 import CustomerService from "./CustomerService";
-import GAVtexInternalService from './tracking/GAVtexInternalService'
+import GAWakeInternalService from './tracking/GAWakeInternalService'
 import GAService from './tracking/GAService'
+import Logger from "./Logger";
 
 export default class CartService {
 	static CART_KEY = 'cart_key'
+  static CACHED_CART = null
 
 	/**
 	* Pega carrinho na memória ou gera um novo se não existir.
@@ -16,45 +18,71 @@ export default class CartService {
 	* @returns {SimpleCart} {cartId: string, quantity: number} - O objeto de carrinho simples com id e quantidade de itens
 	* @see {@link getCheckout} para objeto completo de carrinho.
 	*/
-	static async getCurrentOrCreateCart(cartId) {
-		if (!cartId) {
-			cartId = await StorageService.getStorageItem(CartService.CART_KEY)
-		}
+	static async getCurrentOrCreateCart() {
 
-		let cart
+    const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
 		if (cartId) {
-			cart = await CartService.getCartById(cartId)
+			return CartService.getCheckout();
 		} else {
-			cart = await CartService.generateNewCart()
+			return CartService.generateNewCart();
 		}
 
-		return CartService.parseWakeCartToSimpleCart(cart)
 	}
 
-	/**
-	* Pega o carrinho de compras atual
-	* @param {cartId} - Id do carrinho.
-	* @returns {WakeCart} Objeto de carrinho Wake
-	* @see {@link getCheckout} para objeto completo de carrinho.
-	*/
-	static async getCartById(cartId) {
-		try {
-			console.log('Obtendo dados do carrinho', cartId, WakeService.configs.cartHost)
-			const cartCookie = `carrinho-id=${cartId}; path=/`
-			const cart = await Eitri.http.get(WakeService.configs.cartHost, {
-				headers: {
-					Accept: '*/*',
-					'Content-Type': 'application/json',
-					Cookie: cartCookie
-				}
-			})
-			if (cart?.data?.Id) await StorageService.setStorageItem(CartService.CART_KEY, cart.data.Id)
-			return cart?.data
-		} catch (e) {
-			console.error('[SHARED] [getCartById] Erro ao obter carrinho', cartId, e)
-			throw e
-		}
-	}
+  /**
+   * Pega carrinho de compras completo
+   * @returns {CheckoutObject} Objeto de carrinho completo
+   */
+  static async getCheckout() {
+    const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+    if (cartId) {
+      try {
+        const token = await CustomerService.getCustomerToken()
+
+        const response = await GraphqlService.query(queryGetCheckout, {
+          "checkoutId": cartId,
+          customerAccessToken: token ?? ''
+        })
+
+        CartService.CACHED_CART = response?.data
+
+        return response.data
+      } catch (e) {
+        console.error('[SHARED] [getCheckout] Erro ao obter checkout', cartId, e)
+        throw e
+      }
+    }
+
+    return null
+  }
+
+  static getCart = CartService.getCheckout
+
+	// /**
+	// * Pega o carrinho de compras atual
+	// * @param {cartId} - Id do carrinho.
+	// * @returns {WakeCart} Objeto de carrinho Wake
+	// * @see {@link getCheckout} para objeto completo de carrinho.
+	// */
+	// static async getCartById(cartId) {
+	// 	try {
+	// 		const cartCookie = `carrinho-id=${cartId}; path=/`
+	// 		const cart = await Eitri.http.get(WakeService.configs.cartHost, {
+	// 			headers: {
+	// 				Accept: '*/*',
+	// 				'Content-Type': 'application/json',
+	// 				Cookie: cartCookie
+	// 			}
+	// 		})
+	// 		if (cart?.data?.Id) await StorageService.setStorageItem(CartService.CART_KEY, cart.data.Id)
+	// 		return cart?.data
+	// 	} catch (e) {
+	// 		console.error('[SHARED] [getCartById] Erro ao obter carrinho', cartId, e)
+	// 		throw e
+	// 	}
+	// }
 
 	/**
 	* Gera um carrinho de compras
@@ -63,53 +91,21 @@ export default class CartService {
 	*/
 	static async generateNewCart() {
 		try {
-			console.log('Gerando novo carrinho', WakeService.configs.cartHost)
-			const cart = await Eitri.http.get(WakeService.configs.cartHost)
-			if (cart?.data?.Id) await StorageService.setStorageItem(CartService.CART_KEY, cart.data.Id)
-			return cart?.data
+      Logger.log('====> [addItems] Gerando novo carrinho')
+
+      const response = await GraphqlService.query(queryCreteCheckout)
+
+      Logger.log('====> [addItems] Novo carrinho gerado', response.data.checkoutId)
+
+      CartService.CACHED_CART = response?.data
+
+      await StorageService.setStorageItem(CartService.CART_KEY, response.data.checkoutId)
+
+			return response?.data
 		} catch (e) {
 			console.error('[SHARED] [generateNewCart] Erro ao gerar novo carrinho', e)
 			throw e
 		}
-	}
-
-	/**
-	* Pega carrinho de compras completo
-	* @param {cartId} - Id do carrinho, se não existir procura no Storage.
-	* @returns {CheckoutObject} Objeto de carrinho completo
-	* @see {@link getCheckout} Idem ao getCheckout.
-	*/
-	static async getFullCart(cartId) {
-		return CartService.getCheckout(cartId)
-	}
-
-	/**
-	* Pega carrinho de compras completo
-	* @param {cartId} Id do carrinho, se não existir procura no Storage.
-	* @returns {CheckoutObject} Objeto de carrinho completo
-	*/
-	static async getCheckout(cartId) {
-    if (!cartId) {
-			cartId = await StorageService.getStorageItem(CartService.CART_KEY)
-		}
-
-		if (cartId) {
-			try {
-        const token = await CustomerService.getCustomerToken()
-
-        const response = await GraphqlService.query(queryGetCheckout, {
-					"checkoutId": cartId,
-          customerAccessToken: token ?? ''
-				})
-				// GAVtexInternalService.addItemToCart(products, addToCartRes.data, currentPage)
-				return response.data
-			} catch (e) {
-				console.error('[SHARED] [getCheckout] Erro ao pegar itens do carrinho', e)
-				throw e
-			}
-		}
-
-		return null
 	}
 
 	/**
@@ -118,16 +114,39 @@ export default class CartService {
 	* @param {cartId} - Id do carrinho, se não for passado pegará do Storage
 	* @returns {CheckoutObject} O objeto de checkout atualizado.
 	*/
-	static async addItems(products, cartId) {
-		const _cartId = cartId || await StorageService.getStorageItem(CartService.CART_KEY)
+	static async addItems(products) {
+
+    if (CartService.CACHED_CART && CartService.CACHED_CART.orders && CartService.CACHED_CART.orders.length > 0) {
+      Logger.log('====> [addItems] Cart já possui itens, limpando...')
+      await CartService.clearCart()
+    }
+
+		let _cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+    if (!_cartId) {
+      Logger.log('====> [addItems] CartId não encontrado')
+      const newCart = await CartService.generateNewCart()
+      _cartId = newCart.checkoutId
+    }
+
+    if (!_cartId) {
+      throw new Error('Cart not found')
+    }
 
     try {
+      Logger.log('====> [addItems] Adicionando itens ao carrinho', _cartId, products)
 			const response = await GraphqlService.query(queryAddItem, {
 				"checkoutId": _cartId,
 				"products": products
 			})
 
-			GAVtexInternalService.addItemToCart(products, response.data)
+      CartService.CACHED_CART = response.data
+
+      GAWakeInternalService.addItemToCart(products, response.data)
+
+      const allAdded = products.every(addedProduct => response.data.products.some(productInCart => productInCart.productVariantId === addedProduct.productVariantId))
+      if (!allAdded) {
+        throw new Error('Not all products were added to the cart')
+      }
 
 			return response.data
 		} catch (e) {
@@ -139,11 +158,10 @@ export default class CartService {
 	/**
 	* Remove uma quantidade de produto do carrinho de compras.
 	* @param {Array<{productVariantId: number, quantity: number}>} products - A lista de produtos a serem removidos do carrinho.
-	* @param {cart} carrinho - O carrinho de compras atual.
 	* @returns {CheckoutObject} O objeto de checkout atualizado.
 	*/
-	static async removeItems(products, cart) {
-		const _cartId = cart?.checkoutId || await StorageService.getStorageItem(CartService.CART_KEY)
+	static async removeItems(products) {
+		const _cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
 		try {
 			const response = await GraphqlService.query(queryRemoveItem, {
@@ -151,8 +169,11 @@ export default class CartService {
 				"products": products
 			})
 
-			GAVtexInternalService.removeItemFromCart(products, cart)
-			return response.data
+			GAWakeInternalService.removeItemFromCart(products, CartService.CACHED_CART)
+
+      CartService.CACHED_CART = response.data
+
+      return response.data
 		} catch (e) {
 			GAService.logError('Error on removeItemFromCart', e)
 			throw e
@@ -161,69 +182,10 @@ export default class CartService {
 
 	static async clearCart() {
 		await StorageService.removeItem(CartService.CART_KEY)
+    CartService.CACHED_CART = null
 	}
 
-	static async resolvePostalCode(zipCode, countryCode = 'BRA') {
-	}
-
-	static async getClientProfileByEmail(email) {
-	}
-
-	static async addClientPreferences(payload) {
-	}
-
-	static async addMarketingData(payload) {
-	}
-
-	static async listPickPoints(payload) {
-	}
-
-	static async clearOrderFormMessages() {
-	}
-
-	static async addOfferingsItems(itemIndex, offeringItemId) {
-	}
-
-	static async removeOfferingsItems(itemIndex, offeringItemId) {
-	}
-
-	static async addOpenTextFieldToCart(value) {
-	}
-
-	static async simulateCart(payload, salesChannel) {
-	}
-
-	static async updateItem(orderFormId, payload) {
-	}
-
-	static async addAttachmentToItem(orderFormId, itemIndex, attachmentId, payload) {
-	}
-
-	static async setOrderFormId(orderFormId) {
-	}
-
-	static async addGift(selectableGiftId, selectedGifts) {
-	}
-
-	static async removeGift(selectableGiftId) {
-	}
-
-	/**
-	* Converte objeto de carrinho Wake para um padrão simples com Id e quantidade
-	* @param {WakeCart} Objeto de carrinho Wake.
-	* @returns {cartId: string, quantity: number} O objeto simples de carrinho.
-	* @see {@link getCheckout} para objeto completo de carrinho.
-	*/
-	static parseWakeCartToSimpleCart(wakeCart) {
-		const quantity = wakeCart.Produtos.reduce((total, produto) => {
-			return total + produto.Quantidade;
-		}, 0)
-
-		const simpleCart = {
-			cartId: wakeCart.Id,
-			quantity
-		}
-		return simpleCart
-	}
-
+  static async forceCartId(cartId) {
+    await StorageService.setStorageItem(CartService.CART_KEY, cartId)
+  }
 }
