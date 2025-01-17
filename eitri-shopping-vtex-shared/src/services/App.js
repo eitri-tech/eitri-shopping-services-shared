@@ -6,10 +6,7 @@ export default class App {
 
   static configs = {
     verbose: false,
-    clarityId: '',
-    autoTriggerGAEvents: true,
-    appConfigs: {},
-    provider: ''
+    gaVerbose: false
   }
 
   static tryAutoConfigure = async overwrites => {
@@ -26,21 +23,19 @@ export default class App {
       console.log('[SHARED] ********* Config Vtex encontrada, configurando automaticamente *******')
       console.log('[SHARED] Account ======>', remoteConfig.providerInfo.account)
       console.log('[SHARED] Host ======>', remoteConfig.providerInfo.host)
-      App.configs.provider = 'VTEX'
       await Vtex.configure(remoteConfig)
     } catch (error) {
-      console.error('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
+      console.error('[SHARED] Error autoConfigure ', error)
       throw error
     }
 
     try {
-      if (remoteConfig.clarityId) {
-        App.configs.clarityId = remoteConfig.clarityId
-        ClarityService.init(remoteConfig.clarityId)
+      if (remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId) {
+        const clarityId = remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId
+        ClarityService.init(clarityId)
       }
     } catch (error) {
-      console.error('[SHARED] Error clarity ', remoteConfig.ecommerceProvider, error)
-      throw error
+      console.error('[SHARED] Error ao inicializar Clarity', error)
     }
 
     try {
@@ -51,12 +46,7 @@ export default class App {
 
       App.configs = {
         ...App.configs,
-        verbose: remoteConfig.verbose ?? false,
-        autoTriggerGAEvents: remoteConfig?.autoTriggerGAEvents ?? true,
-        appConfigs: {
-          ...remoteConfig.appConfigs,
-          ...overwrites?.appConfigs,
-        },
+        ...remoteConfig,
       }
 
       console.log('[SHARED] *********** App configurado com sucesso ************')

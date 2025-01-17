@@ -1,4 +1,4 @@
-import Vtex from "../../services/Vtex";
+import Vtex from "../services/Vtex";
 
 export default function CustomerMethods() {
 

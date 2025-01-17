@@ -130,10 +130,9 @@ export default class VtexCartService {
    * @param {string} params.salesChannel - O canal de vendas onde o item será adicionado.
    * @param {number} params.quantity - A quantidade do item a ser adicionada.
    * @param {string} params.seller - O ID do vendedor.
-   * @param {string} params.currentPage - A página atual no contexto da operação.
    * @returns {Promise<void>} - Uma promessa que resolve quando o item for adicionado.
    */
-	static async addItem({ id, item, itemId, salesChannel, quantity, seller, sellers, currentPage }) {
+	static async addItem({ id, item, itemId, salesChannel, quantity, seller, sellers }) {
 
     const _quantity = item?.quantity ?? quantity ?? 1
 
@@ -164,7 +163,7 @@ export default class VtexCartService {
 
       const addToCartRes = await VtexCaller.post(url, payload)
 
-      GAVtexInternalService.addItemToCart([itemToSend], addToCartRes.data, currentPage)
+      GAVtexInternalService.addItemToCart([itemToSend], addToCartRes.data)
 
       return addToCartRes.data
 
@@ -174,7 +173,7 @@ export default class VtexCartService {
 		}
 	}
 
-	static async changeItemQuantity(index, newQuantity, item, currentPage) {
+	static async changeItemQuantity(index, newQuantity, item) {
 		try {
 			const orderFormId = await VtexCartService.getStoredOrderFormId()
 			const payload = {
@@ -188,7 +187,7 @@ export default class VtexCartService {
 
 			const updateCart = await VtexCaller.post(`api/checkout/pub/orderForm/${orderFormId}/items/update`, payload)
 			if (newQuantity === 0) {
-				GAVtexInternalService.removeItemFromCart(item, currentPage)
+				GAVtexInternalService.removeItemFromCart(item)
 			}
 			return updateCart.data
 		} catch (e) {

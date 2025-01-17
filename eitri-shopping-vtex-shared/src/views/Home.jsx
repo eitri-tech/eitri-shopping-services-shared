@@ -1,5 +1,6 @@
 import App from "../services/App";
 import Eitri from 'eitri-bifrost'
+import {Vtex} from "../export";
 
 export default function Home() {
 
@@ -8,18 +9,22 @@ export default function Home() {
   }, [])
 
   const init = async () => {
-    const configs = await App.tryAutoConfigure({ verbose: true })
-    navigateTo('Vtex')
+    await App.tryAutoConfigure({ gaVerbose: true })
+    await Vtex.cart.setOrderFormId('7e0dbf489fd24a908a9245763ced817b')
   }
 
   const navigateTo = async (path) => {
-    Eitri.navigation.navigate({ path, replace: true })
+    Eitri.navigation.navigate({ path })
   }
 
 	return (
     <Window topInset bottomInset>
       <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
-        <Button color='background-color' onPress={() => navigateTo('Vtex')} label='VTEX' />
+        <Button wide color='background-color' onPress={() => navigateTo('CartMethods')} label='Métodos de carrinho' />
+        <Button wide color='background-color' onPress={() => navigateTo('CustomerMethods')} label='Métodos de usuário' />
+        <Button wide color='background-color' onPress={() => navigateTo('WishListMethods')} label='Métodos de Wishlist' />
+        <Button wide color='background-color' onPress={() => navigateTo('CatalogMethods')} label='Métodos de Catálogo' />
+        <Button wide color='background-color' onPress={() => navigateTo('CheckoutMethods')} label='Métodos de Checkout' />
       </View>
     </Window>
   )

@@ -44,7 +44,9 @@ export default class VtexCheckoutService {
 			}
 		)
 
-		return response.data
+    GAVtexInternalService.addShippingInfo(response.data)
+
+    return response.data
 	}
 
 	static async setLogisticInfo(logisticInfo) {
@@ -62,28 +64,7 @@ export default class VtexCheckoutService {
 			}
 		)
 
-		return response.data
-	}
-
-	static async selectDeliveryOption(deliveryOption) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
-
-		const payload = {
-			logisticsInfo: deliveryOption,
-			clearAddressIfPostalCodeNotFound: false
-		}
-
-		const response = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
-			payload,
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json',
-					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-				}
-			}
-		)
+    GAVtexInternalService.addShippingInfo(response.data)
 
 		return response.data
 	}
