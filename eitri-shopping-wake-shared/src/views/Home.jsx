@@ -1,5 +1,6 @@
 import Eitri from 'eitri-bifrost'
 import WakeService from "../services/WakeService";
+import GAService from "../services/tracking/GAService";
 
 export default function Home(props) {
 
@@ -8,7 +9,7 @@ export default function Home(props) {
     }, [])
 
     const init = async () => {
-        await WakeService.tryAutoConfigure({ gaVerbose: true, verbose: true })
+      await WakeService.tryAutoConfigure({ gaVerbose: true, verbose: true })
     }
 
     const navigateTo = async (path) => {
