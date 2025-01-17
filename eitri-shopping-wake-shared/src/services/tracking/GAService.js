@@ -1,20 +1,20 @@
 import Eitri from 'eitri-bifrost'
-import Logger from '../Logger'
 import WakeService from "../WakeService";
 
 export default class GAService {
 	static logScreenView = (currentPage, pageClass = '') => {
 		try {
-
-			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logScreenView) {
-				Eitri.exposedApis.fb.logScreenView({ screen: currentPage, screenClass: pageClass })
-			}
-
-      if (WakeService.configs.gaVerbose) {
-        console.log('[Analytics]', '[logScreenView]', { screen: currentPage, screenClass: pageClass })
+			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.currentScreen) {
+				Eitri.exposedApis.fb.currentScreen({ screen: currentPage, screenClass: pageClass })
+        if (WakeService.configs.gaVerbose) {
+          console.log('[Analytics]', '[logScreenView]', { screen: currentPage, screenClass: pageClass })
+        }
+			} else {
+        console.log('[Analytics] Eitri.exposedApis.fb.logScreenView not available')
       }
+
 		} catch (error) {
-			this.logError('logScreenView', error.message)
+			console.error('[Analytics] Error on logScreenView', error.message)
 		}
 	}
 
@@ -50,14 +50,15 @@ export default class GAService {
 
 			if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logError) {
 				Eitri.exposedApis.fb.logError({ message: params })
-			}
-
-      if (WakeService.configs.gaVerbose) {
-        console.log('[Analytics]', '[logError]', { message: params })
+        if (WakeService.configs.gaVerbose) {
+          console.log('[Analytics]', '[logError]', { message: params })
+        }
+			} else {
+        console.error('[Analytics] Eitri.exposedApis.fb.logError not available')
       }
 
     } catch (error) {
-			console.error('logError', error.message)
+			console.error('[Analytics] Error on logError', error.message)
 		}
 	}
 
