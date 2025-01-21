@@ -35,7 +35,7 @@ query ($customerAccessToken:String!) {
 export const queryCustomer = `
 query ($customerAccessToken:String!) {
   customer(customerAccessToken:$customerAccessToken) {
-    addresses {
+   addresses {
       address
       address2
       addressDetails
