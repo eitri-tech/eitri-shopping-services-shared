@@ -62,9 +62,6 @@ query ($customerAccessToken:String!) {
     cpf
     cnpj
     companyName
-    subscriptions {
-      status
-    }
     creationDate
     customerType
     companyName
