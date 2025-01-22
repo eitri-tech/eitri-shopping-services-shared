@@ -21,135 +21,61 @@ export default class GAVtexInternalService {
     return result
   }
 
+  static _prepareItems = (items) => {
+    return items.map(item => {
+      const categories = GAVtexInternalService._resolveCategory(item)
+
+      return {
+        item_id: item.id,
+        item_name: item.name,
+        item_brand: item.additionalInfo?.brandName,
+        ...categories,
+        price: item.sellingPrice / 100,
+        quantity: item.quantity
+      }
+    })
+  }
+
   static addItemToCart = (addedItems, cart) => {
     try {
-      let items = []
-      if (Array.isArray(addedItems)) {
-        items = addedItems.map((addedItem, index) => {
-          const item = cart.items.find(i => i.id === addedItem.id)
-          if (!item) {
-            return null
-          }
+      if (GAVtexInternalService._autoSendIsOff()) return
+      const _addedItems = Array.isArray(addedItems) ? addedItems : [addedItems]
 
-          const categories = GAVtexInternalService._resolveCategory(item)
+      const products = _addedItems.map((addedItem) => cart.items.find(i => i.id === addedItem.id)).filter(i => !!i)
 
-          return {
-            item_id: item.id,
-            item_name: item.skuName,
-            item_brand: item.additionalInfo?.brandName,
-            ...categories,
-            price: item.price / 100,
-            quantity: item.quantity
-          }
-        })
-      } else {
-        const categories = GAVtexInternalService._resolveCategory(addedItems)
+      const items = GAVtexInternalService._prepareItems(products)
 
-        items.push({
-          item_id: addedItems?.productId,
-          item_name: addedItems?.productName || addedItems?.name,
-          item_brand: addedItems?.brand || null,
-          ...categories,
-          price: addedItems?.items
-            ? addedItems?.items[0]?.sellers[0]?.commertialOffer?.Price
-            : addedItems?.price / 100,
-          quantity: addedItems.quantity
-        })
-      }
+      if (items.length === 0) return null
 
       const params = {
         currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-        value: items[0]?.price,
+        value: items.reduce((acc, curr) => acc + curr.price * curr.quantity, 0),
         items: items
       }
 
       GAService.logEvent('add_to_cart', params)
     } catch (e) {
-      GAService.logError('Error on addItemToCart', e, currentPage)
+      console.error('Error on analytics addItemToCart', e)
     }
   }
 
-  static viewCart = cart => {
+  static removeItemFromCart = (index, cart) => {
     try {
-      const items = cart?.items.map(item => {
-        const categories = GAVtexInternalService._resolveCategory(item)
+      if (GAVtexInternalService._autoSendIsOff()) return
 
-        return {
-          item_id: item.id,
-          item_name: item.skuName,
-          item_brand: item.additionalInfo?.brandName,
-          ...categories,
-          price: item.price / 100,
-          quantity: item.quantity
-        }
-      })
+      const itemRemoved = cart.items[index]
 
-      const params = {
-        currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-        value: cart.value / 100,
-        items: items
-      }
-
-      GAService.logEvent('view_cart', params)
-    } catch (e) {
-      GAService.logError('Error on viewCart', e, currentPage)
-    }
-  }
-
-  static removeItemFromCart = itemRemoved => {
-    try {
-      const categories = GAVtexInternalService._resolveCategory(itemRemoved)
-
-      let item = {
-        item_id: itemRemoved.id,
-        item_name: itemRemoved.skuName,
-        item_brand: itemRemoved.additionalInfo?.brandName,
-        ...categories,
-        price: itemRemoved.price / 100,
-        quantity: itemRemoved.quantity
-      }
+      const items = GAVtexInternalService._prepareItems([itemRemoved])
 
       const params = {
         currency: 'BRL',
-        value: itemRemoved.price / 100,
-        items: [item]
+        value: items.reduce((acc, curr) => acc + curr.price * curr.quantity, 0),
+        items: items
       }
 
       GAService.logEvent('remove_from_cart', params)
     } catch (e) {
-      GAService.logError('Error on removeItemToCart', e, currentPage)
-    }
-  }
-
-  static beginCheckout = cart => {
-    try {
-      const items = cart.items.map((addedItem, index) => {
-        const item = cart.items.find(i => i.id === addedItem.id)
-        if (!item) {
-          return null
-        }
-
-        const categories = GAVtexInternalService._resolveCategory(item)
-
-        return {
-          item_id: item.id,
-          item_name: item.skuName,
-          item_brand: item.additionalInfo?.brandName,
-          ...categories,
-          price: item.price / 100,
-          quantity: item.quantity
-        }
-      })
-
-      const params = {
-        currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-        value: cart.value / 100,
-        coupon: cart?.marketingData?.coupon || '',
-        items: items
-      }
-      GAService.logEvent('begin_checkout', params)
-    } catch (e) {
-      GAService.logError('Error on begin checkout', e, currentPage)
+      console.error('Error on analytics removeItemFromCart', e)
     }
   }
 
@@ -187,89 +113,74 @@ export default class GAVtexInternalService {
     }
   }
 
-  static addPaymentInfo = (cart, currentPage = null) => {
+  static addPaymentInfo = (cart) => {
+    if (GAVtexInternalService._autoSendIsOff()) return
     try {
-      const items = cart.items.map(addedItem => {
-        const item = cart.items.find(i => i.id === addedItem.id)
-        if (!item) {
-          return null
-        }
-
+      const items = cart.items.map(item => {
         const categories = GAVtexInternalService._resolveCategory(item)
 
         return {
           item_id: item.id,
-          item_name: item.skuName,
+          item_name: item.name,
           item_brand: item.additionalInfo?.brandName,
           ...categories,
-          price: item.price / 100,
+          price: item.sellingPrice / 100,
           quantity: item.quantity
         }
       })
 
-      let shippingSelected = cart?.shipping?.options.find(item => item.isCurrent === true)
+      let paymentSelected = cart?.paymentData?.payments?.map(item => {
+        const paymentSystem = cart?.paymentData?.paymentSystems.find(payment => payment.stringId === item.paymentSystem)
+        return paymentSystem?.name
+      })
+      const uniquePayment = [...new Set(paymentSelected)]
+
+      const totalItemPrice = cart.totalizers.find(item => item.id === 'Items')?.value / 100
 
       const params = {
         currency: cart?.storePreferencesData?.currencyCode || 'BRL',
-        value: cart?.value / 100,
-        coupon: cart?.marketingData?.coupon,
-        shipping_tier: shippingSelected?.label,
-        payment_type: cart?.payments[0].name,
+        value: totalItemPrice,
+        payment_type: uniquePayment.join(';'),
         items: items
       }
 
-      GAService.logEvent('add_payment_info', params)
+     GAService.logEvent('add_payment_info', params)
     } catch (error) {
-      GAService.logError('Error on begin checkout', error, currentPage)
+      GAService.logError('Error on begin checkout', error)
     }
   }
 
-  static viewItemList = (items, origin, search) => {
+  static purchase = (cart, orderId) => {
     try {
-      const listItems = items.products.map(item => {
+      if (GAVtexInternalService._autoSendIsOff()) return
+
+      const items = cart.items.map(item => {
         const categories = GAVtexInternalService._resolveCategory(item)
 
         return {
-          item_id: item.productId,
-          item_name: item.productName,
-          item_brand: item.brand,
+          item_id: item.id,
+          item_name: item.name,
+          item_brand: item.additionalInfo?.brandName,
           ...categories,
-          price: item.items[0].sellers[0].commertialOffer.Price
+          price: item.sellingPrice / 100,
+          quantity: item.quantity
         }
       })
-      const params = {
-        item_list_id: search,
-        item_list_name: origin,
-        items: listItems
-      }
 
-      GAService.logEvent('view_item_list', params)
-    } catch (error) {
-      GAService.logError('Error on viewItemList', error, currentPage)
-    }
-  }
-
-  static sendViewItem = product => {
-    try {
-      const categories = GAVtexInternalService._resolveCategory(product)
+      const totalItemPrice = cart.totalizers.find(item => item.id === 'Items')?.value / 100
+      const shippingPrice = cart.totalizers.find(item => item.id === 'Shipping')?.value / 100
 
       const params = {
         currency: 'BRL',
-        value: product?.items[0]?.sellers[0]?.commertialOffer?.Price,
-        items: [
-          {
-            item_id: product.productId,
-            item_name: product.productName,
-            item_brand: product.brand,
-            ...categories,
-            price: product.items[0].sellers[0].commertialOffer.Price
-          }
-        ]
+        value: totalItemPrice,
+        transaction_id: orderId,
+        shipping: shippingPrice,
+        items: items
       }
 
-      GAService.logEvent('view_item', params)
+      GAService.logEvent('purchase', params)
     } catch (error) {
-      GAService.logError('Error on sendViewItem', error, currentPage)
+      GAService.logError('Error on purchase', error)
     }
   }
 }

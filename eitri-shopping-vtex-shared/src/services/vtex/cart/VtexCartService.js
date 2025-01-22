@@ -6,6 +6,7 @@ import Vtex from '../../Vtex'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
+  static _CACHED_CART = null
 
 	static async assertMarketingData(cart) {
 		try {
@@ -57,7 +58,10 @@ export default class VtexCartService {
 			const response = await VtexCaller.get(path)
 			const cart = response.data
 			VtexCartService.assertMarketingData(cart)
-			return cart
+
+      VtexCartService._CACHED_CART = cart
+
+      return cart
 		} catch (e) {
 			console.error('Erro ao obter carrinho', orderFormId, e)
 			throw e
@@ -77,6 +81,9 @@ export default class VtexCartService {
 			console.log('Novo carrinho gerado', cart.orderFormId)
 
 			await VtexCartService.saveCartIdOnStorage(cart.orderFormId)
+
+      VtexCartService._CACHED_CART = cart
+
 			return cart
 		} catch (e) {
 			console.error('Erro ao gerar novo carrinho', e)
@@ -140,7 +147,7 @@ export default class VtexCartService {
       const itemToSend = {
         id: id ?? itemId ?? item?.itemId ?? item?.id,
         quantity: parseInt(_quantity),
-        seller: item?.seller ?? seller ?? sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers[0].sellerId ?? "1",
+        seller: item?.seller ?? seller ?? sellers?.find(i => i.sellerDefault)?.sellerId ?? item?.sellers?.[0].sellerId ?? "1",
       }
 
 			let orderFormId = await VtexCartService.getStoredOrderFormId()
@@ -163,7 +170,9 @@ export default class VtexCartService {
 
       const addToCartRes = await VtexCaller.post(url, payload)
 
-      GAVtexInternalService.addItemToCart([itemToSend], addToCartRes.data)
+      GAVtexInternalService.addItemToCart(itemToSend, addToCartRes.data)
+
+      VtexCartService._CACHED_CART = addToCartRes.data
 
       return addToCartRes.data
 
@@ -173,30 +182,33 @@ export default class VtexCartService {
 		}
 	}
 
-	static async changeItemQuantity(index, newQuantity, item) {
+	static async changeItemQuantity(index, newQuantity) {
 		try {
 			const orderFormId = await VtexCartService.getStoredOrderFormId()
 			const payload = {
 				orderItems: [
 					{
-						quantity: `${newQuantity}`,
-						index: `${index}`
+						quantity: newQuantity,
+						index: index
 					}
 				]
 			}
 
 			const updateCart = await VtexCaller.post(`api/checkout/pub/orderForm/${orderFormId}/items/update`, payload)
 			if (newQuantity === 0) {
-				GAVtexInternalService.removeItemFromCart(item)
+				GAVtexInternalService.removeItemFromCart(index, VtexCartService._CACHED_CART)
 			}
-			return updateCart.data
+
+      VtexCartService._CACHED_CART = updateCart.data
+
+      return updateCart.data
 		} catch (e) {
 			console.error('Erro ao modificar a quantidade no carrinho', e)
 		}
 	}
 
-	static async removeItem(index, item, currentPage) {
-		return await VtexCartService.changeItemQuantity(index, 0, item, currentPage)
+	static async removeItem(index) {
+		return await VtexCartService.changeItemQuantity(index, 0)
 	}
 
 	static async removeAllItems() {
@@ -214,7 +226,9 @@ export default class VtexCartService {
 			}
 		)
 
-		return response.data
+    VtexCartService._CACHED_CART = response.data
+
+    return response.data
 	}
 
 	static async removeClientData() {
@@ -228,7 +242,8 @@ export default class VtexCartService {
 	}
 
 	static async clearCart() {
-		await StorageService.removeItem(VtexCartService.VTEX_CART_KEY)
+    VtexCartService._CACHED_CART = null
+    await StorageService.removeItem(VtexCartService.VTEX_CART_KEY)
 	}
 
 	static async resolvePostalCode(zipCode, countryCode = 'BRA') {

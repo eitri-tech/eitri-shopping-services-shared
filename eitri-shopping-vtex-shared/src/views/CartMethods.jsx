@@ -8,12 +8,16 @@ export default function CartMethods() {
 
   const addToCart = async () => {
     const item = {
-        "id": "2143621557",
+        "id": "112416",
         "quantity": 1,
         "seller": "1",
       }
 
     const cart = await Vtex.cart.addItem(item)
+  }
+
+  const removeFromCart = async () => {
+    const cart = await Vtex.cart.removeItem(1)
   }
 
   const simulateCart = async () => {
@@ -63,6 +67,7 @@ export default function CartMethods() {
       <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
         <Button wide color='background-color' onPress={getCart} label='Obter ou criar carrinho' />
         <Button wide color='background-color' onPress={addToCart} label='Adicionar ao carrinho' />
+        <Button wide color='background-color' onPress={removeFromCart} label='Remover do carrinho' />
         <Button wide color='background-color' onPress={simulateCart} label='Simulate cart' />
       </View>
     </Window>

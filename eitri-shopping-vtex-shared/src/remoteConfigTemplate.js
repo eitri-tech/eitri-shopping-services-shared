@@ -4,7 +4,7 @@
  * opções de busca e comportamento do aplicativo.
  * campos com * são obrigatórios.
  */
-const ecommerceConfig = {
+const remoteConfigTemplate = {
   ecommerceProvider: "VTEX", // Não utilizado.,
   providerInfo: {
     account: "torratorra", //* Conta VTEX
@@ -25,7 +25,6 @@ const ecommerceConfig = {
       buyGoesToPDP: true // Indica se o botão "Comprar" irá direcionar para o PDP ao invés de adicionar ao carrinho.
     }
   },
-
   storePreferences: {
     displayCompanyName: "Lojas Torra", //* Nome da loja para exibição.
     currencyCode: "BRL", // Código da moeda.
@@ -48,11 +47,9 @@ const ecommerceConfig = {
     marketingTag: "eitri-shop", // Tag de marketing associada à loja - importante para identifição da compra. Se não enviada "eitri-shop" será a padrão.
     salesChannel: "1" // Canal de vendas configurado - importante para identificação da compra. Se não enviada "1" será a padrão.
   },
-
   searchOptions: {
     legacySearch: false // Se `true`, habilita o modo de busca legado ao invés do intelligent search.
   },
-
   /**
    * Configuraçoes da bottom bar nativa. O array é posicional, deve ser preenchido seguindo a ordem da bottom bar.
    */

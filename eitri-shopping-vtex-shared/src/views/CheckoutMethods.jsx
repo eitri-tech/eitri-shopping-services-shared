@@ -36,11 +36,28 @@ export default function CheckoutMethods() {
     })
   }
 
+  const selectPayment = async () => {
+    await Vtex.checkout.selectPaymentOption({
+      "payments":[
+        {
+          "paymentSystem":125,
+          "paymentSystemName":"Pix",
+          "group":"instantPaymentPaymentGroup",
+          "installmentsValue":37434,
+          "value":37434,
+          "referenceValue":37434
+        }],
+      "giftCards":[]
+    })
+  }
+
 
   return (
     <Window topInset bottomInset title="Métodos de checkout">
       <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
         <Button wide color='background-color' onPress={selectShipping} label='Selecionar opção de entrega' />
+
+        <Button wide color='background-color' onPress={selectPayment} label='Selecionar opção de pagamento' />
       </View>
     </Window>
   )

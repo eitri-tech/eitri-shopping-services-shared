@@ -56,4 +56,6 @@ export default class GAService {
       console.error('[Analytics] Error on logError', error.message)
     }
   }
+
+  // TODO: Implementar métodos de ecommerce para GA (https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag)
 }
