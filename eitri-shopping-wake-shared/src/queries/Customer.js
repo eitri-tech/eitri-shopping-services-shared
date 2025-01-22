@@ -108,6 +108,17 @@ mutation ($input: String) {
   }
 }`
 
+export const queryCustomerUpdate = `
+mutation ($customerAccessToken: String!, $input: CustomerUpdateInput) {
+ customerName
+    companyName
+    cpf
+    cnpj
+    email
+    birthDate
+    gender
+`
+
 export const queryCustomerCompletePartialRegistration = `
 mutation ($customerAccessToken: String!, $input: CustomerSimpleCreateInputGraphInput! ) {
   customerCompletePartialRegistration(input: $input, customerAccessToken: $customerAccessToken) {
