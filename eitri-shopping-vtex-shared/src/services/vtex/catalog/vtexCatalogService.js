@@ -21,11 +21,10 @@ export default class VtexCatalogService {
 		return Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null
 	}
 
-	static async searchProduct(text, options = {}, currentPage = null) {
+	static async searchProduct(text, options = {}) {
 		const defaultOptions = VtexCatalogService.getSearchOptions()
 		const queryString = objectToQueryString({ ...defaultOptions, ...options })
 		const result = await VtexCaller.get(`api/io/_v/api/intelligent-search/product_search?q=${text}&${queryString}`)
-		GAVtexInternalService.viewItemList(result?.data, 'intelligent-search', text, currentPage)
 		if (!result || result?.data.length === 0) return []
 		return result.data
 	}
@@ -37,7 +36,7 @@ export default class VtexCatalogService {
 		return result?.data
 	}
 
-	static async getProductsByFacets(facet, options = {}, currentPage) {
+	static async getProductsByFacets(facet, options = {}) {
 		const defaultOptions = VtexCatalogService.getSearchOptions()
 		const queryString = objectToQueryString({ ...defaultOptions, ...options })
 		const response = await VtexCaller.get(
@@ -46,7 +45,6 @@ export default class VtexCatalogService {
 				params: options
 			}
 		)
-		GAVtexInternalService.viewItemList(response.data, 'intelligent-search', facet, currentPage)
 		return response.data
 	}
 
@@ -57,35 +55,31 @@ export default class VtexCatalogService {
 		return response.data
 	}
 
-	static async getSimilarProducts(productId, currentPage) {
+	static async getSimilarProducts(productId) {
 		let url = `api/catalog_system/pub/products/crossselling/similars/${productId}`
 		const result = await VtexCaller.get(url)
 
 		if (!result || result?.data.length === 0) return []
 		const availableProducts = VtexCatalogService.filterAvailableProductsOnly(result.data)
 
-		GAVtexInternalService.viewItemList(availableProducts, 'similars', productId, currentPage)
-
 		return availableProducts
 	}
 
-  static async legacySearch(search, currentPage) {
+  static async legacySearch(search) {
     let url = `api/catalog_system/pub/products/search/${search}`
     const result = await VtexCaller.get(url)
-    GAVtexInternalService.viewItemList(result.data, 'products_search', search, currentPage)
     return result.data
   }
 
   /*
     @deprecated Esta função será removida
   */
-	static async getSearchProducts(search, currentPage) {
-		return await VtexCatalogService.legacySearch(search, currentPage)
+	static async getSearchProducts(search) {
+		return await VtexCatalogService.legacySearch(search)
 	}
 
-	static async getWhoSawAlsoSaw(productId, currentPage) {
+	static async getWhoSawAlsoSaw(productId) {
 		const result = await VtexCaller.get(`api/catalog_system/pub/products/crossselling/whosawalsosaw/${productId}`)
-		GAVtexInternalService.viewItemList({ products: result?.data }, 'whosawalsosaw', productId, currentPage)
 		return result?.data
 	}
 

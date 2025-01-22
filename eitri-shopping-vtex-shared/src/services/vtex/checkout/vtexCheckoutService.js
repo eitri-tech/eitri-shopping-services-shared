@@ -22,6 +22,8 @@ export default class VtexCheckoutService {
 			payload
 		)
 
+    GAVtexInternalService.addPaymentInfo(response.data)
+
 		return response.data
 	}
 
@@ -44,7 +46,9 @@ export default class VtexCheckoutService {
 			}
 		)
 
-		return response.data
+    GAVtexInternalService.addShippingInfo(response.data)
+
+    return response.data
 	}
 
 	static async setLogisticInfo(logisticInfo) {
@@ -62,28 +66,7 @@ export default class VtexCheckoutService {
 			}
 		)
 
-		return response.data
-	}
-
-	static async selectDeliveryOption(deliveryOption) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
-
-		const payload = {
-			logisticsInfo: deliveryOption,
-			clearAddressIfPostalCodeNotFound: false
-		}
-
-		const response = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
-			payload,
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json',
-					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-				}
-			}
-		)
+    GAVtexInternalService.addShippingInfo(response.data)
 
 		return response.data
 	}
@@ -201,7 +184,6 @@ export default class VtexCheckoutService {
 	static async processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess) {
 		console.log('====> Processando o pagamento', orderGroup)
 		Logger.log('====> Processando o pagamento', { orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess })
-		console.time('processPayment')
 
 		try {
 			const result = await Eitri.http.post(
@@ -217,7 +199,6 @@ export default class VtexCheckoutService {
 					}
 				}
 			)
-			console.timeEnd('processPayment')
 			console.log('Pagamento processado com sucesso', result.status)
 			if (result.status === 204) {
 				console.log('Pagamento processado com sucesso', orderGroup)
@@ -312,8 +293,13 @@ export default class VtexCheckoutService {
 
 		await VtexCheckoutService.setPaymentMethod(id, paymentMethod)
 
-		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
-	}
+		const processedPayment = await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+
+    GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+
+    return processedPayment
+
+  }
 
 	static async payInstantPayment(cart) {
 		console.log('===> Pagamento via Pix')
@@ -356,8 +342,13 @@ export default class VtexCheckoutService {
 
 		await VtexCheckoutService.setPaymentMethod(id, paymentMethod)
 
-		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
-	}
+    const processedPayment = await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+
+    GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+
+    return processedPayment
+
+  }
 
 	static async payWithCard(cart, cardInfo, captchaToken, captchaSiteKey) {
 		console.log('===> Pagamento via Cartão de Crédito')
@@ -440,7 +431,11 @@ export default class VtexCheckoutService {
 
 		await VtexCheckoutService.setPaymentMethod(id, creditCardPaymentPayload)
 
-		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+		const processedPayment = await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess)
+
+    GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+
+    return processedPayment
 	}
 
 	static async getPixStatus(transactionId, paymentId) {

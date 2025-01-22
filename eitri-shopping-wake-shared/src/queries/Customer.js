@@ -50,10 +50,21 @@ query ($customerAccessToken:String!) {
       receiverName
       referencePoint
       state
-      
     }
     birthDate
+    phoneNumber
+    mobilePhoneNumber
     businessPhoneNumber
+    customerId
+    customerName
+    email
+    gender
+    cpf
+    cnpj
+    companyName
+    creationDate
+    customerType
+    companyName
     checkingAccountBalance
     checkingAccountHistory {
       date
@@ -61,16 +72,6 @@ query ($customerAccessToken:String!) {
       type
       value
     }
-    cnpj
-    companyName
-    cpf
-    creationDate
-    customerId
-    customerName
-    customerType
-    companyName
-    email
-    gender
     partners { 
       name
       partnerAccessToken
