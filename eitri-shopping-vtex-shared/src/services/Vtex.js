@@ -14,36 +14,35 @@ export default class Vtex {
 		host: '',
 		vtexCmsUrl: '',
 		searchOptions: {},
-		segments: null
+		segments: null,
+    session: '',
+    marketingTag: 'eitri-shop',
+    salesChannel: null,
+    faststore: ''
 	}
 
 	static configure = async remoteConfig => {
-		const { appConfigs, providerInfo, segments, searchOptions, marketingTag, storePreferences } = remoteConfig
 
-		const { account, host, faststore, vtexCmsUrl, bindingId, salesChannel } = providerInfo
-
-		let _host = host
+		let _host = remoteConfig?.providerInfo?.host
 		if (_host && !_host.startsWith('https://')) {
-			_host = 'https://' + host
+			_host = 'https://' + remoteConfig?.providerInfo?.host
 		}
 
 		Vtex.configs = {
-			account,
-      appConfigs,
-			api: `https://${account}.vtexcommercestable.com.br`,
-			host: _host,
-			searchOptions,
-			segments,
-			faststore,
-			bindingId,
-			vtexCmsUrl,
-			salesChannel,
-      storePreferences,
-			marketingTag: marketingTag ?? 'eitri-shop'
+      account: remoteConfig?.providerInfo?.account,
+      api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
+      host: _host,
+      vtexCmsUrl: remoteConfig?.providerInfo?.vtexCmsUrl,
+      searchOptions: remoteConfig?.searchOptions,
+      segments: remoteConfig?.storePreferences?.segments,
+      marketingTag: remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
+      salesChannel: remoteConfig?.storePreferences?.salesChannel,
+      faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		const session = await Vtex.getSession(segments)
-		Vtex.configs.session = session
+    const session = await Vtex.getSession(remoteConfig?.storePreferences?.segments)
+    Vtex.configs.session = session
+
 	}
 
 	static getSession = async (segments) => {
@@ -63,7 +62,7 @@ export default class Vtex {
 			}
 			return null
 		} catch (e) {
-			console.error('Error configuring segments', e)
+			console.error('[SHARED] Error configuring segments', e)
 			return null
 		}
 	}
