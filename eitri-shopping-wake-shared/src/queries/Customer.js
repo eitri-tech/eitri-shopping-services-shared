@@ -109,14 +109,18 @@ mutation ($input: String) {
 }`
 
 export const queryCustomerUpdate = `
-mutation ($customerAccessToken: String!, $input: CustomerUpdateInput) {
- customerName
+mutation ($customerAccessToken: String!, $input: CustomerUpdateInput!) {
+  customerUpdate(customerAccessToken: $customerAccessToken, input: $input) {
+    customerName
     companyName
     cpf
     cnpj
     email
+    phoneNumber
     birthDate
     gender
+}
+} 
 `
 
 export const queryCustomerCompletePartialRegistration = `

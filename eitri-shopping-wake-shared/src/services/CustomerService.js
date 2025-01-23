@@ -16,7 +16,8 @@ import {
   queryUpdateAddress,
   queryCustomerCompletePartialRegistration,
   queryCustomerPasswordChange,
-  querySimpleLogin, queryCustomerOrders
+  querySimpleLogin, queryCustomerOrders,
+  queryCustomerUpdate
 } from "../queries/Customer";
 import {Wake} from "../export";
 
@@ -86,8 +87,8 @@ export default class CustomerService {
       }
 
       const response = await GraphqlService.query(queryCustomerUpdate, {
-        input: customer,
         customerAccessToken: savedToken,
+        input: customer,
       });
 
       return response;
