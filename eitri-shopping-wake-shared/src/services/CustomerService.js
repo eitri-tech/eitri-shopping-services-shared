@@ -16,7 +16,8 @@ import {
   queryUpdateAddress,
   queryCustomerCompletePartialRegistration,
   queryCustomerPasswordChange,
-  querySimpleLogin, queryCustomerOrders
+  querySimpleLogin, queryCustomerOrders,
+  queryCustomerUpdate
 } from "../queries/Customer";
 import {Wake} from "../export";
 
@@ -75,6 +76,25 @@ export default class CustomerService {
     } catch (e) {
       console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
       throw e
+    }
+  }
+
+  static async customerUpdate(customer) {
+    try {
+      const savedToken = await CustomerService.getCustomerToken();
+      if (!savedToken) {
+        return null;
+      }
+
+      const response = await GraphqlService.query(queryCustomerUpdate, {
+        customerAccessToken: savedToken,
+        input: customer,
+      });
+
+      return response;
+    } catch (e) {
+      console.error("[SHARED] [updateCustomer] Erro ao atualizar customer", e);
+      throw e;
     }
   }
 

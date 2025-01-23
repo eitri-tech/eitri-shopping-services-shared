@@ -48,6 +48,17 @@ export default function CustomerMethod() {
     console.log('create >>', result)
   }
 
+  const updateCustomer = async () => {
+    const customer = {
+      fullName: "Igor Cantelmo",
+      birthDate: "1993-09-29T00:00:00",
+    };
+
+    const result = await WakeService.customer.customerUpdate(customer);
+
+    console.log("customer >>", result);
+  };
+
   const simpleLogin = async () => {
     const result = await WakeService.customer.customerSimpleLoginStart('neposod158@nozamas.com')
     console.log('create >>', result)
@@ -184,6 +195,10 @@ export default function CustomerMethod() {
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={simpleLogin} label={`Simple Login`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={updateCustomer} label={`Customer Update`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
