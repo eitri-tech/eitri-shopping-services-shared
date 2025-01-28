@@ -280,3 +280,21 @@ mutation (
   ${checkoutModel}
   }
 }`
+
+export const queryCheckoutAddCoupon = `
+mutation (
+  $checkoutId: Uuid!
+  $coupon: String!
+  $customerAccessToken: String
+) {
+  checkoutAddCoupon(
+    checkoutId: $checkoutId
+    coupon: $coupon
+    customerAccessToken: $customerAccessToken
+  ) {
+    checkoutId
+    coupon
+    total
+    subtotal
+  }
+}`

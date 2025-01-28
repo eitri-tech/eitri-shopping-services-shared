@@ -1,5 +1,6 @@
 import GraphqlService from './GraphqlService'
 import {
+  queryCheckoutAddCoupon,
   queryCheckoutAddressAssociate, queryCheckoutComplete,
   queryCheckoutCustomerAssociate, queryCheckoutSelectInstallment, queryCheckoutSelectPaymentMethod,
   queryCheckoutSelectShippingQuote, queryPaymentMethods,
@@ -198,6 +199,31 @@ export default class CheckoutService {
       return response
     } catch (e) {
       console.error('[SHARED] [checkoutSelectInstallment] Erro ao definir parcelas pagamento', e)
+      throw e
+    }
+  }
+
+  static async checkoutAddCoupon(coupon) {
+    try {
+
+      const [cartId, token] = await Promise.all([
+        StorageService.getStorageItem(CartService.CART_KEY),
+        CustomerService.getCustomerToken()
+      ])
+
+      if (!cartId || !token) {
+        return null
+      }
+
+      const response = await GraphqlService.query(queryCheckoutAddCoupon, {
+        coupon: coupon,
+        customerAccessToken: token,
+        checkoutId: cartId
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [checkoutAddCoupon] Erro ao adicionar cupom', coupon, e)
       throw e
     }
   }
