@@ -292,9 +292,17 @@ mutation (
     coupon: $coupon
     customerAccessToken: $customerAccessToken
   ) {
-    checkoutId
-    coupon
-    total
-    subtotal
+    ${checkoutModel}
+  }
+}`
+
+export const queryCheckoutRemoveCoupon = `
+mutation (
+  $checkoutId: Uuid!
+) {
+  checkoutRemoveCoupon(
+    checkoutId: $checkoutId
+  ) {
+    ${checkoutModel}
   }
 }`
