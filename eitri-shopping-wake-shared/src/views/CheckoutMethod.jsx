@@ -84,6 +84,11 @@ export default function CheckoutMethod() {
     console.log('response >>', response)
   }
 
+ const checkoutRemoveCoupon = async () => {
+    const response = await WakeService.checkout.checkoutRemoveCoupon()
+    console.log('response >>', response)
+  }
+
   const back = () => {
     Eitri.navigation.back()
   }
@@ -158,6 +163,10 @@ export default function CheckoutMethod() {
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
           <Button wide color='background-color' onPress={checkoutAddCoupon} label={`Adicionar cupom`} />
+        </View>
+
+        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+          <Button wide color='background-color' onPress={checkoutRemoveCoupon} label={`Remover cupom`} />
         </View>
 
         <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >

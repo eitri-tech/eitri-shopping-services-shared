@@ -91,11 +91,11 @@ export default class CartService {
 	*/
 	static async generateNewCart() {
 		try {
-      Logger.log('====> [addItems] Gerando novo carrinho')
+      Logger.log('====> Gerando novo carrinho')
 
       const response = await GraphqlService.query(queryCreteCheckout)
 
-      Logger.log('====> [addItems] Novo carrinho gerado', response.data.checkoutId)
+      Logger.log('====> Novo carrinho gerado', response.data.checkoutId)
 
       CartService.CACHED_CART = response?.data
 

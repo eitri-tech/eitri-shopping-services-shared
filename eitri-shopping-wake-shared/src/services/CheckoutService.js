@@ -1,9 +1,14 @@
 import GraphqlService from './GraphqlService'
 import {
   queryCheckoutAddCoupon,
-  queryCheckoutAddressAssociate, queryCheckoutComplete,
-  queryCheckoutCustomerAssociate, queryCheckoutSelectInstallment, queryCheckoutSelectPaymentMethod,
-  queryCheckoutSelectShippingQuote, queryPaymentMethods,
+  queryCheckoutAddressAssociate,
+  queryCheckoutComplete,
+  queryCheckoutCustomerAssociate,
+  queryCheckoutRemoveCoupon,
+  queryCheckoutSelectInstallment,
+  queryCheckoutSelectPaymentMethod,
+  queryCheckoutSelectShippingQuote,
+  queryPaymentMethods,
   queryShippingQuotes
 } from "../queries/Checkout";
 import CartService from "./CartService";
@@ -211,19 +216,39 @@ export default class CheckoutService {
         CustomerService.getCustomerToken()
       ])
 
-      if (!cartId || !token) {
+      if (!cartId) {
         return null
       }
 
       const response = await GraphqlService.query(queryCheckoutAddCoupon, {
         coupon: coupon,
-        customerAccessToken: token,
-        checkoutId: cartId
+        checkoutId: cartId,
+        customerAccessToken: token ?? ''
       })
 
       return response
     } catch (e) {
       console.error('[SHARED] [checkoutAddCoupon] Erro ao adicionar cupom', coupon, e)
+      throw e
+    }
+  }
+
+  static async checkoutRemoveCoupon() {
+    try {
+
+      const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+      if (!cartId) {
+        return null
+      }
+
+      const response = await GraphqlService.query(queryCheckoutRemoveCoupon, {
+        checkoutId: cartId
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [checkoutRemoveCoupon] Erro ao remover cupom', e)
       throw e
     }
   }
