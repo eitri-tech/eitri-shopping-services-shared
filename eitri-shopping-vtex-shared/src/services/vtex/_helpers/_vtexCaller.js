@@ -49,7 +49,7 @@ export default class VtexCaller {
 			...options.headers
 		})
 
-		const res = Eitri.http.get(url.href, {
+		const res = await Eitri.http.get(url.href, {
 			...options,
 			headers: {
 				...headers,
