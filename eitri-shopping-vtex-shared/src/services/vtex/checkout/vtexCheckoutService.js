@@ -184,6 +184,15 @@ export default class VtexCheckoutService {
 	static async processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess) {
 		console.log('====> Processando o pagamento', orderGroup)
 		Logger.log('====> Processando o pagamento', { orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess })
+		Logger.log('====> Chamando URL do gateway', `${Vtex.configs.host}/api/checkout/pub/gatewayCallback/${orderGroup}`)
+		Logger.log('====> HEADERS', {
+      headers: {
+        'accept': 'application/json, text/javascript, */*; q=0.01',
+        'content-type': 'application/json',
+        'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+        'Cookie': `Vtex_CHKO_Auth=${CheckoutDataAccess};CheckoutDataAccess=VTEX_CHK_Order_Auth=${Vtex_CHKO_Auth}`
+      }
+    })
 
 		try {
 			const result = await Eitri.http.post(
@@ -193,8 +202,7 @@ export default class VtexCheckoutService {
 					headers: {
 						'accept': 'application/json, text/javascript, */*; q=0.01',
 						'content-type': 'application/json',
-						'user-agent':
-							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+						'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
 						'Cookie': `Vtex_CHKO_Auth=${CheckoutDataAccess};CheckoutDataAccess=VTEX_CHK_Order_Auth=${Vtex_CHKO_Auth}`
 					}
 				}
@@ -205,8 +213,6 @@ export default class VtexCheckoutService {
 				return { ok: true, orderGroup }
 			}
 		} catch (e) {
-			console.timeEnd('processPayment')
-			console.log('erro no processPayment', e)
 			if (!e.response.data) {
 				console.log('erro no processPayment', e.response)
 				throw Error(e)
@@ -216,7 +222,7 @@ export default class VtexCheckoutService {
 				console.log('Pagemento processado com sucesso para Pix', orderGroup)
 				return { pix: true, pixData: e.response.data.paymentAuthorizationAppCollection[0].appPayload }
 			} else {
-				console.log('erro no processPayment', e.response)
+				console.error('erro no processPayment', e.response)
 				throw Error(e)
 			}
 		}
