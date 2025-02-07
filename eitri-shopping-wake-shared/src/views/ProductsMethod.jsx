@@ -58,6 +58,17 @@ export default function ProductsMethod() {
     setLoading(false)
   }
 
+  const notifyMe = async () => {
+    setLoading(true)
+    try {
+      const res = await WakeService.product.restockAlert('teste', 'teste.eitri@calindra.com.br', 336903)
+      console.log('res', JSON.stringify(res))
+    } catch (e) {
+      console.error(e)
+    }
+    setLoading(false)
+  }
+
   const getProduct = async (productId) => {
     setLoading(true)
     resetView()
@@ -93,6 +104,9 @@ export default function ProductsMethod() {
           </View>
           <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
             <Button wide color='background-color' onPress={() => findByTerm(searchTerm, '')} label={`Buscar pelo termo: ${searchTerm}`} />
+            </View>
+          <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
+            <Button wide color='background-color' onPress={() => notifyMe()} label={`Avise me`} />
           </View>
 
           {products.length > 0 &&
