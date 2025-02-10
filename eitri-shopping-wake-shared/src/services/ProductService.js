@@ -82,5 +82,28 @@ export default class ProductService {
 		let products = response.product || null
 		return products
 	}
+
+	static async restockAlert(name, email, productVariantId) {
+		const query = `mutation ($input: RestockAlertInput!) {
+			productRestockAlert(input: $input) {
+				productVariantId
+				name
+				email
+				requestDate
+			}
+		}`
+		
+		const variables = {
+			input: {
+				name,
+				email,
+				productVariantId
+			}
+		}
+		
+		const response = await GraphqlService.query(query, variables)
+		let products = response.productRestockAlert || null
+		return products
+	}
 	
 }
