@@ -1,5 +1,6 @@
 import GraphqlService from './GraphqlService'
 import {
+  queryAddCheckoutMetadata,
   queryCheckoutAddCoupon,
   queryCheckoutAddressAssociate,
   queryCheckoutComplete,
@@ -252,5 +253,28 @@ export default class CheckoutService {
       throw e
     }
   }
+
+  static async addCheckoutMetadata(checkoutId, metadata) {
+    const eitriMetadata = {key: 'utmSource', value: 'eitri-shop'}
+    if (Array.isArray(metadata)) {
+      metadata.push(eitriMetadata)
+    } else {
+      metadata = [eitriMetadata]
+    }
+      
+    try {
+      const response = await GraphqlService.query(queryAddCheckoutMetadata, {
+        checkoutId,
+        metadata
+      })
+
+      return response
+    } catch (e) {
+      console.error('[SHARED] [addCheckoutMetadata]', e)
+      throw e
+    }
+  }
+
+
 
 }

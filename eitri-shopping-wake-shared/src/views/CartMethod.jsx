@@ -1,7 +1,9 @@
 import Eitri from 'eitri-bifrost'
 import WakeService from "../services/WakeService"
+import StorageService from '../services/StorageService'
+import CartService from '../services/CartService'
 
-const cartId = '75a1e20b-e486-4bfd-baea-ff539b39acf8'
+const cartId = '49ea1288-d2ef-4092-9968-ed5b70966ede'
 export default function CartMethod() {
 
   const [loading, setLoading] = useState(true)
@@ -13,6 +15,7 @@ export default function CartMethod() {
   }, [])
 
   const getCart = async () => {
+    await StorageService.setStorageItem(CartService.CART_KEY, cartId)
     try {
       const _cart = await WakeService.cart.getCart()
       console.log('_cart >>', _cart)
@@ -55,6 +58,11 @@ export default function CartMethod() {
 
   const cleanCart = async () => {
     await WakeService.cart.clearCart()
+  }
+
+  const addMetadata = async () => {
+      const res = await WakeService.checkout.addCheckoutMetadata(cartId, [{ key: 'utmCampaign', value: 'aplicativo' }])
+      console.log('addMetadata >>', res)
   }
 
   const back = () => {
@@ -107,6 +115,10 @@ export default function CartMethod() {
 
             <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10}>
               <Button wide color='background-color' onPress={cleanCart} label='Limpa carrinho' />
+            </View>
+            
+            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10}>
+              <Button wide color='background-color' onPress={addMetadata} label='Add Metadata' />
             </View>
 
             <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
