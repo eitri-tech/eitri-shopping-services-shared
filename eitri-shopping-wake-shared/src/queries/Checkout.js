@@ -306,3 +306,18 @@ mutation (
     ${checkoutModel}
   }
 }`
+
+export const queryAddCheckoutMetadata = `
+mutation (
+  $checkoutId: Uuid!,
+  $metadata: [CheckoutMetadataInput]!
+) {
+  checkoutAddMetadata(
+    checkoutId: $checkoutId
+    metadata: $metadata
+  ) {
+    metadata {
+      key value
+    }
+  }
+}`
