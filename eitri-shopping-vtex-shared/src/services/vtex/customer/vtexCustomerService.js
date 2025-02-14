@@ -209,6 +209,10 @@ export default class VtexCustomerService {
 		return savedToken.token
 	}
 
+  static async getStorageCustomerToken() {
+    return await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
+  }
+
 	static async setCustomerToken(token) {
 		const creationTimeStamp = Math.floor(Date.now() / 1000)
 		return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, { token, creationTimeStamp })
