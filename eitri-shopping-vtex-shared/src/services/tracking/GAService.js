@@ -23,18 +23,28 @@ export default class GAService {
       ...data
     }
 
+    // tentativa pelo tracking
     try {
-      if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logEvent) {
-        Eitri.exposedApis.fb.logEvent({ eventName: event, data: params })
-        if (App.configs.gaVerbose) {
-          console.log('[Analytics]', '[logEvent]', { eventName: event, data: params })
-        }
-      } else {
-        console.error('[Analytics] Eitri.exposedApis.fb.logEvent not available')
+      Eitri.exposedApis.tracking.logEvent({ eventName: event, data: params })
+      if (App.configs.gaVerbose) {
+        console.log('[Analytics]', '[logEvent]', { eventName: event, data: params })
       }
+      return
+    } catch (error) {
+      // console.error('[Analytics] Error on logEvent', error.message)
+    }
+
+    // tentativa pelo fb
+    try {
+      Eitri.exposedApis.fb.logEvent({ eventName: event, data: params })
+      if (App.configs.gaVerbose) {
+        console.log('[Analytics]', '[logEvent]', { eventName: event, data: params })
+      }
+      return
     } catch (error) {
       console.error('[Analytics] Error on logEvent', error.message)
     }
+
   }
 
   static logError = (event, error) => {

@@ -18,7 +18,7 @@ export default class WakeService {
 
 	static configs = {
 		verbose: false,
-    gaVerbose: false,
+    	gaVerbose: false,
 		autoTriggerGAEvents: true,
 		clarityId: '',
 		provider: 'WAKE',
@@ -76,9 +76,9 @@ export default class WakeService {
 
 		try {
 			const environment = await Eitri.environment.getName()
-			if (remoteConfig.clarityId && environment === 'prod') {
-				WakeService.configs.clarityId = remoteConfig.clarityId
-				await Eitri.clarity.init(remoteConfig.clarityId)
+			if (remoteConfig.appConfigs?.clarityId && environment === 'prod') {
+				WakeService.configs.clarityId = remoteConfig.appConfigs.clarityId
+				await ClarityService.init(remoteConfig.appConfigs.clarityId)
 			}
 		} catch (error) {
 			console.error('[SHARED] Error clarity ', remoteConfig.clarityId, error)
@@ -94,16 +94,6 @@ export default class WakeService {
 			console.error('[SHARED] Error App configure ', error)
 			throw error
 		}
-
-		try {
-			if (remoteConfig.clarityId) {
-			  WakeService.configs.clarityId = remoteConfig.clarityId
-			  ClarityService.init(remoteConfig.clarityId)
-			}
-		  } catch (error) {
-			console.error('[SHARED] Error clarity ', remoteConfig.ecommerceProvider, error)
-			throw error
-		  }
 
 		console.log(`[SHARED] App WAKE ${WakeService.configs.account} configurado com sucesso`)
 		return WakeService.configs
