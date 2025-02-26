@@ -321,3 +321,31 @@ mutation (
     }
   }
 }`
+
+export const queryCheckoutUseCheckingAccount = `
+mutation (
+  $checkoutId: Uuid!,
+  $customerAccessToken: String!
+) {
+  checkoutUseCheckingAccount(
+    checkoutId: $checkoutId
+    useBalance: true
+    customerAccessToken: $customerAccessToken
+  ) {
+    ${checkoutModel}
+  }
+}`
+
+export const queryCheckoutReset = `
+mutation ( $checkoutId: Uuid! ) {
+  checkoutReset( checkoutId: $checkoutId, types:[PAYMENT] ) {
+    isSuccess
+  }
+}`
+
+
+
+
+
+
+

@@ -1,7 +1,12 @@
-import Eitri from 'eitri-bifrost'
-import WakeService from "../services/WakeService"
+import Eitri from "eitri-bifrost";
+import WakeService from "../services/WakeService";
 
-const cartId = '75a1e20b-e486-4bfd-baea-ff539b39acf8'
+let cartId = "c1e3c46b-1872-401d-85e6-b1c8f2c9c464";
+const userLogin = {
+  login: "fulano@email.com",
+  pass: "123456",
+};
+
 export default function CheckoutMethod() {
 
   const [loading, setLoading] = useState(true)
@@ -14,9 +19,12 @@ export default function CheckoutMethod() {
   }
 
   const login = async () => {
-    const result = await WakeService.customer.customerAuthenticatedLogin('', '')
-    console.log('create >>', result)
-  }
+    const result = await WakeService.customer.customerAuthenticatedLogin(
+      userLogin.login,
+      userLogin.pass
+    );
+    console.log("create >>", result);
+  };
 
   const getCheckout = async () => {
     let _fullCart = await WakeService.cart.getCheckout()
@@ -89,6 +97,26 @@ export default function CheckoutMethod() {
     console.log('response >>', response)
   }
 
+  const useCashback = async () => {
+    try {
+      const response = await WakeService.checkout.checkoutUseCheckingAccount(fullCart.checkoutId);
+      console.log("response useCashback >>", JSON.stringify(response));
+    } catch (e) {
+      console.error('useCashback', e);
+    }
+    await getCheckout()
+  };
+
+  const resetCheckout = async () => {
+    try {
+      const response = await WakeService.checkout.checkoutReset(fullCart.checkoutId);
+      console.log("response resetCheckout >>", JSON.stringify(response));
+    } catch (e) {
+      console.error('resetCheckout', e);
+    }
+    await getCheckout()
+  };
+
   const back = () => {
     Eitri.navigation.back()
   }
@@ -104,11 +132,19 @@ export default function CheckoutMethod() {
           <Text>
             Total de Produtos: {cart.quantity || '0'}
           </Text>
+          <Text>
+            Credito: {fullCart?.customer?.checkingAccountBalance || '0'}
+          </Text>
+          <Text>
+            Credito associado: {fullCart?.checkingAccountValue || '0'}
+          </Text>
         </View>
 
         {fullCart &&
           <View direction='column'>
-            <Text>Checkout value: {fullCart.total || '0'}</Text>
+            <Text>Subtotal: {fullCart.subtotal || '0'}</Text>
+            <Text>Descontos: {fullCart.totalDiscount || '0'}</Text>
+            <Text>Total: {fullCart.total || '0'}</Text>
             {fullCart.products?.map((product, idx) => (
               <Text paddingLeft='small' key={`p_${idx}`}>
                 {product.quantity} {product.name}
@@ -165,12 +201,12 @@ export default function CheckoutMethod() {
           <Button wide color='background-color' onPress={checkoutAddCoupon} label={`Adicionar cupom`} />
         </View>
 
-        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-          <Button wide color='background-color' onPress={checkoutRemoveCoupon} label={`Remover cupom`} />
+        <View padding="large" direction="column" justifyContent="center" alignItems="center" width="100%" gap={10} >
+          <Button wide color="background-color" onPress={useCashback} label={`Usar Crédito da Conta`} />
         </View>
 
-        <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-          <Button wide color='background-color' onPress={checkoutComplete} label={`Completar pagamento`} />
+        <View padding="large" direction="column" justifyContent="center" alignItems="center" width="100%" gap={10} >
+          <Button wide color="background-color" onPress={resetCheckout} label={`Resetar pagamento`} />
         </View>
 
         <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
