@@ -6,9 +6,11 @@ import {
   queryCheckoutComplete,
   queryCheckoutCustomerAssociate,
   queryCheckoutRemoveCoupon,
+  queryCheckoutReset,
   queryCheckoutSelectInstallment,
   queryCheckoutSelectPaymentMethod,
   queryCheckoutSelectShippingQuote,
+  queryCheckoutUseCheckingAccount,
   queryPaymentMethods,
   queryShippingQuotes
 } from "../queries/Checkout";
@@ -275,6 +277,30 @@ export default class CheckoutService {
     }
   }
 
+  static async checkoutUseCheckingAccount(checkoutId) {
+    const token = await CustomerService.getCustomerToken();
 
+    if (!token) {
+      return null;
+    }
 
+    try {
+      const response = await GraphqlService.query( queryCheckoutUseCheckingAccount,
+        { customerAccessToken: token, checkoutId: checkoutId, } );
+      return response;
+    } catch (e) {
+      console.error("[SHARED] [checkoutUseCheckingAccount]", e);
+      throw e;
+    }
+  }
+
+  static async checkoutReset(checkoutId) {
+    try {
+      const response = await GraphqlService.query( queryCheckoutReset, { checkoutId } );
+      return response;
+    } catch (e) {
+      console.error("[SHARED] [CheckoutReset]", e);
+      throw e;
+    }
+  }
 }
