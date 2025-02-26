@@ -3,7 +3,7 @@ import WakeService from "../services/WakeService";
 
 let cartId = "c1e3c46b-1872-401d-85e6-b1c8f2c9c464";
 const userLogin = {
-  login: "leo.csr.silva@gmail.com",
+  login: "fulano@email.com",
   pass: "123456",
 };
 
