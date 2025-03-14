@@ -1,11 +1,10 @@
-import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import Vtex from '../../Vtex'
 import Eitri from 'eitri-bifrost'
 import Logger from '../../Logger'
 import VtexCartService from '../cart/VtexCartService'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
-import GAService from '../../tracking/GAService'
+import App from "../../App";
 
 export default class VtexCheckoutService {
 
@@ -292,7 +291,7 @@ export default class VtexCheckoutService {
 					id: id,
 					merchantName: payment.merchantSellerPayments[0].id
 				},
-				currencyCode: 'BRL',
+				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0
 			}
 		]
@@ -341,7 +340,7 @@ export default class VtexCheckoutService {
 					id: id,
 					merchantName: payment.merchantSellerPayments[0].id
 				},
-				currencyCode: 'BRL',
+				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0
 			}
 		]
@@ -429,7 +428,7 @@ export default class VtexCheckoutService {
 					merchantName: payment.merchantSellerPayments[0].id
 				},
 				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
-				currencyCode: 'BRL',
+				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0,
 				groupName: 'creditCardPaymentGroup'
 			}

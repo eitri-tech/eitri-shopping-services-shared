@@ -49,6 +49,16 @@ export default class App {
         ...remoteConfig,
       }
 
+      if (!App.configs?.storePreferences?.currencyCode) {
+        App.configs = {
+          ...App.configs,
+          storePreferences: {
+            ...App.configs.storePreferences,
+            currencyCode: 'BRL'
+          }
+        }
+      }
+      
       console.log('[SHARED] *********** App configurado com sucesso ************')
 
       return App.configs
