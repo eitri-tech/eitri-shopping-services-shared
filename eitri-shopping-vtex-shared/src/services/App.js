@@ -58,9 +58,7 @@ export default class App {
           }
         }
       }
-
-      console.log('[SHARED] Configuracoes da app: ', App.configs)
-
+      
       console.log('[SHARED] *********** App configurado com sucesso ************')
 
       return App.configs
