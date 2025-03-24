@@ -10,7 +10,7 @@ export default function Home() {
 
   const init = async () => {
     await App.tryAutoConfigure({ verbose: false, gaVerbose: true })
-    await Vtex.cart.setOrderFormId('07a0566e9c074e6c8b3472985329050c')
+    // await Vtex.cart.setOrderFormId('9ee6eb188e0f4ba79839f06e406cda4e')
   }
 
   const navigateTo = async (path) => {

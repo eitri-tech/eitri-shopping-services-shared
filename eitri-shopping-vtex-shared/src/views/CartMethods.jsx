@@ -2,13 +2,18 @@ import Vtex from "../services/Vtex";
 
 export default function CartMethods() {
 
+  const clearCart = async () => {
+    const cart = await Vtex.cart.clearCart()
+  }
+
   const getCart = async () => {
     const cart = await Vtex.cart.getCurrentOrCreateCart()
+    console.log(cart)
   }
 
   const addToCart = async () => {
     const item = {
-        "id": "112416",
+        "id": "1001",
         "quantity": 1,
         "seller": "1",
       }
@@ -65,6 +70,7 @@ export default function CartMethods() {
   return (
     <Window topInset bottomInset>
       <View padding='large' direction='column' gap={10} justifyContent='center' alignItems='center' width='100%'>
+        <Button wide color='background-color' onPress={clearCart} label='Limpar carrinho' />
         <Button wide color='background-color' onPress={getCart} label='Obter ou criar carrinho' />
         <Button wide color='background-color' onPress={addToCart} label='Adicionar ao carrinho' />
         <Button wide color='background-color' onPress={removeFromCart} label='Remover do carrinho' />
