@@ -6,7 +6,7 @@ mutation AuthenticatedLogin($input:String!, $pass:String!) {
     type
     validUntil
   }
-}`
+}`;
 
 export const queryCustomerAccessTokenRenew = `
 mutation ($customerAccessToken:String!) {
@@ -14,7 +14,7 @@ mutation ($customerAccessToken:String!) {
     token
     validUntil
   }
-}`
+}`;
 
 export const querySimpleCustomer = `
 query ($customerAccessToken:String!) {
@@ -30,7 +30,7 @@ query ($customerAccessToken:String!) {
     companyName
     email
   }
-}`
+}`;
 
 export const queryCustomer = `
 query ($customerAccessToken:String!) {
@@ -77,7 +77,7 @@ query ($customerAccessToken:String!) {
       partnerAccessToken
     }
   }
-}`
+}`;
 
 export const queryCreateCustomer = `
 mutation ($input: CustomerCreateInput) {
@@ -86,7 +86,7 @@ mutation ($input: CustomerCreateInput) {
     customerName
     customerType
   }
-}`
+}`;
 
 export const querySimpleLogin = `
 mutation ($input: String) {
@@ -106,7 +106,7 @@ mutation ($input: String) {
       }
     }
   }
-}`
+}`;
 
 export const queryCustomerUpdate = `
 mutation ($customerAccessToken: String!, $input: CustomerUpdateInput!) {
@@ -121,7 +121,7 @@ mutation ($customerAccessToken: String!, $input: CustomerUpdateInput!) {
     gender
 }
 } 
-`
+`;
 
 export const queryCustomerCompletePartialRegistration = `
 mutation ($customerAccessToken: String!, $input: CustomerSimpleCreateInputGraphInput! ) {
@@ -131,14 +131,14 @@ mutation ($customerAccessToken: String!, $input: CustomerSimpleCreateInputGraphI
     type
     validUntil
   }
-}`
+}`;
 
 export const queryCustomerPasswordChange = `
 mutation ($customerAccessToken: String!, $input: CustomerPasswordChangeInput! ) {
   customerPasswordChange(input: $input, customerAccessToken: $customerAccessToken) {
     isSuccess
   }
-}`
+}`;
 
 export const queryCreateAddress = `
 mutation ($customerAccessToken: String!, $address: CreateCustomerAddressInput! ) {
@@ -157,7 +157,7 @@ mutation ($customerAccessToken: String!, $address: CreateCustomerAddressInput! )
     street
     referencePoint
   }
-}`
+}`;
 
 export const queryUpdateAddress = `
 mutation ($customerAccessToken: String!, $address: UpdateCustomerAddressInput!, $id: ID! ) {
@@ -176,14 +176,14 @@ mutation ($customerAccessToken: String!, $address: UpdateCustomerAddressInput!, 
     street
     referencePoint
   }
-}`
+}`;
 
 export const queryRemoveAddress = `
 mutation ($customerAccessToken: String!, $id: ID! ) {
   customerAddressRemove(customerAccessToken: $customerAccessToken, id: $id) {
     isSuccess
   }
-}`
+}`;
 
 export const queryGetCustomerWishlist = `query Wishlist($customerAccessToken: String!, $productsIds: [Long]) {
   customer(customerAccessToken: $customerAccessToken){
@@ -210,21 +210,21 @@ export const queryGetCustomerWishlist = `query Wishlist($customerAccessToken: St
     	}
     }
   }
-}`
+}`;
 
 export const queryAddWishlistProduct = `mutation  ($customerAccessToken: String!, $productId: Long! ){
   wishlistAddProduct(customerAccessToken:$customerAccessToken, productId:$productId) {
     productId
     productName
   }
-}`
+}`;
 
 export const queryRemoveWishlistProduct = `mutation ($customerAccessToken: String!, $productId: Long! ) {
   wishlistRemoveProduct(customerAccessToken:$customerAccessToken, productId: $productId) {
     productId
     productName
   }
-}`
+}`;
 
 export const queryCustomerOrders = `
 query ($customerAccessToken:String!) {
@@ -366,4 +366,4 @@ query ($customerAccessToken:String!) {
     }
   }
   }
-}`
+}`;

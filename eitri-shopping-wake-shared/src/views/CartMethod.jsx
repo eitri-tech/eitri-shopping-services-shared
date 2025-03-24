@@ -1,132 +1,217 @@
-import Eitri from 'eitri-bifrost'
-import WakeService from "../services/WakeService"
-import StorageService from '../services/StorageService'
-import CartService from '../services/CartService'
+import Eitri from "eitri-bifrost";
+import WakeService from "../services/WakeService";
+import StorageService from "../services/StorageService";
+import CartService from "../services/CartService";
 
-const cartId = '49ea1288-d2ef-4092-9968-ed5b70966ede'
+const cartId = "49ea1288-d2ef-4092-9968-ed5b70966ede";
 export default function CartMethod() {
-
-  const [loading, setLoading] = useState(true)
-  const [cart, setCart] = useState({})
-  const [fullCart, setFullCart] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [cart, setCart] = useState({});
+  const [fullCart, setFullCart] = useState(null);
 
   useEffect(() => {
-    getCart()
-  }, [])
+    getCart();
+  }, []);
 
   const getCart = async () => {
-    await StorageService.setStorageItem(CartService.CART_KEY, cartId)
+    await StorageService.setStorageItem(CartService.CART_KEY, cartId);
     try {
-      const _cart = await WakeService.cart.getCart()
-      console.log('_cart >>', _cart)
-      setCart(_cart)
-      setLoading(false)
+      const _cart = await WakeService.cart.getCart();
+      console.log("_cart >>", _cart);
+      setCart(_cart);
+      setLoading(false);
     } catch (e) {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const newCart = async () => {
-    const _cart = await WakeService.cart.generateNewCart()
-    console.log('_new_cart >>', _cart)
-    setCart(_cart)
-    setLoading(false)
-  }
+    const _cart = await WakeService.cart.generateNewCart();
+    console.log("_new_cart >>", _cart);
+    setCart(_cart);
+    setLoading(false);
+  };
 
   const getCartById = async () => {
-    const cartId = '75a1e20b-e486-4bfd-baea-ff539b39acf8'
-    await WakeService.cart.forceCartId(cartId)
-    const _cart = await WakeService.cart.getCart()
-    console.log('_cart >>', _cart)
-    setLoading(false)
-  }
+    const cartId = "75a1e20b-e486-4bfd-baea-ff539b39acf8";
+    await WakeService.cart.forceCartId(cartId);
+    const _cart = await WakeService.cart.getCart();
+    console.log("_cart >>", _cart);
+    setLoading(false);
+  };
 
   const addItemCart = async () => {
-    setLoading(true)
+    setLoading(true);
     //337013, 340789, 341041, 343687, 344094
-    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 346845, quantity: 1 }, { productVariantId: 344094, quantity: 1 }])
-    setFullCart(_fullCart)
-    setLoading(false)
-  }
+    const _fullCart = await WakeService.cart.addItems([
+      { productVariantId: 346845, quantity: 1 },
+      { productVariantId: 344094, quantity: 1 },
+    ]);
+    setFullCart(_fullCart);
+    setLoading(false);
+  };
 
   const removeItemCart = async () => {
-    setLoading(true)
-    const _fullCart = await WakeService.cart.removeItems([{ productVariantId: 346845, quantity: 1}])
-    setFullCart(_fullCart)
-    setLoading(false)
-  }
+    setLoading(true);
+    const _fullCart = await WakeService.cart.removeItems([
+      { productVariantId: 346845, quantity: 1 },
+    ]);
+    setFullCart(_fullCart);
+    setLoading(false);
+  };
 
   const cleanCart = async () => {
-    await WakeService.cart.clearCart()
-  }
+    await WakeService.cart.clearCart();
+  };
 
   const addMetadata = async () => {
-      const res = await WakeService.checkout.addCheckoutMetadata(cartId, [{ key: 'utmCampaign', value: 'aplicativo' }])
-      console.log('addMetadata >>', res)
-  }
+    const res = await WakeService.checkout.addCheckoutMetadata(cartId, [
+      { key: "utmCampaign", value: "aplicativo" },
+    ]);
+    console.log("addMetadata >>", res);
+  };
 
   const back = () => {
-    Eitri.navigation.back()
-  }
+    Eitri.navigation.back();
+  };
 
   return (
-    <Window topInset bottomInset title='CartMethod'>
-      <View margin='large'>
+    <Window topInset bottomInset title="CartMethod">
+      <View margin="large">
         {loading ? (
-          <Text marginTop='small'>buscando ...</Text>
+          <Text marginTop="small">buscando ...</Text>
         ) : (
           <View>
-
-            <View direction='column'>
-              <Text>
-                Carrinho no Storage: {cart?.checkoutId}
-              </Text>
-              <Text>
-                Total de Produtos: {cart?.quantity || '0'}
-              </Text>
+            <View direction="column">
+              <Text>Carrinho no Storage: {cart?.checkoutId}</Text>
+              <Text>Total de Produtos: {cart?.quantity || "0"}</Text>
             </View>
 
-            {fullCart &&
-              <View direction='column'>
-                <Text>Checkout value: {fullCart.total || '0'}</Text>
+            {fullCart && (
+              <View direction="column">
+                <Text>Checkout value: {fullCart.total || "0"}</Text>
                 {fullCart.products?.map((product, idx) => (
-                  <Text paddingLeft='small' key={`p_${idx}`}>
+                  <Text paddingLeft="small" key={`p_${idx}`}>
                     {product.quantity} {product.name}
                   </Text>
                 ))}
               </View>
-            }
+            )}
 
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={getCart} label={`Get Cart`} />
+            <View
+              padding="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              gap={10}
+            >
+              <Button
+                wide
+                color="background-color"
+                onPress={getCart}
+                label={`Get Cart`}
+              />
             </View>
 
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={newCart} label={`Generate new cart`} />
+            <View
+              padding="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              gap={10}
+            >
+              <Button
+                wide
+                color="background-color"
+                onPress={newCart}
+                label={`Generate new cart`}
+              />
             </View>
 
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={addItemCart} label={`Adiciona item ao carrinho`} />
+            <View
+              padding="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              gap={10}
+            >
+              <Button
+                wide
+                color="background-color"
+                onPress={addItemCart}
+                label={`Adiciona item ao carrinho`}
+              />
             </View>
 
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10} >
-              <Button wide color='background-color' onPress={removeItemCart} label={`Remove item do carrinho`} />
+            <View
+              padding="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              gap={10}
+            >
+              <Button
+                wide
+                color="background-color"
+                onPress={removeItemCart}
+                label={`Remove item do carrinho`}
+              />
             </View>
 
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10}>
-              <Button wide color='background-color' onPress={cleanCart} label='Limpa carrinho' />
-            </View>
-            
-            <View padding='large' direction='column' justifyContent='center' alignItems='center' width='100%' gap={10}>
-              <Button wide color='background-color' onPress={addMetadata} label='Add Metadata' />
+            <View
+              padding="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              gap={10}
+            >
+              <Button
+                wide
+                color="background-color"
+                onPress={cleanCart}
+                label="Limpa carrinho"
+              />
             </View>
 
-            <View marginTop='large' direction='column' justifyContent='center' alignItems='center' width='100%'>
-              <Button wide backgroundColor='neutral-100' color='neutral-900' onPress={back} label='Voltar' />
+            <View
+              padding="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              gap={10}
+            >
+              <Button
+                wide
+                color="background-color"
+                onPress={addMetadata}
+                label="Add Metadata"
+              />
+            </View>
+
+            <View
+              marginTop="large"
+              direction="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+            >
+              <Button
+                wide
+                backgroundColor="neutral-100"
+                color="neutral-900"
+                onPress={back}
+                label="Voltar"
+              />
             </View>
           </View>
         )}
       </View>
     </Window>
-  )
+  );
 }

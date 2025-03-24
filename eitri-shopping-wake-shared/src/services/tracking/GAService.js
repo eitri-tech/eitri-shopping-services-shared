@@ -17,7 +17,7 @@ export default class GAService {
         }
       } else {
         console.log(
-          "[Analytics] Eitri.exposedApis.fb.logScreenView not available"
+          "[Analytics] Eitri.exposedApis.fb.logScreenView not available",
         );
       }
     } catch (error) {
@@ -74,7 +74,7 @@ export default class GAService {
         }
       } else {
         console.error(
-          "[Analytics] Eitri.exposedApis.fb.logError not available"
+          "[Analytics] Eitri.exposedApis.fb.logError not available",
         );
       }
     } catch (error) {

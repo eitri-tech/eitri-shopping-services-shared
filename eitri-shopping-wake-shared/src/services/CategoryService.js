@@ -1,15 +1,13 @@
-import GraphqlService from './GraphqlService'
+import GraphqlService from "./GraphqlService";
 
 export default class CategoryService {
+  static async findAll(cursor = "") {
+    let _cursor = "";
+    if (cursor) {
+      _cursor = `, after: "${cursor}"`;
+    }
 
-	static async findAll(cursor = '') {
-
-		let _cursor = ''
-		if (cursor) {
-			_cursor = `, after: "${cursor}"`
-		}
-
-		const query = `query {
+    const query = `query {
 			categories(first: 8 ${_cursor}) {
 				edges {
 					cursor
@@ -18,11 +16,10 @@ export default class CategoryService {
 					}
 				}
 			}
-		}`
+		}`;
 
-		const response = await GraphqlService.query(query)
-		let categories = response.categories?.edges || []
-		return categories
-	}
-
+    const response = await GraphqlService.query(query);
+    let categories = response.categories?.edges || [];
+    return categories;
+  }
 }
