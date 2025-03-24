@@ -5,7 +5,7 @@ module.exports = {
   "eitri-luminus": "1.65.6",
   "eitri-bifrost": "2.9.0",
   "eitri-commons": "2.1.2",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "messageVersion": "Envio de log de eventos para o appsflyer",
   "public-key": "0b837c87-a494-4521-9b0f-5ac49db5af9c",
   "applicationId": "99c18c0a-4112-4937-b27c-802d03f4e9e9",
