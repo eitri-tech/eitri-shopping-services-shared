@@ -1,5 +1,5 @@
-import GAService from './tracking/GAService'
+import GAService from "./tracking/GAService";
 
 export default class Tracking {
-	static ga = GAService
+  static ga = GAService;
 }

@@ -1,80 +1,83 @@
-import VtexCatalogService from './vtex/catalog/vtexCatalogService'
-import VtexCustomerService from './vtex/customer/vtexCustomerService'
-import VtexCheckoutService from './vtex/checkout/vtexCheckoutService'
-import VtexCartService from './vtex/cart/VtexCartService'
-import VtexCmsService from './vtex/cms/vtexCmsService'
-import VtexWishlistService from './vtex/wishlist/vtexWishlistService'
-import VtexCaller from './vtex/_helpers/_vtexCaller'
+import VtexCatalogService from "./vtex/catalog/vtexCatalogService";
+import VtexCustomerService from "./vtex/customer/vtexCustomerService";
+import VtexCheckoutService from "./vtex/checkout/vtexCheckoutService";
+import VtexCartService from "./vtex/cart/VtexCartService";
+import VtexCmsService from "./vtex/cms/vtexCmsService";
+import VtexWishlistService from "./vtex/wishlist/vtexWishlistService";
+import VtexCaller from "./vtex/_helpers/_vtexCaller";
 import App from "./App";
 
 export default class Vtex {
-	static configs = {
-		account: '',
-		api: '',
-		host: '',
-		vtexCmsUrl: '',
-		searchOptions: {},
-		segments: null,
-    session: '',
-    marketingTag: 'eitri-shop',
+  static configs = {
+    account: "",
+    api: "",
+    host: "",
+    vtexCmsUrl: "",
+    searchOptions: {},
+    segments: null,
+    session: "",
+    marketingTag: "eitri-shop",
     salesChannel: null,
-    faststore: ''
-	}
+    faststore: "",
+  };
 
-	static configure = async remoteConfig => {
+  static configure = async (remoteConfig) => {
+    let _host = remoteConfig?.providerInfo?.host;
+    if (_host && !_host.startsWith("https://")) {
+      _host = "https://" + remoteConfig?.providerInfo?.host;
+    }
 
-		let _host = remoteConfig?.providerInfo?.host
-		if (_host && !_host.startsWith('https://')) {
-			_host = 'https://' + remoteConfig?.providerInfo?.host
-		}
-
-		Vtex.configs = {
+    Vtex.configs = {
       account: remoteConfig?.providerInfo?.account,
       api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
       host: _host,
       vtexCmsUrl: remoteConfig?.providerInfo?.vtexCmsUrl,
       searchOptions: remoteConfig?.searchOptions,
       segments: remoteConfig?.storePreferences?.segments,
-      marketingTag: remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
+      marketingTag:
+        remoteConfig?.storePreferences?.marketingTag ?? "eitri-shop",
       salesChannel: remoteConfig?.storePreferences?.salesChannel,
-      faststore: remoteConfig?.providerInfo?.faststore
-		}
+      faststore: remoteConfig?.providerInfo?.faststore,
+    };
 
-    const session = await Vtex.getSession(remoteConfig?.storePreferences?.segments)
-    Vtex.configs.session = session
+    const session = await Vtex.getSession(
+      remoteConfig?.storePreferences?.segments,
+    );
+    Vtex.configs.session = session;
+  };
 
-	}
+  static getSession = async (segments) => {
+    try {
+      if (segments) {
+        const _public = {};
 
-	static getSession = async (segments) => {
-		try {
-			if (segments) {
-				const _public = {}
+        for (const key in segments) {
+          if (segments[key] !== null) {
+            _public[key] = { value: segments[key] };
+          }
+        }
 
-				for (const key in segments) {
-					if (segments[key] !== null) {
-						_public[key] = { value: segments[key] }
-					}
-				}
+        const result = await VtexCaller.post("api/sessions", {
+          public: _public,
+        });
 
-				const result = await VtexCaller.post('api/sessions', { public: _public })
-
-				return result.data
-			}
-			return null
-		} catch (e) {
-			console.error('[SHARED] Error configuring segments', e)
-			return null
-		}
-	}
+        return result.data;
+      }
+      return null;
+    } catch (e) {
+      console.error("[SHARED] Error configuring segments", e);
+      return null;
+    }
+  };
 
   static tryAutoConfigure = async (overwrites) => {
-    return await App.tryAutoConfigure(overwrites)
-  }
+    return await App.tryAutoConfigure(overwrites);
+  };
 
-	static catalog = VtexCatalogService
-	static checkout = VtexCheckoutService
-	static customer = VtexCustomerService
-	static cart = VtexCartService
-	static cms = VtexCmsService
-	static wishlist = VtexWishlistService
+  static catalog = VtexCatalogService;
+  static checkout = VtexCheckoutService;
+  static customer = VtexCustomerService;
+  static cart = VtexCartService;
+  static cms = VtexCmsService;
+  static wishlist = VtexWishlistService;
 }

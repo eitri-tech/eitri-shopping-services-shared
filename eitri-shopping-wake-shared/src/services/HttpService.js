@@ -1,56 +1,62 @@
-import Eitri from 'eitri-bifrost'
-import WakeService from './WakeService'
+import Eitri from "eitri-bifrost";
+import WakeService from "./WakeService";
 
 export default class WakeCaller {
-	static _mountUrl = (baseUrl, path) => {
-		try {
-			return new URL(`${baseUrl}/${path.startsWith('/') ? path.substring(1) : path}`)
-		} catch (error) {
-			console.log('Erro ao montar URL', `${baseUrl}/${path.startsWith('/') ? path.substring(1) : path}`, error)
-		}
-	}
+  static _mountUrl = (baseUrl, path) => {
+    try {
+      return new URL(
+        `${baseUrl}/${path.startsWith("/") ? path.substring(1) : path}`,
+      );
+    } catch (error) {
+      console.log(
+        "Erro ao montar URL",
+        `${baseUrl}/${path.startsWith("/") ? path.substring(1) : path}`,
+        error,
+      );
+    }
+  };
 
-	static _getHeaders = async () => {
-		const configs = await WakeService.configs
-		
-		const headers = {
-			'Content-Type': 'application/json',
-			'Accept': '*/*',
-			'TCS-Access-Token': configs.tcs_account
-		}
+  static _getHeaders = async () => {
+    const configs = await WakeService.configs;
 
-		return headers
-	}
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "*/*",
+      "TCS-Access-Token": configs.tcs_account,
+    };
 
-	static async get(path, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || WakeService.configs.api
-		const url = WakeCaller._mountUrl(_baseUrl, path)
-		const headers = await WakeCaller._getHeaders()
+    return headers;
+  };
 
-		const res = Eitri.http.get(url.href, {
-			...options,
-			headers: {
-				...headers,
-				...options.headers
-			}
-		})
+  static async get(path, options = {}, baseUrl) {
+    const _baseUrl = baseUrl || WakeService.configs.api;
+    const url = WakeCaller._mountUrl(_baseUrl, path);
+    const headers = await WakeCaller._getHeaders();
 
-		return res
-	}
+    const res = Eitri.http.get(url.href, {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers,
+      },
+    });
 
-	static async post(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || WakeService.configs.graphqlApi
-		const url = WakeCaller._mountUrl(_baseUrl, path)
-		const headers = await WakeCaller._getHeaders()
+    return res;
+  }
 
-		const res = await Eitri.http.post(url.href, data, {
-			...options,
-			headers: {
-				...headers,
-				...options.headers
-			}
-		})
+  static async post(path, data, options = {}, baseUrl) {
+    const _baseUrl = baseUrl || WakeService.configs.graphqlApi;
+    const url = WakeCaller._mountUrl(_baseUrl, path);
+    const headers = await WakeCaller._getHeaders();
 
-		return res
-	}
-};
+    const res = await Eitri.http.post(url.href, data, {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers,
+      },
+    });
+
+    return res;
+  }
+}
