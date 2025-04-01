@@ -6,7 +6,7 @@ export default class ClarityService {
       return;
     }
     try {
-      await Eitri.clarity.init(projectId);
+      await Eitri.tracking.clarity.init(projectId);
     } catch (e) {
       console.error("Error initializing Clarity", e);
     }
