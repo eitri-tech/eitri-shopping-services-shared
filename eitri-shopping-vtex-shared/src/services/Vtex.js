@@ -87,7 +87,12 @@ export default class Vtex {
 		const session = await Vtex.buildSession(segments, true)
 		Vtex.configs.session = session
 		Vtex.configs.segments = segments
-	}
+  }
+
+  static async refreshSegmentSession() {
+    let utmParams = await VtexCustomerService.getUtmParams() || {}
+    Vtex.updateSegmentSession(utmParams)
+  }
 
   static catalog = VtexCatalogService;
   static checkout = VtexCheckoutService;
