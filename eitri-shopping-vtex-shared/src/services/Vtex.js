@@ -6,6 +6,7 @@ import VtexCmsService from "./vtex/cms/vtexCmsService";
 import VtexWishlistService from "./vtex/wishlist/vtexWishlistService";
 import VtexCaller from "./vtex/_helpers/_vtexCaller";
 import App from "./App";
+import GAService from "./tracking/GAService";
 
 export default class Vtex {
   static configs = {
@@ -48,6 +49,12 @@ export default class Vtex {
   };
 
   static buildSession = async (segments, update) => {
+    try {
+      GAService.sendCampaignDetails(segments)
+    } catch (e) {
+      console.error("[SHARED] Error send campaign_details", e)
+    }
+
     try {
       if (segments) {
         const _public = {};
