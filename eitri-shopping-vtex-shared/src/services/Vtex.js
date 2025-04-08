@@ -27,26 +27,27 @@ export default class Vtex {
       _host = "https://" + remoteConfig?.providerInfo?.host;
     }
 
+    let utmParams = await VtexCustomerService.getUtmParams() || {}
+    const configSegments = remoteConfig?.storePreferences?.segments || {}
     Vtex.configs = {
       account: remoteConfig?.providerInfo?.account,
       api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
       host: _host,
       vtexCmsUrl: remoteConfig?.providerInfo?.vtexCmsUrl,
       searchOptions: remoteConfig?.searchOptions,
-      segments: remoteConfig?.storePreferences?.segments,
-      marketingTag:
-        remoteConfig?.storePreferences?.marketingTag ?? "eitri-shop",
+      segments: {...configSegments, ...utmParams},
+      marketingTag: remoteConfig?.storePreferences?.marketingTag ?? "eitri-shop",
       salesChannel: remoteConfig?.storePreferences?.salesChannel,
       faststore: remoteConfig?.providerInfo?.faststore,
     };
-
-    const session = await Vtex.getSession(
-      remoteConfig?.storePreferences?.segments,
+    
+    const session = await Vtex.buildSession(
+      {...configSegments, ...utmParams}
     );
     Vtex.configs.session = session;
   };
 
-  static getSession = async (segments) => {
+  static buildSession = async (segments, update) => {
     try {
       if (segments) {
         const _public = {};
@@ -56,12 +57,15 @@ export default class Vtex {
             _public[key] = { value: segments[key] };
           }
         }
+        
+        let result
+				if (update) {
+					result = await VtexCaller.patch(`api/sessions`, { public: _public })
+				} else {
+					result = await VtexCaller.post(`api/sessions`, { public: _public })
+				}
 
-        const result = await VtexCaller.post("api/sessions", {
-          public: _public,
-        });
-
-        return result.data;
+        return result?.data
       }
       return null;
     } catch (e) {
@@ -73,6 +77,17 @@ export default class Vtex {
   static tryAutoConfigure = async (overwrites) => {
     return await App.tryAutoConfigure(overwrites);
   };
+
+  static async updateSegmentSession(utmParams) {
+    if (!utmParams) return null
+    
+		const configSegments = Vtex.configs?.segments || {}
+
+    const segments = { ...configSegments, ...utmParams }
+		const session = await Vtex.buildSession(segments, true)
+		Vtex.configs.session = session
+		Vtex.configs.segments = segments
+	}
 
   static catalog = VtexCatalogService;
   static checkout = VtexCheckoutService;
