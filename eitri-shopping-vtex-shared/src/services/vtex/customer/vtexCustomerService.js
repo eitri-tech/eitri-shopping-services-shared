@@ -433,7 +433,7 @@ export default class VtexCustomerService {
 			
 			if (utmParams?.saveAt) {
 				const cutDate = new Date()
-				cutDate.setDate(cutDate.getDate() - VtexCustomerService.TIME_EXPIRES_UTM_PARAMS_IN_DAYS); // atraza a data em X dias
+				cutDate.setDate(cutDate.getDate() - VtexCustomerService.TIME_EXPIRES_UTM_PARAMS_IN_DAYS)  // atrasa a data em X dias
 
 				if (cutDate.toISOString() > utmParams.saveAt) {
 					// retornando vazio se o valor expirou
