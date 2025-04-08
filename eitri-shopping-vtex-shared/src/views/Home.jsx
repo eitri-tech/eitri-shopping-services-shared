@@ -29,6 +29,12 @@ export default function Home() {
         <Button
           wide
           color="background-color"
+          onPress={() => navigateTo("VtexMethods")}
+          label="Métodos Vtex Config"
+        />
+        <Button
+          wide
+          color="background-color"
           onPress={() => navigateTo("CartMethods")}
           label="Métodos de carrinho"
         />
