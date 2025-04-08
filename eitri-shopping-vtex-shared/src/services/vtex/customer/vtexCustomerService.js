@@ -8,6 +8,10 @@ export default class VtexCustomerService {
   static STORAGE_USER_DATA = "user_data";
   static TOKEN_EXPIRATION_TIME_SEC = 86200;
 
+  static CHANNEL_UTM_PARAMS_KEY = 'ChanellUTMParams'
+	static STORAGE_UTM_PARAMS_KEY = 'utm_params_key'
+  static TIME_EXPIRES_UTM_PARAMS_IN_DAYS = 30
+  
   static async loginWithEmailAndPassword(email, password) {
     const { account } = Vtex.configs;
 
@@ -336,5 +340,113 @@ export default class VtexCustomerService {
     return result?.data;
   }
 
-  static async newsletterSubscribe(email) {}
+  static async newsletterSubscribe(email) { }
+  
+  /**
+	 * Extrai parâmetros UTM de uma string de query ou de um objeto e salva no Storage.
+	 *
+	 * @param {string|Object} input - A string de query (ex: "?utm_source=google") ou um objeto contendo parâmetros.
+	 * @returns {Object | null} Um objeto contendo os parâmetros UTM extraídos serão salvo no Storage.
+	 * @property {string} saveAt - data de salvamento no formato ISO 8601. Ex: 2025-03-31T10:21:54.164Z
+	 * @property {string} utm_campaignid - O ID da campanha.
+	 * @property {string} utm_campaign - O nome da campanha.
+	 * @property {string} utm_source - A fonte do tráfego.
+	 * @property {string} utm_medium - O meio da campanha.
+	 * @property {string} utm_term - O termo da campanha.
+	 * @property {string} utm_content - O conteúdo da campanha.
+	 */
+	static async saveUtmParams(queryParams) {
+
+		if (!queryParams) return
+
+		if (typeof queryParams === 'string') {
+			const queryParamsObj = queryParams.split('&').reduce((acc, param) => {
+				const [key, value] = param.split('=')
+				acc[key] = value
+				return acc
+			}, {})
+			return VtexCustomerService.saveUtmParams(queryParamsObj) 
+		}
+
+		if (typeof queryParams === 'object') {
+			const utmParams = {}
+
+			try {
+				for (const key of Object.keys(queryParams)) {
+					const normalizedKey = key.replace(/[_-]/g, '').toLowerCase()
+			
+					if (normalizedKey.startsWith('utm')) {
+						const newKey = 'utm_' + normalizedKey.substring(3)
+						utmParams[newKey] = queryParams[key]
+					}
+				}
+
+				if (Object.keys(utmParams).length > 0) {
+					utmParams.saveAt = new Date().toISOString()
+					await StorageService.setStorageJSON(VtexCustomerService.STORAGE_UTM_PARAMS_KEY, utmParams)
+				}
+				
+			} catch (e) {
+				console.error('Erro ao salvar parâmetros UTM', e)
+				return null
+			}
+
+			if (Object.keys(utmParams).length > 0) {
+        try {
+          console.log('Publicando eventBus', VtexCustomerService.CHANNEL_UTM_PARAMS_KEY)
+					Eitri.eventBus.publish({
+						channel: VtexCustomerService.CHANNEL_UTM_PARAMS_KEY,
+						broadcast: true,
+						data: utmParams
+          })
+				} catch (e) {
+					console.error('Erro ao publicar eventBus UTM', e)
+        }
+        
+        try {
+          Vtex.updateSegmentSession(utmParams)
+        } catch (e) {
+					console.error('updateSegmentSession', e)
+        }
+			}
+
+			return utmParams
+		}
+
+		return null
+	}
+
+	/**
+	 * Retorna parâmetros UTM salvos no Storage como um objeto.
+	 *
+	 * @returns {Object} Um objeto contendo os parâmetros UTM salvos no Storage.
+	 * @property {string} utm_campaignid - O ID da campanha.
+	 * @property {string} utm_campaign - O nome da campanha.
+	 * @property {string} utm_source - A fonte do tráfego.
+	 * @property {string} utm_medium - O meio da campanha.
+	 * @property {string} utm_term - O termo da campanha.
+	 * @property {string} utm_content - O conteúdo da campanha.
+	 */
+	static async getUtmParams() {
+		try {
+			const utmParams = await StorageService.getStorageJSON(VtexCustomerService.STORAGE_UTM_PARAMS_KEY)
+			
+			if (utmParams?.saveAt) {
+				const cutDate = new Date()
+				cutDate.setDate(cutDate.getDate() - VtexCustomerService.TIME_EXPIRES_UTM_PARAMS_IN_DAYS); // atraza a data em X dias
+
+				if (cutDate.toISOString() > utmParams.saveAt) {
+					// retornando vazio se o valor expirou
+					return {}
+				}
+			}
+			
+			return utmParams || {}
+		} catch (e) {
+			console.error('Erro ao obter parâmetros UTM', e)
+    }
+    
+    return {}
+  }
+  
 }
