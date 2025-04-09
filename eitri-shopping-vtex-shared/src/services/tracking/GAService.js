@@ -82,5 +82,26 @@ export default class GAService {
     }
   };
 
+  static sendCampaignDetails = segments => {
+		if (!segments) return null
+
+		const utmParams = {}
+		for (const key of Object.keys(segments)) {
+			const normalizedKey = key.replace(/[_-]/g, '').toLowerCase()
+
+			if (normalizedKey.startsWith('utm')) {
+				if (normalizedKey === 'utmcampaignid') {
+					utmParams['campaign_id'] = segments[key]
+				} else {
+					utmParams[normalizedKey.substring(3)] = segments[key]
+				}
+			}
+		}
+
+    if (Object.keys(utmParams).length > 0) {
+      GAService.logEvent('campaign_details', utmParams)
+		}
+	}
+
   // TODO: Implementar métodos de ecommerce para GA (https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag)
 }
