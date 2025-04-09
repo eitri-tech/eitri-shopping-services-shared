@@ -136,12 +136,11 @@ export default class VtexCustomerService {
 	}
 
 	static async loginWithGoogle() {
-		try {
-			let webFlowRes = await Eitri.webFlow.start({
-				startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
-				stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
-				allowedDomains: ['*'],
-				onLoadJsScript: `
+		let webFlowRes = await Eitri.webFlow.start({
+			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
+			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
+			allowedDomains: ['*'],
+			onLoadJsScript: `
 			          const interval = setInterval(() => {
 			              const googleBtn = document.querySelector(
 			                  ".vtex-login-2-x-googleOptionBtn button"
@@ -159,23 +158,20 @@ export default class VtexCustomerService {
 			              console.log("Timeout, google button not found");
 			          }, 10000);
 			          `,
-				maxNavigationLimit: 20
-			})
+			maxNavigationLimit: 20
+		})
 
-			const finishNavigation = webFlowRes?.recordedNavigation?.find(n =>
-				n.url.includes(`api/vtexid/oauth/finish`)
-			)
+		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`))
 
-			if (finishNavigation) {
-				const params = new URL(finishNavigation.url).searchParams
-				const authCookieValue = params.get('authCookieValue')
+		if (finishNavigation) {
+			const params = new URL(finishNavigation.url).searchParams
+			const authCookieValue = params.get('authCookieValue')
 
-				await VtexCustomerService.setCustomerToken(authCookieValue)
-				VtexCustomerService.setCustomerData('email', '')
-				VtexCustomerService.notifyLoginToExposedApis()
-			}
-		} catch (error) {
-			console.log('webFlowStart.error: ', error)
+			await VtexCustomerService.setCustomerToken(authCookieValue)
+			VtexCustomerService.setCustomerData('email', '')
+			VtexCustomerService.notifyLoginToExposedApis()
+		} else {
+			throw new Error('Google login failed')
 		}
 	}
 
