@@ -1,0 +1,13 @@
+image: node:18
+
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Verificar e Publicar Versões
+          script:
+            - echo "Executando script..."
+            - npm i -g eitri-cli
+            - node check_and_push.js
+          services:
+            - docker
