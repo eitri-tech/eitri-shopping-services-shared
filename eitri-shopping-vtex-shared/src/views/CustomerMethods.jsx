@@ -4,7 +4,7 @@ import Eitri from 'eitri-bifrost'
 export default function CustomerMethods() {
 	const [email, setEmail] = useState('')
 	const [accessKey, setAccessKey] = useState('')
-	const [password, setPassword] = useState('wagnerfq@gmail.com')
+	const [password, setPassword] = useState('')
 
 	const sendEmail = async () => {
 		await Vtex.customer.sendAccessKeyByEmail(email)
@@ -14,6 +14,16 @@ export default function CustomerMethods() {
 		console.log('loginWithEmailAndAccessKey', email, accessKey)
 		const result = await Vtex.customer.loginWithEmailAndAccessKey(email, accessKey)
 		console.log('loginWithEmailAndAccessKey', result)
+	}
+
+	const loginWithPassword = async () => {
+		try {
+			console.log('loginWithPassword', email, password)
+			const result = await Vtex.customer.loginWithEmailAndPassword(email, password)
+			console.log('loginWithPassword', result)
+		} catch (e) {
+			console.log('loginWithPassword error', e)
+		}
 	}
 
 	const isLogged = async () => {
@@ -28,6 +38,11 @@ export default function CustomerMethods() {
 
 	const googleAuth = async () => {
 		await Vtex.customer.loginWithGoogle()
+	}
+
+	const executeRefreshToken = async () => {
+		const savedToken = await Vtex.customer.executeRefreshToken()
+		console.log('savedToken', savedToken)
 	}
 
 	return (
@@ -67,6 +82,23 @@ export default function CustomerMethods() {
 					display='flex'
 					gap={10}>
 					<Input
+						placeholder='Password'
+						inputType='text'
+						grow={4}
+						value={password}
+						onChange={value => setPassword(value)}
+					/>
+					<Button
+						color='background-color'
+						grow={1}
+						onPress={loginWithPassword}
+						label='Acesso com senha'
+					/>
+				</View>
+				<View
+					display='flex'
+					gap={10}>
+					<Input
 						placeholder='Access Key'
 						inputType='numeric'
 						grow={4}
@@ -80,6 +112,19 @@ export default function CustomerMethods() {
 						label='Validar login'
 					/>
 				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={googleAuth}
+						label='Google login'
+					/>
+				</View>
+
 				<View
 					display='flex'
 					gap={10}>
@@ -99,8 +144,8 @@ export default function CustomerMethods() {
 						wide
 						color='background-color'
 						grow={1}
-						onPress={googleAuth}
-						label='Google login'
+						onPress={executeRefreshToken}
+						label='Refresh token'
 					/>
 				</View>
 			</View>

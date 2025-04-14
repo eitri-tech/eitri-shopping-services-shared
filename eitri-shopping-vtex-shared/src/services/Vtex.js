@@ -45,6 +45,8 @@ export default class Vtex {
 
 		const session = await Vtex.buildSession({ ...configSegments, ...utmParams })
 		Vtex.configs.session = session
+
+		Vtex.customer.executeRefreshToken()
 	}
 
 	static buildSession = async (segments, update) => {

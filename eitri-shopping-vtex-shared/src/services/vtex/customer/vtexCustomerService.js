@@ -3,6 +3,7 @@ import Vtex from '../../Vtex'
 import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import App from '../../App'
+import extractCookies from '../_helpers/extractCookies'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -13,58 +14,7 @@ export default class VtexCustomerService {
 	static STORAGE_UTM_PARAMS_KEY = 'utm_params_key'
 	static TIME_EXPIRES_UTM_PARAMS_IN_DAYS = 30
 
-	static async loginWithEmailAndPassword(email, password) {
-		const { account } = Vtex.configs
-
-		const startLoginRes = await VtexCaller.post(
-			'api/vtexid/pub/authentication/startlogin',
-			{
-				accountName: account,
-				scope: account,
-				user: email
-			},
-			{
-				headers: { 'Content-Type': 'multipart/form-data', 'accept': '*/*' }
-			}
-		)
-
-		const setCookieHeader = startLoginRes.headers['set-cookie']
-
-		let cookieValue = ''
-		if (setCookieHeader) {
-			cookieValue = setCookieHeader.split(';')[0]
-		}
-
-		const loginRes = await VtexCaller.post(
-			`api/vtexid/pub/authentication/classic/validate`,
-			{
-				password: password,
-				login: email
-			},
-			{
-				headers: {
-					'Content-Type': 'multipart/form-data',
-					'accept': '*/*',
-					'accept-language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-					'User-Agent':
-						'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-					'Cookie': cookieValue
-				}
-			}
-		)
-
-		const { data } = loginRes
-		const { authCookie } = data
-		const { authStatus } = data
-
-		await VtexCustomerService.setCustomerToken(authCookie.Value)
-		VtexCustomerService.setCustomerData('email', email)
-		VtexCustomerService.notifyLoginToExposedApis()
-
-		return authStatus
-	}
-
-	static async sendAccessKeyByEmail(email) {
+	static async _startLogin(email) {
 		const { account } = Vtex.configs
 
 		const startLoginRes = await VtexCaller.post(
@@ -82,11 +32,46 @@ export default class VtexCustomerService {
 			}
 		)
 
-		const setCookieHeader = startLoginRes.headers['set-cookie']
+		const vssCookie = extractCookies(startLoginRes, '_vss')
 
-		if (setCookieHeader) {
-			VtexCustomerService.cookieValue = setCookieHeader.split(';')[0]
+		if (vssCookie) {
+			VtexCustomerService.cookieValue = vssCookie
 		}
+	}
+
+	static async loginWithEmailAndPassword(email, password) {
+		await VtexCustomerService._startLogin(email)
+
+		const loginRes = await VtexCaller.post(
+			`api/vtexid/pub/authentication/classic/validate`,
+			{
+				password: password,
+				login: email
+			},
+			{
+				headers: {
+					'Content-Type': 'multipart/form-data',
+					'accept': '*/*',
+					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
+				}
+			}
+		)
+
+		const refreshToken = extractCookies(loginRes, 'vid_rt')
+
+		const { data } = loginRes
+		const { authCookie } = data
+		const { authStatus } = data
+
+		await VtexCustomerService.setCustomerToken(authCookie.Value, refreshToken)
+		VtexCustomerService.setCustomerData('email', email)
+		VtexCustomerService.notifyLoginToExposedApis()
+
+		return authStatus
+	}
+
+	static async sendAccessKeyByEmail(email) {
+		await VtexCustomerService._startLogin(email)
 
 		const loginRes = await VtexCaller.post(
 			`api/vtexid/pub/authentication/accesskey/send`,
@@ -98,7 +83,7 @@ export default class VtexCustomerService {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 					'accept': '*/*',
-					'Cookie': VtexCustomerService.cookieValue
+					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
 				}
 			}
 		)
@@ -119,16 +104,18 @@ export default class VtexCustomerService {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 					'accept': '*/*',
-					'Cookie': VtexCustomerService.cookieValue
+					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
 				}
 			}
 		)
+
+		const refreshToken = extractCookies(loginRes, 'vid_rt')
 
 		const { data } = loginRes
 		const { authCookie } = data
 		const { authStatus } = data
 
-		await VtexCustomerService.setCustomerToken(authCookie.Value)
+		await VtexCustomerService.setCustomerToken(authCookie.Value, refreshToken)
 		VtexCustomerService.setCustomerData('email', email)
 		VtexCustomerService.notifyLoginToExposedApis()
 
@@ -167,7 +154,7 @@ export default class VtexCustomerService {
 			const params = new URL(finishNavigation.url).searchParams
 			const authCookieValue = params.get('authCookieValue')
 
-			await VtexCustomerService.setCustomerToken(authCookieValue)
+			await VtexCustomerService.setCustomerToken(authCookieValue, '')
 			VtexCustomerService.setCustomerData('email', '')
 			VtexCustomerService.notifyLoginToExposedApis()
 		} else {
@@ -261,9 +248,13 @@ export default class VtexCustomerService {
 		return await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 	}
 
-	static async setCustomerToken(token) {
+	static async setCustomerToken(token, refreshToken) {
 		const creationTimeStamp = Math.floor(Date.now() / 1000)
-		return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, { token, creationTimeStamp })
+		return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
+			token,
+			refreshToken,
+			creationTimeStamp
+		})
 	}
 
 	static async isLoggedIn() {
@@ -460,5 +451,36 @@ export default class VtexCustomerService {
 		}
 
 		return {}
+	}
+
+	static async executeRefreshToken() {
+		const { account } = Vtex.configs
+
+		const res = await VtexCustomerService.getStorageCustomerToken()
+
+		if (!res) return
+		if (res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC > Math.floor(Date.now() / 1000)) {
+			return null
+		}
+
+		if (res?.refreshToken && res?.token) {
+			const loginRes = await VtexCaller.post(
+				`api/vtexid/refreshtoken/webstore`,
+				{},
+				{
+					headers: {
+						accept: '*/*',
+						Cookie: `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}`
+					}
+				}
+			)
+
+			const refreshToken = extractCookies(loginRes, 'vid_rt')
+			const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
+
+			if (newToken && refreshToken) {
+				await VtexCustomerService.setCustomerToken(newToken, refreshToken)
+			}
+		}
 	}
 }
