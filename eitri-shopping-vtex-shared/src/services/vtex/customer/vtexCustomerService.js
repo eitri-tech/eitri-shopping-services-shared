@@ -457,8 +457,13 @@ export default class VtexCustomerService {
 		const { account } = Vtex.configs
 
 		const res = await VtexCustomerService.getStorageCustomerToken()
-		if (res.refreshToken && res.token) {
-			console.log('res', `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}`)
+
+		if (!res) return
+		if (res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC > Math.floor(Date.now() / 1000)) {
+			return null
+		}
+
+		if (res?.refreshToken && res?.token) {
 			const loginRes = await VtexCaller.post(
 				`api/vtexid/refreshtoken/webstore`,
 				{},
