@@ -127,7 +127,7 @@ export default class VtexCheckoutService {
 
 			const transactionData = result.data
 
-			const { id, orderGroup } = transactionData
+			const { id, orderGroup, merchantTransactions } = transactionData
 
 			const { Vtex_CHKO_Auth, CheckoutDataAccess } = VtexCheckoutService.extractCookieValues(
 				result.headers['set-cookie']
@@ -147,7 +147,8 @@ export default class VtexCheckoutService {
 				id,
 				orderGroup,
 				Vtex_CHKO_Auth,
-				CheckoutDataAccess
+				CheckoutDataAccess,
+				merchantTransactions
 			}
 		} catch (e) {
 			console.log('erro no startPayment', e)
@@ -272,17 +273,17 @@ export default class VtexCheckoutService {
 
 		const payment = cart.paymentData?.payments[0]
 
-		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
-			cart.orderFormId,
-			{
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
+			await VtexCheckoutService.startTransaction(cart.orderFormId, {
 				referenceId: cart.orderFormId,
 				savePersonalData: true,
 				optinNewsLetter: false,
 				value: cart.value,
 				referenceValue: cart.value,
 				interestValue: 1
-			}
-		)
+			})
+
+		const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
 		const paymentMethod = [
 			{
@@ -294,12 +295,12 @@ export default class VtexCheckoutService {
 				installmentsValue: cart.value,
 				value: cart.value,
 				referenceValue: cart.value,
-				id: payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: cart.value,
 				transaction: {
 					id: id,
-					merchantName: payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
 				},
 				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0
@@ -325,17 +326,17 @@ export default class VtexCheckoutService {
 
 		const payment = cart.paymentData?.payments[0]
 
-		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
-			cart.orderFormId,
-			{
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
+			await VtexCheckoutService.startTransaction(cart.orderFormId, {
 				referenceId: cart.orderFormId,
 				savePersonalData: true,
 				optinNewsLetter: false,
 				value: cart.value,
 				referenceValue: cart.value,
 				interestValue: 0
-			}
-		)
+			})
+
+		const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
 		const paymentMethod = [
 			{
@@ -347,12 +348,12 @@ export default class VtexCheckoutService {
 				installmentsValue: cart.value,
 				value: cart.value,
 				referenceValue: cart.value,
-				id: payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: cart.value,
 				transaction: {
 					id: id,
-					merchantName: payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
 				},
 				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0
@@ -378,9 +379,8 @@ export default class VtexCheckoutService {
 
 		const payment = cart.paymentData?.payments[0]
 
-		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
-			cart.orderFormId,
-			{
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
+			await VtexCheckoutService.startTransaction(cart.orderFormId, {
 				referenceId: cart.orderFormId,
 				savePersonalData: true,
 				optinNewsLetter: false,
@@ -389,8 +389,9 @@ export default class VtexCheckoutService {
 				interestValue: 0,
 				recaptchaKey: captchaSiteKey,
 				recaptchaToken: captchaToken
-			}
-		)
+			})
+
+		const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
 		const cardInfoFields = () => {
 			if (cardInfo.billingAddress.postalCode && cardInfo.billingAddress.city) {
@@ -438,12 +439,12 @@ export default class VtexCheckoutService {
 				installments: payment.merchantSellerPayments[0].installments,
 				chooseToUseNewCard: true,
 				isRegexValid: true,
-				id: payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
 				interestRate: payment.merchantSellerPayments[0].interestRate,
 				installmentValue: payment.merchantSellerPayments[0].installmentValue,
 				transaction: {
 					id: id,
-					merchantName: payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
 				},
 				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
 				currencyCode: App.configs?.storePreferences?.currencyCode,
@@ -471,17 +472,17 @@ export default class VtexCheckoutService {
 		const payment = cart.paymentData?.payments[0]
 		const paymentSystem = cart.paymentData?.paymentSystems?.find(ps => ps.stringId === payment.paymentSystem)
 
-		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
-			cart.orderFormId,
-			{
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
+			await VtexCheckoutService.startTransaction(cart.orderFormId, {
 				referenceId: cart.orderFormId,
 				savePersonalData: true,
 				optinNewsLetter: false,
 				value: cart.value,
 				referenceValue: cart.value,
 				interestValue: 1
-			}
-		)
+			})
+
+		const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
 		const paymentMethod = [
 			{
@@ -493,12 +494,12 @@ export default class VtexCheckoutService {
 				installmentsValue: payment.value,
 				value: payment.value,
 				referenceValue: payment.value,
-				id: payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: payment.value,
 				transaction: {
 					id: id,
-					merchantName: payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
 				},
 				currencyCode: 'BRL',
 				originalPaymentIndex: 0
@@ -527,17 +528,17 @@ export default class VtexCheckoutService {
 
 		console.log(paymentSystem)
 
-		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess } = await VtexCheckoutService.startTransaction(
-			cart.orderFormId,
-			{
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
+			await VtexCheckoutService.startTransaction(cart.orderFormId, {
 				referenceId: cart.orderFormId,
 				savePersonalData: true,
 				optinNewsLetter: false,
 				value: cart.value,
 				referenceValue: cart.value,
 				interestValue: 1
-			}
-		)
+			})
+
+		const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
 		const paymentMethod = [
 			{
@@ -549,12 +550,12 @@ export default class VtexCheckoutService {
 				installmentsValue: payment.value,
 				value: payment.value,
 				referenceValue: payment.value,
-				id: payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: payment.value,
 				transaction: {
 					id: id,
-					merchantName: payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
 				},
 				currencyCode: 'BRL',
 				originalPaymentIndex: 0
