@@ -295,12 +295,12 @@ export default class VtexCheckoutService {
 				installmentsValue: cart.value,
 				value: cart.value,
 				referenceValue: cart.value,
-				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id || payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: cart.value,
 				transaction: {
 					id: id,
-					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0
@@ -348,12 +348,12 @@ export default class VtexCheckoutService {
 				installmentsValue: cart.value,
 				value: cart.value,
 				referenceValue: cart.value,
-				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id || payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: cart.value,
 				transaction: {
 					id: id,
-					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				currencyCode: App.configs?.storePreferences?.currencyCode,
 				originalPaymentIndex: 0
@@ -439,12 +439,12 @@ export default class VtexCheckoutService {
 				installments: payment.merchantSellerPayments[0].installments,
 				chooseToUseNewCard: true,
 				isRegexValid: true,
-				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id || payment.merchantSellerPayments[0].id,
 				interestRate: payment.merchantSellerPayments[0].interestRate,
 				installmentValue: payment.merchantSellerPayments[0].installmentValue,
 				transaction: {
 					id: id,
-					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
 				currencyCode: App.configs?.storePreferences?.currencyCode,
@@ -494,12 +494,12 @@ export default class VtexCheckoutService {
 				installmentsValue: payment.value,
 				value: payment.value,
 				referenceValue: payment.value,
-				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id || payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: payment.value,
 				transaction: {
 					id: id,
-					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				currencyCode: 'BRL',
 				originalPaymentIndex: 0
@@ -526,8 +526,6 @@ export default class VtexCheckoutService {
 		const payment = cart.paymentData?.payments[0]
 		const paymentSystem = cart.paymentData?.paymentSystems?.find(ps => ps.stringId === payment.paymentSystem)
 
-		console.log(paymentSystem)
-
 		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
 			await VtexCheckoutService.startTransaction(cart.orderFormId, {
 				referenceId: cart.orderFormId,
@@ -550,12 +548,12 @@ export default class VtexCheckoutService {
 				installmentsValue: payment.value,
 				value: payment.value,
 				referenceValue: payment.value,
-				id: merchantTransaction?.id ?? payment.merchantSellerPayments[0].id,
+				id: merchantTransaction?.id || payment.merchantSellerPayments[0].id,
 				interestRate: 0,
 				installmentValue: payment.value,
 				transaction: {
 					id: id,
-					merchantName: merchantTransaction?.merchantName ?? payment.merchantSellerPayments[0].id
+					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				currencyCode: 'BRL',
 				originalPaymentIndex: 0
