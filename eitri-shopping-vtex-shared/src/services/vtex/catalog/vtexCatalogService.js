@@ -71,11 +71,10 @@ export default class VtexCatalogService {
 		return result.data
 	}
 
-	/*
-    @deprecated Esta função será removida
-  */
-	static async getSearchProducts(search) {
-		return await VtexCatalogService.legacySearch(search)
+	static async legacyParamsSearch(params) {
+		let url = `api/catalog_system/pub/products/search?${params}`
+		const result = await VtexCaller.get(url)
+		return result.data
 	}
 
 	static async getWhoSawAlsoSaw(productId) {
