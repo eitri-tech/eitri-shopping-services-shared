@@ -92,4 +92,22 @@ export default class VtexCatalogService {
 		const result = await VtexCaller.get(url)
 		return result?.data
 	}
+
+	static async topSearches(locale) {
+		let url = `api/io/_v/api/intelligent-search/top_searches`
+		if (locale) {
+			url += `?locale=${locale}`
+		}
+		const result = await VtexCaller.get(url)
+		return result?.data
+	}
+
+	static async searchSuggestions(query, locale) {
+		let url = `api/io/_v/api/intelligent-search/search_suggestions?query=${query}`
+		if (locale) {
+			url += `&locale=${locale}`
+		}
+		const result = await VtexCaller.get(url)
+		return result?.data
+	}
 }
