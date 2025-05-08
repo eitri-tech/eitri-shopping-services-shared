@@ -8,7 +8,7 @@ export default function Home() {
 	}, [])
 
 	const init = async () => {
-		await App.tryAutoConfigure({ verbose: false, gaVerbose: true })
+		await App.tryAutoConfigure({ verbose: true, gaVerbose: false })
 		// await Vtex.cart.setOrderFormId('9ee6eb188e0f4ba79839f06e406cda4e')
 	}
 

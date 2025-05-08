@@ -133,6 +133,7 @@ export default class VtexCartService {
 	 * @returns {Promise<void>} - Uma promessa que resolve quando o item for adicionado.
 	 */
 	static async addItem({ id, item, itemId, salesChannel, quantity, seller, sellers }) {
+		console.log('===> Adicionando item ao carrinho', id, item, itemId, salesChannel, quantity, seller, sellers)
 		const _quantity = item?.quantity ?? quantity ?? 1
 
 		try {

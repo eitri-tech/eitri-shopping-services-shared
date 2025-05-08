@@ -221,7 +221,7 @@ export default class VtexCheckoutService {
 		}
 	}
 
-	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, currentPage) {
+	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')
 
@@ -251,6 +251,12 @@ export default class VtexCheckoutService {
 			return await VtexCheckoutService.payPromissory(cart)
 		}
 
+		//Cartao de loja
+		const storeCardGroupName = App?.configs?.appConfigs.storeCardGroupName ?? ''
+		if (paymentSystem.groupName === storeCardGroupName) {
+			return await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
+		}
+
 		const externalPaymentsImplementation = App?.configs?.appConfigs.externalPayments ?? []
 
 		if (
@@ -268,6 +274,65 @@ export default class VtexCheckoutService {
 		throw Error('Método de pagamento não suportado')
 	}
 
+	static async getPixStatus(transactionId, paymentId) {
+		try {
+			const result = await Eitri.http.get(
+				`https://${Vtex.configs.account}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
+				{
+					headers: {
+						'accept': 'application/json, text/javascript, */*; q=0.01',
+						'content-type': 'application/json',
+						'user-agent':
+							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
+					}
+				}
+			)
+			return result.data
+		} catch (e) {
+			console.log('erro no getPixStatus', e)
+		}
+	}
+
+	static async resolveZipCode(zipcode) {
+		const response = await VtexCaller.get(`api/checkout/pub/postal-code/BRA/${zipcode}`)
+		return response.data
+	}
+
+	static getGiftCartPaymentMethod(cart, transaction) {
+		if (!(cart?.paymentData?.giftCards?.length > 0)) {
+			return null
+		}
+
+		const giftCardPaymentSystem = cart?.paymentData?.paymentSystems?.find(
+			system => system.groupName === 'giftCardPaymentGroup'
+		)
+
+		if (!giftCardPaymentSystem) {
+			return null
+		}
+
+		return cart.paymentData.giftCards.map(giftCard => {
+			return {
+				paymentSystem: giftCardPaymentSystem.id,
+				paymentSystemName: giftCardPaymentSystem.name,
+				group: 'giftCardPaymentGroup',
+				installments: 1,
+				installmentsValue: giftCard.value,
+				value: giftCard.value,
+				referenceValue: giftCard.value,
+				fields: {
+					redemptionCode: giftCard.redemptionCode,
+					provider: giftCard.provider,
+					giftCardId: giftCard.id
+				},
+				transaction: {
+					...transaction
+				}
+			}
+		})
+	}
+
+	// Payments
 	static async payBankInvoice(cart) {
 		console.log('===> Pagamento de boleto')
 
@@ -574,61 +639,58 @@ export default class VtexCheckoutService {
 		return await VtexCheckoutService.processPayment(orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, id)
 	}
 
-	static async getPixStatus(transactionId, paymentId) {
-		try {
-			const result = await Eitri.http.get(
-				`https://${Vtex.configs.account}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
-				{
-					headers: {
-						'accept': 'application/json, text/javascript, */*; q=0.01',
-						'content-type': 'application/json',
-						'user-agent':
-							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
-					}
-				}
-			)
-			return result.data
-		} catch (e) {
-			console.log('erro no getPixStatus', e)
-		}
-	}
+	static async payStoreCart(cart, cardInfo, groupName, options) {
+		console.log('===> Pagamento via Cartão da Loja')
 
-	static async resolveZipCode(zipcode) {
-		const response = await VtexCaller.get(`api/checkout/pub/postal-code/BRA/${zipcode}`)
-		return response.data
-	}
+		const payment = cart.paymentData?.payments[0]
 
-	static getGiftCartPaymentMethod(cart, transaction) {
-		if (!(cart?.paymentData?.giftCards?.length > 0)) {
-			return null
-		}
+		const { id, orderGroup, Vtex_CHKO_Auth, CheckoutDataAccess, merchantTransactions } =
+			await VtexCheckoutService.startTransaction(cart.orderFormId, {
+				referenceId: cart.orderFormId,
+				savePersonalData: options?.savePersonalData ?? true,
+				optinNewsLetter: options?.optinNewsLetter ?? false,
+				value: cart.value,
+				referenceValue: cart.value,
+				interestValue: 0
+			})
 
-		const giftCardPaymentSystem = cart?.paymentData?.paymentSystems?.find(
-			system => system.groupName === 'giftCardPaymentGroup'
+		const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
+
+		const creditCardPaymentPayload = [
+			{
+				hasDefaultBillingAddress: true,
+				isLuhnValid: true,
+				installmentsInterestRate: payment.merchantSellerPayments[0].interestRate,
+				referenceValue: cart.value,
+				bin: payment.bin,
+				value: cart.value,
+				paymentSystem: payment.paymentSystem,
+				fields: cardInfo,
+				installments: payment.merchantSellerPayments[0].installments,
+				isRegexValid: true,
+				id: merchantTransaction?.id || payment.merchantSellerPayments[0].id,
+				interestRate: payment.merchantSellerPayments[0].interestRate,
+				installmentValue: payment.merchantSellerPayments[0].installmentValue,
+				transaction: {
+					id: id,
+					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
+				},
+				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
+				currencyCode: App.configs?.storePreferences?.currencyCode,
+				groupName: groupName
+			}
+		]
+
+		await VtexCheckoutService.setPaymentMethod(id, creditCardPaymentPayload)
+
+		const processedPayment = await VtexCheckoutService.processPayment(
+			orderGroup,
+			Vtex_CHKO_Auth,
+			CheckoutDataAccess
 		)
 
-		if (!giftCardPaymentSystem) {
-			return null
-		}
+		GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
 
-		return cart.paymentData.giftCards.map(giftCard => {
-			return {
-				paymentSystem: giftCardPaymentSystem.id,
-				paymentSystemName: giftCardPaymentSystem.name,
-				group: 'giftCardPaymentGroup',
-				installments: 1,
-				installmentsValue: giftCard.value,
-				value: giftCard.value,
-				referenceValue: giftCard.value,
-				fields: {
-					redemptionCode: giftCard.redemptionCode,
-					provider: giftCard.provider,
-					giftCardId: giftCard.id
-				},
-				transaction: {
-					...transaction
-				}
-			}
-		})
+		return processedPayment
 	}
 }
