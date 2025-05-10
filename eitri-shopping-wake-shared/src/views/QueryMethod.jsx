@@ -1,7 +1,7 @@
 import Eitri from "eitri-bifrost";
 import WakeService from "../services/WakeService";
 
-export default function ProductsMethod() {
+export default function QueryMethod() {
   const productId = 151613;
 
   const [loading, setLoading] = useState(false);
