@@ -65,10 +65,6 @@ export default class VtexCustomerService {
 
 		await VtexCustomerService._processPostLogin(authCookie.Value, refreshToken)
 
-		// await VtexCustomerService.setCustomerToken(authCookie.Value, refreshToken)
-		// VtexCustomerService.setCustomerData('email', email)
-		// VtexCustomerService.notifyLoginToExposedApis()
-
 		return authStatus
 	}
 
@@ -501,6 +497,8 @@ export default class VtexCustomerService {
 				await VtexCustomerService.setCustomerData('email', result?.data?.profile?.email)
 				await VtexCustomerService.setCustomerData('userId', result?.data?.profile?.userId)
 			}
-		} catch (e) {}
+		} catch (e) {
+			console.error('Erro ao processar _processPostLogin', e)
+		}
 	}
 }
