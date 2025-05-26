@@ -4,7 +4,7 @@ module.exports = {
 	'slug': 'eitri-shopping-vtex-shared',
 	'eitri-luminus': '1.78.2',
 	'eitri-bifrost': '3.5.0',
-	'version': '0.1.40',
+	'version': '0.1.41',
 	'messageVersion': 'Ajuste external payment',
 	'public-key': '0b837c87-a494-4521-9b0f-5ac49db5af9c',
 	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',

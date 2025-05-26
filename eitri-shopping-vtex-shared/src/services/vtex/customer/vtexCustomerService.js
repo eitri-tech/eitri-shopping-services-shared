@@ -494,12 +494,13 @@ export default class VtexCustomerService {
 	static async _processPostLogin(authCookie, refreshToken) {
 		await VtexCustomerService.setCustomerToken(authCookie, refreshToken)
 
-		VtexCustomerService.getCustomerProfile().then(result => {
-			if (result?.data?.profile) {
-				VtexCustomerService.notifyLoginToExposedApis(result?.data?.profile?.userId)
-				VtexCustomerService.setCustomerData('email', result?.data?.profile?.email)
-				VtexCustomerService.setCustomerData('userId', result?.data?.profile?.userId)
+		try {
+			const result = await VtexCustomerService.getCustomerProfile()
+			if (result) {
+				await VtexCustomerService.notifyLoginToExposedApis(result?.data?.profile?.userId)
+				await VtexCustomerService.setCustomerData('email', result?.data?.profile?.email)
+				await VtexCustomerService.setCustomerData('userId', result?.data?.profile?.userId)
 			}
-		})
+		} catch (e) {}
 	}
 }
