@@ -265,7 +265,7 @@ export default class VtexCheckoutService {
 			)
 		) {
 			const res = await VtexCheckoutService.payExternalProvider(cart)
-			GAVtexInternalService.purchase(cart, currentPage, res.transactionId)
+			GAVtexInternalService.purchase(cart, res.transactionId)
 			return res
 		}
 
