@@ -63,9 +63,11 @@ export default class VtexCustomerService {
 		const { authCookie } = data
 		const { authStatus } = data
 
-		await VtexCustomerService.setCustomerToken(authCookie.Value, refreshToken)
-		VtexCustomerService.setCustomerData('email', email)
-		VtexCustomerService.notifyLoginToExposedApis()
+		await VtexCustomerService._processPostLogin(authCookie.Value, refreshToken)
+
+		// await VtexCustomerService.setCustomerToken(authCookie.Value, refreshToken)
+		// VtexCustomerService.setCustomerData('email', email)
+		// VtexCustomerService.notifyLoginToExposedApis()
 
 		return authStatus
 	}
@@ -115,9 +117,7 @@ export default class VtexCustomerService {
 		const { authCookie } = data
 		const { authStatus } = data
 
-		await VtexCustomerService.setCustomerToken(authCookie.Value, refreshToken)
-		VtexCustomerService.setCustomerData('email', email)
-		VtexCustomerService.notifyLoginToExposedApis()
+		await VtexCustomerService._processPostLogin(authCookie.Value, refreshToken)
 
 		return authStatus
 	}
@@ -154,18 +154,14 @@ export default class VtexCustomerService {
 			const params = new URL(finishNavigation.url).searchParams
 			const authCookieValue = params.get('authCookieValue')
 
-			await VtexCustomerService.setCustomerToken(authCookieValue, '')
-			VtexCustomerService.setCustomerData('email', '')
-			VtexCustomerService.notifyLoginToExposedApis()
+			await VtexCustomerService._processPostLogin(authCookieValue, '')
 		} else {
 			throw new Error('Google login failed')
 		}
 	}
 
-	static async notifyLoginToExposedApis() {
+	static async notifyLoginToExposedApis(customerId) {
 		try {
-			let result = await VtexCustomerService.getCustomerProfile()
-			const customerId = result?.data?.profile?.userId
 			if (!customerId) {
 				console.log('notifyLoginToExposedApis error', 'customerId not found')
 				return
@@ -227,7 +223,9 @@ export default class VtexCustomerService {
 
 	static async logout() {
 		VtexCustomerService.notifyLogoutToExposedApis()
-		return StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
+		StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
+		StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		return
 	}
 
 	static async getCustomerToken() {
@@ -281,6 +279,15 @@ export default class VtexCustomerService {
 			const newUserData = { ...userData, [key]: value }
 			return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_DATA, newUserData)
 		}
+	}
+
+	static async getCustomerData(key) {
+		const userData = await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_DATA)
+		if (!userData || !userData[key]) {
+			return null
+		}
+
+		return userData[key]
 	}
 
 	static async retrieveCustomerData() {
@@ -482,5 +489,17 @@ export default class VtexCustomerService {
 				await VtexCustomerService.setCustomerToken(newToken, refreshToken)
 			}
 		}
+	}
+
+	static async _processPostLogin(authCookie, refreshToken) {
+		await VtexCustomerService.setCustomerToken(authCookie, refreshToken)
+
+		VtexCustomerService.getCustomerProfile().then(result => {
+			if (result?.data?.profile) {
+				VtexCustomerService.notifyLoginToExposedApis(result?.data?.profile?.userId)
+				VtexCustomerService.setCustomerData('email', result?.data?.profile?.email)
+				VtexCustomerService.setCustomerData('userId', result?.data?.profile?.userId)
+			}
+		})
 	}
 }
