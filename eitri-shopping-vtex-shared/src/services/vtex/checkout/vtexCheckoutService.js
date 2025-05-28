@@ -25,6 +25,8 @@ export default class VtexCheckoutService {
 				overrideHeaders = {
 					Cookie: `'VtexIdclientAutCookie_${userId}=${token}`
 				}
+			} else {
+				overrideHeaders = {}
 			}
 		}
 
