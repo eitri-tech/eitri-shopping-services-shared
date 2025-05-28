@@ -24,11 +24,6 @@ export default class VtexCaller {
 			const account = Vtex.configs.account
 			headers['VtexIdclientAutCookie'] = token
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${token}`
-
-			const userId = await vtexCustomerService.getCustomerData('userId')
-			if (userId) {
-				headers['Cookie'] += `;VtexIdclientAutCookie_${userId}=${token}`
-			}
 		}
 
 		if (Vtex.configs.session) {
@@ -67,16 +62,16 @@ export default class VtexCaller {
 		return res
 	}
 
-	static async post(path, data, options = {}, baseUrl) {
+	static async post(path, data, options = {}, baseUrl, overrideHeaders) {
 		const _baseUrl = baseUrl || Vtex.configs.api
 		const url = VtexCaller._mountUrl(_baseUrl, path)
-		const headers = await VtexCaller._getHeaders()
+		const headers = overrideHeaders || (await VtexCaller._getHeaders())
 
 		Logger.log('===Fazendo Post na API===')
 		Logger.log('URL ========>', url.href)
 		Logger.log('HEADERS ======>', {
 			...headers,
-			...options.headers
+			...options?.headers
 		})
 		Logger.log('BODY =======>', data)
 
@@ -84,7 +79,7 @@ export default class VtexCaller {
 			...options,
 			headers: {
 				...headers,
-				...options.headers
+				...options?.headers
 			}
 		})
 
