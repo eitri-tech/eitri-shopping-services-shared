@@ -8,11 +8,11 @@ export default function CheckoutMethods() {
 
 	const addUser = async () => {
 		await Vtex.checkout.addUserData({
-			email: 'wagnerfq@gmail.com',
+			email: 'wagner.quirino@calindra.com.br',
 			firstName: 'Wagner',
 			lastName: 'Quirino',
 			documentType: 'cpf',
-			document: '256652530-73',
+			document: '10937255750',
 			phone: '(11) 91234-5678',
 			dob: '1990-05-15',
 			isCorporate: false,
@@ -76,14 +76,14 @@ export default function CheckoutMethods() {
 			hasDefaultBillingAddress: false
 		}
 		const giftCard = {
-			redemptionCode: '',
+			redemptionCode: 'EMPC-ZGZN-ANGP-UURV',
 			inUse: true,
 			isSpecialCard: false
 		}
 
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
-				payments: [payment],
+				payments: [],
 				giftCards: [giftCard]
 			})
 			console.log(result)
@@ -105,6 +105,7 @@ export default function CheckoutMethods() {
 				validationCode: null
 			}
 			const result = await Vtex.checkout.pay(cart, cardInfo)
+			// const result = await Vtex.checkout.executePayment(cart, cardInfo)
 			console.log(result)
 		} catch (e) {
 			console.log(e)

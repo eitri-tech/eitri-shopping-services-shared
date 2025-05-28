@@ -6,6 +6,7 @@ import VtexCartService from '../cart/VtexCartService'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import App from '../../App'
 import vtexCustomerService from '../customer/vtexCustomerService'
+import VtexPaymentService from './vtexPaymentService'
 
 export default class VtexCheckoutService {
 	static async selectPaymentOption(paymentOption) {
@@ -244,34 +245,39 @@ export default class VtexCheckoutService {
 		console.time('Pay total time')
 
 		const payment = cart.paymentData?.payments[0]
+		const giftCard = cart.paymentData?.giftCards?.[0]
+
+		if (giftCard && giftCard.value === cart.value) {
+			return await VtexPaymentService.executePayment(cart)
+		}
 
 		const paymentSystem = cart.paymentData?.paymentSystems?.find(
-			system => system.stringId === payment.paymentSystem
+			system => system.stringId === payment?.paymentSystem
 		)
 
 		// Boleto bancário
-		if (paymentSystem.groupName === 'bankInvoicePaymentGroup') {
+		if (paymentSystem?.groupName === 'bankInvoicePaymentGroup') {
 			return await VtexCheckoutService.payBankInvoice(cart)
 		}
 
 		// Pix
-		if (paymentSystem.groupName === 'instantPaymentPaymentGroup') {
-			return await VtexCheckoutService.payInstantPayment(cart)
+		if (paymentSystem?.groupName === 'instantPaymentPaymentGroup') {
+			return await VtexPaymentService.executePayment(cart)
 		}
 
 		//Cartão de Crédito
-		if (paymentSystem.groupName === 'creditCardPaymentGroup') {
+		if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
 			return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
 		}
 
 		//Promissoria
-		if (paymentSystem.groupName === 'promissoryPaymentGroup') {
+		if (paymentSystem?.groupName === 'promissoryPaymentGroup') {
 			return await VtexCheckoutService.payPromissory(cart)
 		}
 
 		//Cartao de loja
 		const storeCardGroupName = App?.configs?.appConfigs.storeCardGroupName ?? ''
-		if (paymentSystem.groupName === storeCardGroupName) {
+		if (paymentSystem?.groupName === storeCardGroupName) {
 			return await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
 		}
 
@@ -290,6 +296,10 @@ export default class VtexCheckoutService {
 		console.time('Pay total time')
 
 		throw Error('Método de pagamento não suportado')
+	}
+
+	static async executePayment(cart, options) {
+		return VtexPaymentService.executePayment(cart, options)
 	}
 
 	static async getPixStatus(transactionId, paymentId) {
@@ -711,4 +721,6 @@ export default class VtexCheckoutService {
 
 		return processedPayment
 	}
+
+	static async payGiftCard(cart) {}
 }
