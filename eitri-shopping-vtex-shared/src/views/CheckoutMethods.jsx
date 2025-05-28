@@ -76,7 +76,7 @@ export default function CheckoutMethods() {
 			hasDefaultBillingAddress: false
 		}
 		const giftCard = {
-			redemptionCode: 'UAJY-AQWX-UPAD-RECC',
+			redemptionCode: '',
 			inUse: true,
 			isSpecialCard: false
 		}
