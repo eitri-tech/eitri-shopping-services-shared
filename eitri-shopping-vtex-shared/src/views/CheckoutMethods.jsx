@@ -10,9 +10,9 @@ export default function CheckoutMethods() {
 		await Vtex.checkout.addUserData({
 			email: 'wagnerfq@gmail.com',
 			firstName: 'Wagner',
-			lastName: 'Teste',
+			lastName: 'Quirino',
 			documentType: 'cpf',
-			document: '109372557-50',
+			document: '256652530-73',
 			phone: '(11) 91234-5678',
 			dob: '1990-05-15',
 			isCorporate: false,
@@ -28,7 +28,8 @@ export default function CheckoutMethods() {
 		const products = await Vtex.catalog.legacyParamsSearch('fq=P:%5B0%2520TO%252099999%5D&_from=0&_to=49')
 		const product = products[Math.floor(Math.random() * products.length)]
 		const sku = product.items[0]
-		await Vtex.cart.addItem(sku)
+		const result = await Vtex.cart.addItem(sku)
+		// console.log(result)
 	}
 
 	const selectShipping = async () => {
@@ -63,26 +64,32 @@ export default function CheckoutMethods() {
 	}
 
 	const selectPayment = async () => {
-		const result = await Vtex.checkout.selectPaymentOption({
-			payments: [
-				{
-					accountId: null,
-					bin: null,
-					hasDefaultBillingAddress: true,
-					installments: `1`,
-					installmentsInterestRate: null,
-					isLuhnValid: null,
-					isRegexValid: null,
-					paymentSystem: '403',
-					referenceValue: 2505,
-					tokenId: null,
-					value: 2505
-				}
-			],
-			giftCards: []
-		})
+		const payment = {
+			paymentSystem: 125,
+			paymentSystemName: 'Pix',
+			group: 'instantPaymentPaymentGroup',
+			installments: 1,
+			installmentsInterestRate: 0,
+			installmentsValue: 46807,
+			value: 46807,
+			referenceValue: 46807,
+			hasDefaultBillingAddress: false
+		}
+		const giftCard = {
+			redemptionCode: 'UAJY-AQWX-UPAD-RECC',
+			inUse: true,
+			isSpecialCard: false
+		}
 
-		console.log(result)
+		try {
+			const result = await Vtex.checkout.selectPaymentOption({
+				payments: [payment],
+				giftCards: [giftCard]
+			})
+			console.log(result)
+		} catch (error) {
+			console.error(error)
+		}
 	}
 
 	const pay = async () => {

@@ -5,6 +5,7 @@ import Logger from '../../Logger'
 import VtexCartService from '../cart/VtexCartService'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import App from '../../App'
+import vtexCustomerService from '../customer/vtexCustomerService'
 
 export default class VtexCheckoutService {
 	static async selectPaymentOption(paymentOption) {
@@ -15,9 +16,24 @@ export default class VtexCheckoutService {
 			giftCards: paymentOption.giftCards
 		}
 
+		// Tem um erro na Vtex, quando existe gift card só é possível enviar o header VtexIdclientAutCookie_userId
+		let overrideHeaders = null
+		if (Array.isArray(payload?.giftCards) && payload?.giftCards.length > 0) {
+			const userId = await vtexCustomerService.getCustomerData('userId')
+			const token = await vtexCustomerService.getCustomerToken()
+			if (token && userId) {
+				overrideHeaders = {
+					Cookie: `'VtexIdclientAutCookie_${userId}=${token}`
+				}
+			}
+		}
+
 		const response = await VtexCaller.post(
 			`api/checkout/pub/orderForm/${orderFormId}/attachments/paymentData`,
-			payload
+			payload,
+			null,
+			null,
+			overrideHeaders
 		)
 
 		GAVtexInternalService.addPaymentInfo(response.data)
