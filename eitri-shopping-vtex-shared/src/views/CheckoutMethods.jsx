@@ -3,25 +3,29 @@ import Vtex from '../services/Vtex'
 export default function CheckoutMethods() {
 	const getCart = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
-		console.log(cart)
+		console.log('carrinho=====>', cart.orderFormId)
 	}
 
 	const addUser = async () => {
-		await Vtex.checkout.addUserData({
-			email: 'wagner.quirino@calindra.com.br',
-			firstName: 'Wagner',
-			lastName: 'Quirino',
-			documentType: 'cpf',
-			document: '10937255750',
-			phone: '(11) 91234-5678',
-			dob: '1990-05-15',
-			isCorporate: false,
-			corporateName: '',
-			tradeName: '',
-			corporateDocument: '',
-			corporatePhone: '',
-			stateInscription: ''
-		})
+		try {
+			await Vtex.checkout.addUserData({
+				email: '',
+				firstName: '',
+				lastName: '',
+				documentType: 'cpf',
+				document: '',
+				phone: '(11) 91234-5678',
+				dob: '1990-05-15',
+				isCorporate: false,
+				corporateName: '',
+				tradeName: '',
+				corporateDocument: '',
+				corporatePhone: '',
+				stateInscription: ''
+			})
+		} catch (e) {
+			console.error(e)
+		}
 	}
 
 	const addRandomItem = async () => {
@@ -70,15 +74,14 @@ export default function CheckoutMethods() {
 			group: 'instantPaymentPaymentGroup',
 			installments: 1,
 			installmentsInterestRate: 0,
-			installmentsValue: 46807,
-			value: 46807,
-			referenceValue: 46807,
+			installmentsValue: 18878,
+			value: 18878,
+			referenceValue: 18878,
 			hasDefaultBillingAddress: false
 		}
 		const giftCard = {
-			redemptionCode: 'EMPC-ZGZN-ANGP-UURV',
-			inUse: true,
-			isSpecialCard: false
+			redemptionCode: '',
+			inUse: true
 		}
 
 		try {
@@ -86,7 +89,8 @@ export default function CheckoutMethods() {
 				payments: [],
 				giftCards: [giftCard]
 			})
-			console.log(result)
+			console.log(result?.paymentData?.payments)
+			console.log(result?.paymentData?.giftCards)
 		} catch (error) {
 			console.error(error)
 		}

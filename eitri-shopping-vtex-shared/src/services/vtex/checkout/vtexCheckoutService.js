@@ -7,8 +7,12 @@ import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import App from '../../App'
 import vtexCustomerService from '../customer/vtexCustomerService'
 import VtexPaymentService from './vtexPaymentService'
+import StorageService from '../../StorageService'
+import extractCookies from '../_helpers/extractCookies'
 
 export default class VtexCheckoutService {
+	static VTEX_CHK_PAYMENT_AUTH = 'vtex_chk_payment_auth'
+
 	static async selectPaymentOption(paymentOption) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
 
@@ -24,7 +28,7 @@ export default class VtexCheckoutService {
 			const token = await vtexCustomerService.getCustomerToken()
 			if (token && userId) {
 				overrideHeaders = {
-					Cookie: `'VtexIdclientAutCookie_${userId}=${token}`
+					Cookie: `VtexIdclientAutCookie_${userId}=${token}`
 				}
 			} else {
 				overrideHeaders = {}
@@ -38,6 +42,14 @@ export default class VtexCheckoutService {
 			null,
 			overrideHeaders
 		)
+
+		const paymentAuthCookie = extractCookies(response, 'CheckoutDataAccess=VTEX_CHK_Payment_Auth')
+
+		if (paymentAuthCookie) {
+			StorageService.setStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH, paymentAuthCookie)
+		} else {
+			StorageService.removeItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+		}
 
 		GAVtexInternalService.addPaymentInfo(response.data)
 
@@ -103,12 +115,7 @@ export default class VtexCheckoutService {
 
 		const response = await VtexCaller.post(
 			`api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
-			userData,
-			{
-				headers: {
-					Cookie: `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-				}
-			}
+			userData
 		)
 
 		return response.data
@@ -240,6 +247,7 @@ export default class VtexCheckoutService {
 		}
 	}
 
+	/// TODO: Migrar o pagamento para VtexPaymentService.executePayment. GiftCard e PIX já estão lá
 	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')

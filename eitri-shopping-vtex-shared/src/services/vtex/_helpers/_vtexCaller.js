@@ -3,6 +3,8 @@ import Vtex from '../../Vtex'
 import vtexCustomerService from '../customer/vtexCustomerService'
 import Logger from '../../Logger'
 import vtexCartService from '../cart/VtexCartService'
+import VtexCheckoutService from '../checkout/vtexCheckoutService'
+import StorageService from '../../StorageService'
 
 export default class VtexCaller {
 	static _mountUrl = (baseUrl, path) => {
@@ -20,7 +22,6 @@ export default class VtexCaller {
 		}
 
 		const token = await vtexCustomerService.getCustomerToken()
-		const orderFormId = await vtexCartService.getStoredOrderFormId()
 
 		if (token) {
 			const account = Vtex.configs.account
@@ -36,11 +37,12 @@ export default class VtexCaller {
 			}
 		}
 
-		if (orderFormId) {
+		const paymentAuth = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+		if (paymentAuth) {
 			if (headers['Cookie']) {
-				headers['Cookie'] += `;CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+				headers['Cookie'] += `;CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
 			} else {
-				headers['Cookie'] = `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+				headers['Cookie'] = `CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
 			}
 		}
 

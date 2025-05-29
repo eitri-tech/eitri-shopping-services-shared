@@ -57,6 +57,7 @@ export default class VtexCartService {
 			const path = `api/checkout/pub/orderForm/${orderFormId}`
 			const response = await VtexCaller.get(path)
 			const cart = response.data
+
 			VtexCartService.assertMarketingData(cart)
 
 			VtexCartService._CACHED_CART = cart

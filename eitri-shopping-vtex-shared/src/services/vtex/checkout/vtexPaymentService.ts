@@ -50,22 +50,6 @@ type ProcessPaymentReturn = {
 }
 
 export default class VtexPaymentService {
-	static _extractCookieValues(cookieString) {
-		const vtexChkoAuthRegex = /Vtex_CHKO_Auth=(.*?);/
-		const checkoutDataAccessRegex = /CheckoutDataAccess=VTEX_CHK_Order_Auth=(.*?);/
-
-		const vtexMatch = cookieString.match(vtexChkoAuthRegex)
-		const checkoutMatch = cookieString.match(checkoutDataAccessRegex)
-
-		const vtex_CHKO_Auth = vtexMatch ? vtexMatch[1] : ''
-		const checkoutDataAccess = checkoutMatch ? checkoutMatch[1] : ''
-
-		return {
-			Vtex_CHKO_Auth: vtex_CHKO_Auth,
-			CheckoutDataAccess: checkoutDataAccess
-		}
-	}
-
 	static async executePayment(cart: any, options?: PaymentOptions) {
 		const startTransactionReturn: StartTransactionReturn = await VtexPaymentService.startTransaction(cart, options)
 
@@ -103,16 +87,15 @@ export default class VtexPaymentService {
 					}
 				}
 			)
-			console.log(result)
+
 			const transactionData = result.data
 
 			const { id, orderGroup, merchantTransactions } = transactionData
 
 			const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
-			const { Vtex_CHKO_Auth, CheckoutDataAccess } = VtexPaymentService._extractCookieValues(
-				result.headers['set-cookie']
-			)
+			const Vtex_CHKO_Auth = extractCookies(result, 'Vtex_CHKO_Auth')
+			const CheckoutDataAccess = extractCookies(result, 'CheckoutDataAccess=VTEX_CHK_Order_Auth')
 
 			const dataReturn = {
 				id,
