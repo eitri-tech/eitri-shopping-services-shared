@@ -6,8 +6,13 @@ import VtexCartService from '../cart/VtexCartService'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import App from '../../App'
 import vtexCustomerService from '../customer/vtexCustomerService'
+import VtexPaymentService from './vtexPaymentService'
+import StorageService from '../../StorageService'
+import extractCookies from '../_helpers/extractCookies'
 
 export default class VtexCheckoutService {
+	static VTEX_CHK_PAYMENT_AUTH = 'vtex_chk_payment_auth'
+
 	static async selectPaymentOption(paymentOption) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
 
@@ -23,7 +28,7 @@ export default class VtexCheckoutService {
 			const token = await vtexCustomerService.getCustomerToken()
 			if (token && userId) {
 				overrideHeaders = {
-					Cookie: `'VtexIdclientAutCookie_${userId}=${token}`
+					Cookie: `VtexIdclientAutCookie_${userId}=${token}`
 				}
 			} else {
 				overrideHeaders = {}
@@ -37,6 +42,14 @@ export default class VtexCheckoutService {
 			null,
 			overrideHeaders
 		)
+
+		const paymentAuthCookie = extractCookies(response, 'CheckoutDataAccess=VTEX_CHK_Payment_Auth')
+
+		if (paymentAuthCookie) {
+			StorageService.setStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH, paymentAuthCookie)
+		} else {
+			StorageService.removeItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+		}
 
 		GAVtexInternalService.addPaymentInfo(response.data)
 
@@ -102,12 +115,7 @@ export default class VtexCheckoutService {
 
 		const response = await VtexCaller.post(
 			`api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
-			userData,
-			{
-				headers: {
-					Cookie: `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-				}
-			}
+			userData
 		)
 
 		return response.data
@@ -239,39 +247,45 @@ export default class VtexCheckoutService {
 		}
 	}
 
+	/// TODO: Migrar o pagamento para VtexPaymentService.executePayment. GiftCard e PIX já estão lá
 	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')
 
 		const payment = cart.paymentData?.payments[0]
+		const giftCard = cart.paymentData?.giftCards?.[0]
+
+		if (giftCard && giftCard.value === cart.value) {
+			return await VtexPaymentService.executePayment(cart)
+		}
 
 		const paymentSystem = cart.paymentData?.paymentSystems?.find(
-			system => system.stringId === payment.paymentSystem
+			system => system.stringId === payment?.paymentSystem
 		)
 
 		// Boleto bancário
-		if (paymentSystem.groupName === 'bankInvoicePaymentGroup') {
+		if (paymentSystem?.groupName === 'bankInvoicePaymentGroup') {
 			return await VtexCheckoutService.payBankInvoice(cart)
 		}
 
 		// Pix
-		if (paymentSystem.groupName === 'instantPaymentPaymentGroup') {
-			return await VtexCheckoutService.payInstantPayment(cart)
+		if (paymentSystem?.groupName === 'instantPaymentPaymentGroup') {
+			return await VtexPaymentService.executePayment(cart)
 		}
 
 		//Cartão de Crédito
-		if (paymentSystem.groupName === 'creditCardPaymentGroup') {
+		if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
 			return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
 		}
 
 		//Promissoria
-		if (paymentSystem.groupName === 'promissoryPaymentGroup') {
+		if (paymentSystem?.groupName === 'promissoryPaymentGroup') {
 			return await VtexCheckoutService.payPromissory(cart)
 		}
 
 		//Cartao de loja
 		const storeCardGroupName = App?.configs?.appConfigs.storeCardGroupName ?? ''
-		if (paymentSystem.groupName === storeCardGroupName) {
+		if (paymentSystem?.groupName === storeCardGroupName) {
 			return await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
 		}
 
@@ -290,6 +304,10 @@ export default class VtexCheckoutService {
 		console.time('Pay total time')
 
 		throw Error('Método de pagamento não suportado')
+	}
+
+	static async executePayment(cart, options) {
+		return VtexPaymentService.executePayment(cart, options)
 	}
 
 	static async getPixStatus(transactionId, paymentId) {
@@ -711,4 +729,6 @@ export default class VtexCheckoutService {
 
 		return processedPayment
 	}
+
+	static async payGiftCard(cart) {}
 }

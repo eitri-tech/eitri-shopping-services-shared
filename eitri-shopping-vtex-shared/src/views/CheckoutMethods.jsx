@@ -3,25 +3,29 @@ import Vtex from '../services/Vtex'
 export default function CheckoutMethods() {
 	const getCart = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
-		console.log(cart)
+		console.log('carrinho=====>', cart.orderFormId)
 	}
 
 	const addUser = async () => {
-		await Vtex.checkout.addUserData({
-			email: 'wagnerfq@gmail.com',
-			firstName: 'Wagner',
-			lastName: 'Quirino',
-			documentType: 'cpf',
-			document: '256652530-73',
-			phone: '(11) 91234-5678',
-			dob: '1990-05-15',
-			isCorporate: false,
-			corporateName: '',
-			tradeName: '',
-			corporateDocument: '',
-			corporatePhone: '',
-			stateInscription: ''
-		})
+		try {
+			await Vtex.checkout.addUserData({
+				email: '',
+				firstName: '',
+				lastName: '',
+				documentType: 'cpf',
+				document: '',
+				phone: '(11) 91234-5678',
+				dob: '1990-05-15',
+				isCorporate: false,
+				corporateName: '',
+				tradeName: '',
+				corporateDocument: '',
+				corporatePhone: '',
+				stateInscription: ''
+			})
+		} catch (e) {
+			console.error(e)
+		}
 	}
 
 	const addRandomItem = async () => {
@@ -70,23 +74,23 @@ export default function CheckoutMethods() {
 			group: 'instantPaymentPaymentGroup',
 			installments: 1,
 			installmentsInterestRate: 0,
-			installmentsValue: 46807,
-			value: 46807,
-			referenceValue: 46807,
+			installmentsValue: 18878,
+			value: 18878,
+			referenceValue: 18878,
 			hasDefaultBillingAddress: false
 		}
 		const giftCard = {
 			redemptionCode: '',
-			inUse: true,
-			isSpecialCard: false
+			inUse: true
 		}
 
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
-				payments: [payment],
+				payments: [],
 				giftCards: [giftCard]
 			})
-			console.log(result)
+			console.log(result?.paymentData?.payments)
+			console.log(result?.paymentData?.giftCards)
 		} catch (error) {
 			console.error(error)
 		}
@@ -105,6 +109,7 @@ export default function CheckoutMethods() {
 				validationCode: null
 			}
 			const result = await Vtex.checkout.pay(cart, cardInfo)
+			// const result = await Vtex.checkout.executePayment(cart, cardInfo)
 			console.log(result)
 		} catch (e) {
 			console.log(e)

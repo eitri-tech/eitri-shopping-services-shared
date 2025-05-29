@@ -2,6 +2,9 @@ import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
 import vtexCustomerService from '../customer/vtexCustomerService'
 import Logger from '../../Logger'
+import vtexCartService from '../cart/VtexCartService'
+import VtexCheckoutService from '../checkout/vtexCheckoutService'
+import StorageService from '../../StorageService'
 
 export default class VtexCaller {
 	static _mountUrl = (baseUrl, path) => {
@@ -31,6 +34,15 @@ export default class VtexCaller {
 				headers['Cookie'] += `;vtex_segment=${Vtex.configs?.session?.segmentToken}`
 			} else {
 				headers['Cookie'] = `vtex_segment=${Vtex.configs?.session?.segmentToken}`
+			}
+		}
+
+		const paymentAuth = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+		if (paymentAuth) {
+			if (headers['Cookie']) {
+				headers['Cookie'] += `;CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
+			} else {
+				headers['Cookie'] = `CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
 			}
 		}
 

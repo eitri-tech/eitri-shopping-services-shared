@@ -45,6 +45,11 @@ export default function CustomerMethods() {
 		console.log('savedToken', savedToken)
 	}
 
+	const executeLogout = async () => {
+		const savedToken = await Vtex.customer.logout()
+		console.log('savedToken', savedToken)
+	}
+
 	return (
 		<Window
 			topInset
@@ -146,6 +151,18 @@ export default function CustomerMethods() {
 						grow={1}
 						onPress={executeRefreshToken}
 						label='Refresh token'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={executeLogout}
+						label='Logout'
 					/>
 				</View>
 			</View>
