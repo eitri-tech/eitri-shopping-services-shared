@@ -60,10 +60,12 @@ export default class VtexCustomerService {
 		const refreshToken = extractCookies(loginRes, 'vid_rt')
 
 		const { data } = loginRes
-		const { authCookie } = data
 		const { authStatus } = data
 
-		await VtexCustomerService._processPostLogin(authCookie.Value, refreshToken)
+		if (authStatus === 'Success') {
+			await VtexCustomerService.setCustomerData('email', email)
+			await VtexCustomerService._processPostLogin(data, refreshToken)
+		}
 
 		return authStatus
 	}
@@ -110,10 +112,12 @@ export default class VtexCustomerService {
 		const refreshToken = extractCookies(loginRes, 'vid_rt')
 
 		const { data } = loginRes
-		const { authCookie } = data
 		const { authStatus } = data
 
-		await VtexCustomerService._processPostLogin(authCookie.Value, refreshToken)
+		if (authStatus === 'Success') {
+			await VtexCustomerService.setCustomerData('email', email)
+			await VtexCustomerService._processPostLogin(data, refreshToken)
+		}
 
 		return authStatus
 	}
@@ -147,10 +151,7 @@ export default class VtexCustomerService {
 		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`))
 
 		if (finishNavigation) {
-			const params = new URL(finishNavigation.url).searchParams
-			const authCookieValue = params.get('authCookieValue')
-
-			await VtexCustomerService._processPostLogin(authCookieValue, '')
+			await VtexCustomerService._processPostSocialLogin(finishNavigation.url)
 		} else {
 			throw new Error('Google login failed')
 		}
@@ -226,28 +227,32 @@ export default class VtexCustomerService {
 
 	static async getCustomerToken() {
 		const savedToken = await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
+
 		if (!savedToken) {
 			return null
 		}
+
 		if (
 			savedToken.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC <
 			Math.floor(Date.now() / 1000)
 		) {
 			return null
 		}
-		return savedToken.token
+		return savedToken
 	}
 
 	static async getStorageCustomerToken() {
 		return await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 	}
 
-	static async setCustomerToken(token, refreshToken) {
+	static async setCustomerToken(token, refreshToken, accountAuthCookieId, accountAuthCookieValue) {
 		const creationTimeStamp = Math.floor(Date.now() / 1000)
 		return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
 			token,
 			refreshToken,
-			creationTimeStamp
+			creationTimeStamp,
+			accountAuthCookieId,
+			accountAuthCookieValue
 		})
 	}
 
@@ -294,8 +299,15 @@ export default class VtexCustomerService {
 		return StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
 	}
 
-	static async getCustomerProfile() {
-		const token = await VtexCustomerService.getCustomerToken()
+	static async getCustomerProfile(_token) {
+		let token
+
+		if (_token) {
+			token = _token
+		} else {
+			const tokenData = await VtexCustomerService.getCustomerToken()
+			token = tokenData?.token
+		}
 
 		if (!token) {
 			throw new Error('User not logged in')
@@ -321,7 +333,8 @@ export default class VtexCustomerService {
 	}
 
 	static async updateCustomerProfile(profile) {
-		const token = await VtexCustomerService.getCustomerToken()
+		const tokenData = await VtexCustomerService.getCustomerToken()
+		let token = tokenData?.token
 
 		if (!token) {
 			throw new Error('User not logged in')
@@ -461,7 +474,7 @@ export default class VtexCustomerService {
 
 		const res = await VtexCustomerService.getStorageCustomerToken()
 
-		if (!res) return
+		if (!res || !res.accountAuthCookieId) return
 		if (res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC > Math.floor(Date.now() / 1000)) {
 			return null
 		}
@@ -482,23 +495,44 @@ export default class VtexCustomerService {
 			const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
 
 			if (newToken && refreshToken) {
-				await VtexCustomerService.setCustomerToken(newToken, refreshToken)
+				await VtexCustomerService.setCustomerToken(newToken, refreshToken, res?.accountAuthCookieId, newToken)
 			}
 		}
 	}
 
-	static async _processPostLogin(authCookie, refreshToken) {
-		await VtexCustomerService.setCustomerToken(authCookie, refreshToken)
+	static async _processPostLogin(loginData, refreshToken) {
+		const authCookieValue = loginData?.authCookie?.Value
+		const accountAuthCookie = loginData?.accountAuthCookie
 
-		try {
-			const result = await VtexCustomerService.getCustomerProfile()
-			if (result) {
-				await VtexCustomerService.notifyLoginToExposedApis(result?.data?.profile?.userId)
-				await VtexCustomerService.setCustomerData('email', result?.data?.profile?.email)
-				await VtexCustomerService.setCustomerData('userId', result?.data?.profile?.userId)
-			}
-		} catch (e) {
-			console.error('Erro ao processar _processPostLogin', e)
-		}
+		const accountAuthCookieValue = accountAuthCookie?.Value
+		const accountAuthCookieId = accountAuthCookie?.Name?.split('_')?.[1]
+
+		const userId = loginData?.userId
+
+		await VtexCustomerService.setCustomerToken(
+			authCookieValue,
+			refreshToken,
+			accountAuthCookieId,
+			accountAuthCookieValue
+		)
+		VtexCustomerService.notifyLoginToExposedApis(userId)
+	}
+
+	static async _processPostSocialLogin(finishNavigationUrl) {
+		const params = new URL(finishNavigationUrl).searchParams
+
+		const authCookieValue = params.get('authCookieValue')
+
+		const accountAuthCookieId = params?.get('authCookieName')?.split('_')?.[1]
+		const accountAuthCookieValue = params?.get('accountAuthCookieValue')
+
+		const userProfile = await VtexCustomerService.getCustomerProfile(authCookieValue)
+
+		const userId = userProfile?.data?.profile?.userId
+		const email = userProfile?.data?.profile?.email
+
+		await VtexCustomerService.setCustomerData('email', email)
+		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
+		VtexCustomerService.notifyLoginToExposedApis(userId)
 	}
 }

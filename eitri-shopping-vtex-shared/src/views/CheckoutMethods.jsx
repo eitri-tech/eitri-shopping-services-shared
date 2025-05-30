@@ -87,7 +87,7 @@ export default function CheckoutMethods() {
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
 				payments: [],
-				giftCards: [giftCard]
+				giftCards: []
 			})
 			console.log(result?.paymentData?.payments)
 			console.log(result?.paymentData?.giftCards)
