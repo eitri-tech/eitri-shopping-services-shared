@@ -45,6 +45,15 @@ export default function CustomerMethods() {
 		console.log('savedToken', savedToken)
 	}
 
+	const getLoggedCustomer = async () => {
+		try {
+			const result = await Vtex.customer.getCustomerProfile()
+			console.log('savedToken', result)
+		} catch (e) {
+			console.log('getLoggedCustomer error', e)
+		}
+	}
+
 	const executeLogout = async () => {
 		const savedToken = await Vtex.customer.logout()
 		console.log('savedToken', savedToken)
@@ -151,6 +160,18 @@ export default function CustomerMethods() {
 						grow={1}
 						onPress={executeRefreshToken}
 						label='Refresh token'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={getLoggedCustomer}
+						label='Obter usuário logado'
 					/>
 				</View>
 

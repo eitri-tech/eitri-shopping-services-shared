@@ -21,12 +21,12 @@ export default class VtexCaller {
 			'accept': 'application/json'
 		}
 
-		const token = await vtexCustomerService.getCustomerToken()
+		const tokenData = await vtexCustomerService.getCustomerToken()
 
-		if (token) {
+		if (tokenData) {
 			const account = Vtex.configs.account
-			headers['VtexIdclientAutCookie'] = token
-			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${token}`
+			headers['VtexIdclientAutCookie'] = tokenData.token
+			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
 		if (Vtex.configs.session) {
