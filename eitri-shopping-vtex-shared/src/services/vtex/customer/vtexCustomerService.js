@@ -129,16 +129,21 @@ export default class VtexCustomerService {
 			allowedDomains: ['*'],
 			onLoadJsScript: `
 			          const interval = setInterval(() => {
-			              const googleBtn = document.querySelector(
-			                  ".vtex-login-2-x-googleOptionBtn button"
-			              );
+			                const googleBtnWrapper = document.querySelector(".vtex-login-2-x-googleOptionBtn");
+							const googleBtn = googleBtnWrapper?.querySelector("button");
+							const label = googleBtn?.querySelector(".vtex-login-2-x-oauthLabel");
 
-			              if (googleBtn) {
-			                  clearInterval(interval);
-			                  console.log("Google button found, clicking...");
-			                  googleBtn.click();
-			              }
-			          }, 500);
+							  const isVisible = googleBtn && googleBtn.offsetParent !== null;
+							  const isEnabled = googleBtn && !googleBtn.disabled;
+							  const hasLabel = label && label.textContent?.toLowerCase().includes("google");
+  
+
+			              if (googleBtn && isVisible && isEnabled && hasLabel) {
+							clearInterval(interval);
+							console.log("Google login button ready. Clicking...");
+							googleBtn.click();
+						}
+						}, 500);
 
 			          setTimeout(() => {
 			              clearInterval(interval);
