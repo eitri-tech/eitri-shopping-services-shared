@@ -1,55 +1,56 @@
-import objectToQueryString from "../_helpers/objectToQueryString";
-import Vtex from "../../Vtex";
-import VtexCaller from "../_helpers/_vtexCaller";
+import objectToQueryString from '../_helpers/objectToQueryString'
+import VtexCaller from '../_helpers/_vtexCaller'
+import Eitri from 'eitri-bifrost'
 
 export default class VtexCmsService {
-  static async getAllContentTypes(projectId) {
-    const { account, vtexCmsUrl } = Vtex.configs;
+	static async getAllContentTypes(projectId) {
+		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-    let BASE_URL = `https://${account}.myvtex.com`;
-    if (vtexCmsUrl) {
-      BASE_URL = vtexCmsUrl;
-    }
+		const account = _remoteConfig?.providerInfo?.account
+		const vtexCmsUrl = _remoteConfig?.providerInfo?.vtexCmsUrl
 
-    const result = await VtexCaller.get(
-      `/_v/cms/api/${projectId}`,
-      {},
-      BASE_URL,
-    );
-    return result?.data;
-  }
+		let BASE_URL = `https://${account}.myvtex.com`
+		if (vtexCmsUrl) {
+			BASE_URL = vtexCmsUrl
+		}
 
-  static async getPagesByContentTypes(projectId, contentTypeId, options) {
-    const { vtexCmsUrl, account } = Vtex.configs;
+		const result = await VtexCaller.get(`/_v/cms/api/${projectId}`, {}, BASE_URL)
+		return result?.data
+	}
 
-    let BASE_URL = `https://${account}.myvtex.com`;
-    if (vtexCmsUrl) {
-      BASE_URL = vtexCmsUrl;
-    }
+	static async getPagesByContentTypes(projectId, contentTypeId, options) {
+		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-    const queryString = objectToQueryString(options);
-    const result = await VtexCaller.get(
-      `/_v/cms/api/${projectId}/${contentTypeId}?${queryString}`,
-      {},
-      BASE_URL,
-    );
-    return result?.data;
-  }
+		const account = _remoteConfig?.providerInfo?.account
+		const vtexCmsUrl = _remoteConfig?.providerInfo?.vtexCmsUrl
 
-  static async getCmsPage(projectId, contentTypeId, documentId, options) {
-    const { vtexCmsUrl, account } = Vtex.configs;
+		let BASE_URL = `https://${account}.myvtex.com`
+		if (vtexCmsUrl) {
+			BASE_URL = vtexCmsUrl
+		}
 
-    let BASE_URL = `https://${account}.myvtex.com`;
-    if (vtexCmsUrl) {
-      BASE_URL = vtexCmsUrl;
-    }
+		const queryString = objectToQueryString(options)
+		const result = await VtexCaller.get(`/_v/cms/api/${projectId}/${contentTypeId}?${queryString}`, {}, BASE_URL)
+		return result?.data
+	}
 
-    const queryString = objectToQueryString(options);
-    const result = await VtexCaller.get(
-      `/_v/cms/api/${projectId}/${contentTypeId}/${documentId}?${queryString}`,
-      {},
-      BASE_URL,
-    );
-    return result?.data;
-  }
+	static async getCmsPage(projectId, contentTypeId, documentId, options) {
+		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
+
+		const account = _remoteConfig?.providerInfo?.account
+		const vtexCmsUrl = _remoteConfig?.providerInfo?.vtexCmsUrl
+
+		let BASE_URL = `https://${account}.myvtex.com`
+		if (vtexCmsUrl) {
+			BASE_URL = vtexCmsUrl
+		}
+
+		const queryString = objectToQueryString(options)
+		const result = await VtexCaller.get(
+			`/_v/cms/api/${projectId}/${contentTypeId}/${documentId}?${queryString}`,
+			{},
+			BASE_URL
+		)
+		return result?.data
+	}
 }
