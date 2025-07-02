@@ -5,6 +5,7 @@ export default function CustomerMethods() {
 	const [email, setEmail] = useState('')
 	const [accessKey, setAccessKey] = useState('')
 	const [password, setPassword] = useState('')
+	const [newPass, setNewPass] = useState('')
 
 	const sendEmail = async () => {
 		await Vtex.customer.sendAccessKeyByEmail(email)
@@ -57,6 +58,16 @@ export default function CustomerMethods() {
 	const executeLogout = async () => {
 		const savedToken = await Vtex.customer.logout()
 		console.log('savedToken', savedToken)
+	}
+
+	const updatePassword = async () => {
+		try {
+			console.log('updatePassword', email, accessKey, newPass)
+			const result = await Vtex.customer.setPassword(email, accessKey, newPass)
+			console.log('updatePassword', result)
+		} catch (e) {
+			console.log('updatePasswordError', e)
+		}
 	}
 
 	return (
@@ -124,6 +135,24 @@ export default function CustomerMethods() {
 						grow={1}
 						onPress={loginWithEmailAndAccessKey}
 						label='Validar login'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Input
+						placeholder='Nova senha'
+						inputType='numeric'
+						grow={4}
+						value={newPass}
+						onChange={value => setNewPass(value)}
+					/>
+					<Button
+						color='background-color'
+						grow={1}
+						onPress={updatePassword}
+						label='Nova senha'
 					/>
 				</View>
 

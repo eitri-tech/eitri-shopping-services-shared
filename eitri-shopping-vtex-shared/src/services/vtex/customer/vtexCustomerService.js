@@ -188,6 +188,7 @@ export default class VtexCustomerService {
 		const loginRes = await VtexCaller.post(
 			`api/vtexid/pub/authentication/classic/setpassword?expireSessions=true`,
 			{
+				authenticationToken: VtexCustomerService.cookieValue,
 				accessKey: accessKey,
 				login: email,
 				newPassword: newPassword
@@ -196,17 +197,20 @@ export default class VtexCustomerService {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 					'accept': '*/*',
-					'Cookie': VtexCustomerService.cookieValue
+					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
 				}
 			}
 		)
 
+		const refreshToken = extractCookies(loginRes, 'vid_rt')
+
 		const { data } = loginRes
-		const { authCookie } = data
 		const { authStatus } = data
 
-		await VtexCustomerService.setCustomerToken(authCookie.Value)
-		VtexCustomerService.setCustomerData('email', email)
+		if (authStatus === 'Success') {
+			await VtexCustomerService.setCustomerData('email', email)
+			await VtexCustomerService._processPostLogin(data, refreshToken)
+		}
 
 		return authStatus
 	}
