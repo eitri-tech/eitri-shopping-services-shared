@@ -8,7 +8,9 @@ export default function Home() {
 	}, [])
 
 	const init = async () => {
+		// const a = new Date().getTime()
 		await App.tryAutoConfigure({ verbose: true, gaVerbose: false })
+		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
 		// await Vtex.cart.setOrderFormId('c9bcc5e093f9457382c5079efd04f3c7')
 	}
 

@@ -50,8 +50,9 @@ export default class Vtex {
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		const session = await Vtex.buildSession({ ...configSegments, ...utmParams })
-		Vtex.configs.session = session
+		Vtex.buildSession({ ...configSegments, ...utmParams }).then(session => {
+			Vtex.configs.session = session
+		})
 
 		Vtex.customer.executeRefreshToken()
 	}
