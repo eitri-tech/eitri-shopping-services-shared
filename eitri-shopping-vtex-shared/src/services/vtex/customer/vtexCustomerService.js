@@ -126,7 +126,7 @@ export default class VtexCustomerService {
 		let webFlowRes = await Eitri.webFlow.start({
 			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
 			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
-			allowedDomains: [Vtex.configs.host, 'accounts.google.com'],
+			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
 			onLoadJsScript: `
       const interval = setInterval(() => {
@@ -165,7 +165,7 @@ export default class VtexCustomerService {
 		let webFlowRes = await Eitri.webFlow.start({
 			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
 			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
-			allowedDomains: [Vtex.configs.host, 'www.facebook.com'],
+			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
 			onLoadJsScript: `
           const interval = setInterval(() => {
