@@ -41,6 +41,10 @@ export default function CustomerMethods() {
 		await Vtex.customer.loginWithGoogle()
 	}
 
+	const facebookAuth = async () => {
+		await Vtex.customer.loginWithFacebook()
+	}
+
 	const executeRefreshToken = async () => {
 		const savedToken = await Vtex.customer.executeRefreshToken()
 		console.log('savedToken', savedToken)
@@ -165,6 +169,18 @@ export default function CustomerMethods() {
 						grow={1}
 						onPress={googleAuth}
 						label='Google login'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={facebookAuth}
+						label='Facebook login'
 					/>
 				</View>
 
