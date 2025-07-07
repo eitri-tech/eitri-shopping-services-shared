@@ -126,31 +126,30 @@ export default class VtexCustomerService {
 		let webFlowRes = await Eitri.webFlow.start({
 			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
 			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
-			allowedDomains: ['*'],
+			allowedDomains: [Vtex.configs.host, 'accounts.google.com'],
+			maxNavigationLimit: 20,
 			onLoadJsScript: `
-			          const interval = setInterval(() => {
-			                const googleBtnWrapper = document.querySelector(".vtex-login-2-x-googleOptionBtn");
-							const googleBtn = googleBtnWrapper?.querySelector("button");
-							const label = googleBtn?.querySelector(".vtex-login-2-x-oauthLabel");
+      const interval = setInterval(() => {
+        const googleBtnWrapper = document.querySelector(".vtex-login-2-x-googleOptionBtn");
+        const googleBtn = googleBtnWrapper?.querySelector("button");
+        const label = googleBtn?.querySelector(".vtex-login-2-x-oauthLabel");
+        
+        const isVisible = googleBtn && googleBtn.offsetParent !== null;
+        const isEnabled = googleBtn && !googleBtn.disabled;
+        const hasLabel = label && label.textContent?.toLowerCase().includes("google");
 
-							  const isVisible = googleBtn && googleBtn.offsetParent !== null;
-							  const isEnabled = googleBtn && !googleBtn.disabled;
-							  const hasLabel = label && label.textContent?.toLowerCase().includes("google");
-  
+        if (googleBtn && isVisible && isEnabled && hasLabel) {
+          clearInterval(interval);
+          console.log("Google login button ready. Clicking...");
+          googleBtn.click();
+        }
+      }, 500);
 
-			              if (googleBtn && isVisible && isEnabled && hasLabel) {
-							clearInterval(interval);
-							console.log("Google login button ready. Clicking...");
-							googleBtn.click();
-						}
-						}, 500);
-
-			          setTimeout(() => {
-			              clearInterval(interval);
-			              console.log("Timeout, google button not found");
-			          }, 10000);
-			          `,
-			maxNavigationLimit: 20
+      setTimeout(() => {
+        clearInterval(interval);
+        console.log("WebFlow Timeout: Google button was not found or ready in time.");
+      }, 10000);
+    `
 		})
 
 		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`))
@@ -159,6 +158,45 @@ export default class VtexCustomerService {
 			await VtexCustomerService._processPostSocialLogin(finishNavigation.url)
 		} else {
 			throw new Error('Google login failed')
+		}
+	}
+
+	static async loginWithFacebook() {
+		let webFlowRes = await Eitri.webFlow.start({
+			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
+			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
+			allowedDomains: [Vtex.configs.host, 'www.facebook.com'],
+			maxNavigationLimit: 20,
+			onLoadJsScript: `
+          const interval = setInterval(() => {
+            const facebookBtnWrapper = document.querySelector(".vtex-login-2-x-facebookOptionBtn");
+            const facebookBtn = facebookBtnWrapper?.querySelector("button");
+            const label = facebookBtn?.querySelector(".vtex-login-2-x-oauthLabel");
+            
+            const isVisible = facebookBtn && facebookBtn.offsetParent !== null;
+            const isEnabled = facebookBtn && !facebookBtn.disabled;
+            const hasLabel = label && label.textContent?.toLowerCase().includes("facebook");
+
+            if (facebookBtn && isVisible && isEnabled && hasLabel) {
+              clearInterval(interval);
+              console.log("Facebook login button ready. Clicking...");
+              facebookBtn.click();
+            }
+          }, 500);
+
+          setTimeout(() => {
+            clearInterval(interval);
+            console.log("WebFlow Timeout: Facebook button was not found or ready in time.");
+          }, 10000);
+        `
+		});
+
+		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`));
+
+		if (finishNavigation) {
+			await VtexCustomerService._processPostSocialLogin(finishNavigation.url);
+		} else {
+			throw new Error('Facebook login failed');
 		}
 	}
 
@@ -371,7 +409,7 @@ export default class VtexCustomerService {
 		return result?.data
 	}
 
-	static async newsletterSubscribe(email) {}
+	static async newsletterSubscribe(email) { }
 
 	/**
 	 * Extrai parâmetros UTM de uma string de query ou de um objeto e salva no Storage.
