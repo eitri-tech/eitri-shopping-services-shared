@@ -128,6 +128,7 @@ export default class VtexCustomerService {
 			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
 			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
+			keepLoadingScreenUntilDomainChange: true,
 			onLoadJsScript: `
       const interval = setInterval(() => {
         const googleBtnWrapper = document.querySelector(".vtex-login-2-x-googleOptionBtn");
@@ -167,6 +168,7 @@ export default class VtexCustomerService {
 			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
 			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
+			keepLoadingScreenUntilDomainChange: true,
 			onLoadJsScript: `
           const interval = setInterval(() => {
             const facebookBtnWrapper = document.querySelector(".vtex-login-2-x-facebookOptionBtn");
