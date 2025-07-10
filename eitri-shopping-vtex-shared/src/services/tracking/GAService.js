@@ -31,20 +31,6 @@ export default class GAService {
       ...data,
     };
 
-    // tentativa pelo tracking
-    try {
-      Eitri.exposedApis.tracking.logEvent({ eventName: event, data: params });
-      if (App.configs.gaVerbose) {
-        console.log("[Analytics]", "[logEvent]", {
-          eventName: event,
-          data: params,
-        });
-      }
-      return;
-    } catch (error) {
-      // console.error('[Analytics] Error on logEvent', error.message)
-    }
-
     // tentativa pelo fb
     try {
       Eitri.exposedApis.fb.logEvent({ eventName: event, data: params });
