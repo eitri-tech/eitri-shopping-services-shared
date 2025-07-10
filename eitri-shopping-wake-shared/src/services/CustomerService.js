@@ -186,7 +186,7 @@ export default class CustomerService {
     const loginData = await StorageService.getStorageJSON(
       CustomerService.STORAGE_USER_TOKEN_KEY,
     );
-    if (!loginData) {
+    if (!loginData?.validUntil) {
       return null;
     }
     const now = new Date();
