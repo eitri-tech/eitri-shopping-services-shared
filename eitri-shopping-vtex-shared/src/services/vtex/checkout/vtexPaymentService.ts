@@ -57,7 +57,7 @@ export default class VtexPaymentService {
 
 		const paymentProcessed: ProcessPaymentReturn = await VtexPaymentService.processPayment(startTransactionReturn)
 
-		GAVtexInternalService.purchase(cart, paymentProcessed.orderId)
+		GAVtexInternalService.purchase(cart, paymentProcessed?.transactionId || paymentProcessed?.orderId)
 
 		return paymentProcessed
 	}
