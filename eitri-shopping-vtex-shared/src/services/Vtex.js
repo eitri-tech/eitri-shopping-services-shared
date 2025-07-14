@@ -16,6 +16,7 @@ export default class Vtex {
 		host: '',
 		domain: '',
 		vtexCmsUrl: '',
+		sendGACampaignAlongSession: true,
 		searchOptions: {},
 		segments: null,
 		session: '',
@@ -43,6 +44,7 @@ export default class Vtex {
 			host: _host,
 			domain: _domain,
 			vtexCmsUrl: remoteConfig?.providerInfo?.vtexCmsUrl,
+			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
 			segments: { ...configSegments, ...utmParams },
 			marketingTag: remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
@@ -58,10 +60,13 @@ export default class Vtex {
 	}
 
 	static buildSession = async (segments, update) => {
-		try {
-			GAService.sendCampaignDetails(segments)
-		} catch (e) {
-			console.error('[SHARED] Error send campaign_details', e)
+		if (Vtex.configs.sendGACampaignAlongSession) {
+			try {
+				GAService.sendCampaignDetails(segments)
+				console.log('[SHARED] Campaign segments details sent to GA')
+			} catch (e) {
+				console.error('[SHARED] Error send campaign_details', e)
+			}
 		}
 
 		try {
