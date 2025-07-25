@@ -296,7 +296,7 @@ export default class VtexCheckoutService {
 			)
 		) {
 			const res = await VtexCheckoutService.payExternalProvider(cart)
-			GAVtexInternalService.purchase(cart, res.transactionId)
+			GAVtexInternalService.purchase(cart, res?.transactionId || res?.orderId)
 			return res
 		}
 
@@ -416,7 +416,7 @@ export default class VtexCheckoutService {
 			id
 		)
 
-		GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+		GAVtexInternalService.purchase(cart, processedPayment?.transactionId || processedPayment?.orderId)
 
 		return processedPayment
 	}
@@ -469,7 +469,7 @@ export default class VtexCheckoutService {
 			id
 		)
 
-		GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+		GAVtexInternalService.purchase(cart, processedPayment?.transactionId || processedPayment?.orderId)
 
 		return processedPayment
 	}
@@ -561,7 +561,7 @@ export default class VtexCheckoutService {
 			CheckoutDataAccess
 		)
 
-		GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+		GAVtexInternalService.purchase(cart, processedPayment?.transactionId || processedPayment?.orderId)
 
 		return processedPayment
 	}
@@ -724,7 +724,7 @@ export default class VtexCheckoutService {
 			CheckoutDataAccess
 		)
 
-		GAVtexInternalService.purchase(cart, processedPayment.orderGroup)
+		GAVtexInternalService.purchase(cart, processedPayment?.transactionId || processedPayment?.orderId)
 
 		return processedPayment
 	}
