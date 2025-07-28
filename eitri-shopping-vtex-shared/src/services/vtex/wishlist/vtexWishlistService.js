@@ -17,7 +17,7 @@ export default class VtexWishlistService {
 		const shopperId = user.email
 
 		const body = {
-			query: 'query ViewLists($shopperId: String!, $from: Int, $to: Int) @context(sender: "vtex.wish-list@1.18.0") { viewLists(shopperId: $shopperId, from: $from, to: $to) { data { productId sku title id } name public }}',
+			query: 'query ViewLists($shopperId: String!, $from: Int, $to: Int) { viewLists(shopperId: $shopperId, from: $from, to: $to) { data { productId sku title id } name public }}',
 			variables: {
 				shopperId: shopperId,
 				from: from,
@@ -25,7 +25,7 @@ export default class VtexWishlistService {
 			}
 		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, Vtex.configs.host)
 		return response.data
 	}
 
@@ -39,7 +39,7 @@ export default class VtexWishlistService {
 		const shopperId = user.email
 
 		const body = {
-			query: 'mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) @context(sender: "vtex.wish-list@1.18.0") { removeFromList(shopperId: $shopperId, id: $id, name: $name) }',
+			query: 'mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) { removeFromList(shopperId: $shopperId, id: $id, name: $name) }',
 			variables: {
 				id: id,
 				shopperId: shopperId,
@@ -61,7 +61,7 @@ export default class VtexWishlistService {
 		const shopperId = user.email
 
 		const body = {
-			query: 'mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) @context(sender: "vtex.wish-list@1.18.0") { addToList(shopperId: $shopperId, listItem: $listItem, name: $name) }',
+			query: 'mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) { addToList(shopperId: $shopperId, listItem: $listItem, name: $name) }',
 			variables: {
 				listItem: {
 					productId: productId,
@@ -87,7 +87,7 @@ export default class VtexWishlistService {
 		const shopperId = user.email
 
 		const body = {
-			query: 'query CheckItem ($shopperId: String!, $productId: String!) @context(sender: "vtex.wish-list@1.18.0") { checkList(shopperId: $shopperId, productId: $productId) { inList listNames listIds message }}',
+			query: 'query CheckItem ($shopperId: String!, $productId: String!) { checkList(shopperId: $shopperId, productId: $productId) { inList listNames listIds message }}',
 			variables: {
 				shopperId: shopperId,
 				productId: productId
