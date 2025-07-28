@@ -1,0 +1,34 @@
+name: Verificar e Publicar Versões
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Verificar e Publicar Versões
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:20.10.7
+        options: --privileged
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Validar e Publicar Versões do Eitri App
+        env:
+          EITRI_CLI_CLIENT_ID: ${{ secrets.EITRI_CLI_CLIENT_ID }}
+          EITRI_CLI_CLIENT_SECRET: ${{ secrets.EITRI_CLI_CLIENT_SECRET }}
+        run: |
+          echo "Executando script..."
+          npm install -g eitri-cli
+          node check_and_push.js
