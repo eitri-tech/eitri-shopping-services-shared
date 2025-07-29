@@ -122,4 +122,5 @@ export default class Vtex {
 	static cms = VtexCmsService
 	static wishlist = VtexWishlistService
 	static store = VtexStoreService
+	static http = VtexCaller
 }
