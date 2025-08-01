@@ -8,6 +8,7 @@ import VtexCaller from './vtex/_helpers/_vtexCaller'
 import VtexStoreService from './vtex/store/vtexStoreService'
 import App from './App'
 import GAService from './tracking/GAService'
+import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
 
 export default class Vtex {
 	static configs = {
@@ -122,5 +123,6 @@ export default class Vtex {
 	static cms = VtexCmsService
 	static wishlist = VtexWishlistService
 	static store = VtexStoreService
+	static searchGraphql = VtexSearchGraphql
 	static http = VtexCaller
 }
