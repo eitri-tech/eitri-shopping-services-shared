@@ -1,13 +1,5 @@
-export type ProductSearch = {
-	id: string
-	name: string
-	price: number
-}
-
 export type ProductSearchInput = {
-	query: string
 	fullText: string
-	map: string
 	selectedFacets: {
 		key: string
 		value: string
