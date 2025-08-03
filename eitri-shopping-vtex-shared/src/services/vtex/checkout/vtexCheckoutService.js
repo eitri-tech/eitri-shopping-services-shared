@@ -177,6 +177,7 @@ export default class VtexCheckoutService {
 			}
 		} catch (e) {
 			console.log('erro no startPayment', e)
+			throw e
 		}
 	}
 
@@ -205,6 +206,7 @@ export default class VtexCheckoutService {
 		} catch (e) {
 			//TODO: se der erro aqui, será necessário matar e recriar o carrinho
 			console.log('erro no setPaymentMethod', e)
+			throw e
 		}
 	}
 
@@ -241,7 +243,7 @@ export default class VtexCheckoutService {
 				}
 			} else {
 				console.log('erro no processPayment', e.response)
-				throw Error(e)
+				throw e
 			}
 		}
 	}
