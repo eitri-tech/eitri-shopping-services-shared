@@ -111,7 +111,8 @@ export default class VtexPaymentService {
 
 			return dataReturn
 		} catch (e) {
-			console.log('erro no startPayment', e)
+			console.log('Erro no startPayment', e)
+			throw e
 		}
 	}
 
@@ -226,7 +227,7 @@ export default class VtexPaymentService {
 				}
 			} else {
 				console.log('erro no processPayment', e.response)
-				throw Error(e)
+				throw e
 			}
 		}
 	}
