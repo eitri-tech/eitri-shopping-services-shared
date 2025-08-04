@@ -37,7 +37,7 @@ export default function GraphqlSearchMethods() {
 	const getProduct = async () => {
 		try {
 			const res = await Vtex.searchGraphql.product({
-				slug: 'camisa-polo-plus-size-masculina-algodao-peruano-bege-21322000499028'
+				identifier: { field: 'id', value: '2023347' }
 			})
 			console.log(res)
 		} catch (e) {
