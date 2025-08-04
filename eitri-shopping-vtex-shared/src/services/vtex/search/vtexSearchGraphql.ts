@@ -64,8 +64,16 @@ export default class VtexSearchGraphql {
 		const { host } = Vtex.configs
 		const query = this.toGraphQLArgs(input)
 
+		const _query = query
+			.replace('"id"', 'id')
+			.replace('"slug"', 'slug')
+			.replace('"reference"', 'reference')
+			.replace('"ean"', 'ean')
+			.replace('"sku"', 'sku')
+			.replace('"buy"', 'buy')
+
 		const body = {
-			query: `{ product(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
+			query: `{ product(${_query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
 		}
 
 		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
