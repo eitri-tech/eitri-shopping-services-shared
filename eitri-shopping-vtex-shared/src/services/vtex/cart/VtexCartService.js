@@ -289,7 +289,7 @@ export default class VtexCartService {
 			)
 		} else {
 			response = await VtexCaller.get(
-				`api/checkout/pub/pickup-points?geoCoordinates=${latitude}&geoCoordinates=${longitude}`
+				`api/checkout/pub/pickup-points?geoCoordinates=${longitude};${latitude}`
 			)
 		}
 
