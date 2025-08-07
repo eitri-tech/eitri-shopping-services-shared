@@ -5,6 +5,10 @@ import Tracking from '../services/Tracking'
 export default function GAMethods() {
 	const [msgDebug, setMsgDebug] = useState(null)
 
+	const getConfig = async () => {
+		setMsgDebug(App.configs)
+	}
+
 	const logScreenView = async () => {
 		try {
 			Tracking.ga.logScreenView('GAMethods', 'TestScreen')
@@ -58,10 +62,6 @@ export default function GAMethods() {
 		}
 	}
 
-	const getAppConfigs = async () => {
-		setMsgDebug(App.configs)
-	}
-
 	const toggleVerbose = async () => {
 		App.configs.gaVerbose = !App.configs.gaVerbose
 		setMsgDebug('GA Verbose mode: ' + (App.configs.gaVerbose ? 'ON' : 'OFF'))
@@ -90,6 +90,13 @@ export default function GAMethods() {
 				<Button
 					wide
 					color='background-color'
+					onPress={getConfig}
+					label='Ver Configs'
+				/>
+				
+				<Button
+					wide
+					color='background-color'
 					onPress={logScreenView}
 					label='Log Screen View'
 				/>
@@ -113,13 +120,6 @@ export default function GAMethods() {
 					color='background-color'
 					onPress={sendCampaignDetails}
 					label='Send Campaign Details'
-				/>
-				
-				<Button
-					wide
-					color='background-color'
-					onPress={getAppConfigs}
-					label='Ver App Configs'
 				/>
 				
 				<Button

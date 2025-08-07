@@ -19,11 +19,8 @@ Este projeto contém as funcionalidades compartilhadas de integração do Eitri 
 
 ### Views de Teste (`src/views/`)
 
-- **Home.jsx**: Tela principal com navegação para todas as funcionalidades
-- **GAMethods.jsx**: Tela para testar métodos básicos do GA
-- **GAEcommerceMethods.jsx**: Tela para testar eventos de e-commerce do GA
-- **StorageMethods.jsx**: Tela para testar funcionalidades de storage
-- **AppMethods.jsx**: Tela para testar configurações da aplicação
+- **Home.jsx**: Tela principal com navegação para as funcionalidades de GA
+- **GAMethods.jsx**: Tela para testar métodos básicos do Google Analytics
 
 ## Funcionalidades do Google Analytics
 
@@ -81,4 +78,4 @@ const data = await StorageService.getStorageJSON('key');
 
 ## Telas de Teste
 
-O projeto inclui telas completas para testar todas as funcionalidades implementadas. Acesse através da tela Home.jsx para navegar entre as diferentes funcionalidades.
+O projeto inclui uma tela Home simples para inicialização e uma tela GAMethods para testar todas as funcionalidades de Google Analytics implementadas.
