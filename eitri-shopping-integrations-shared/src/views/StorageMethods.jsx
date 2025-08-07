@@ -77,12 +77,12 @@ export default function StorageMethods() {
 				width='100%'>
 				
 				<View width='100%' gap={10}>
-					<TextInput
+					<Text
 						placeholder='Chave do storage'
 						value={testKey}
 						onChangeText={setTestKey}
 					/>
-					<TextInput
+					<Text
 						placeholder='Valor do storage'
 						value={testValue}
 						onChangeText={setTestValue}
