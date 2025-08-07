@@ -1,6 +1,7 @@
 import Eitri from 'eitri-bifrost'
 import App from '../services/App'
 import Tracking from '../services/Tracking'
+import Logger from '../services/Logger'
 
 export default function GAMethods() {
 	const [msgDebug, setMsgDebug] = useState(null)
@@ -11,6 +12,7 @@ export default function GAMethods() {
 
 	const logScreenView = async () => {
 		try {
+			Logger.log('Usuário testando logScreenView')
 			Tracking.ga.logScreenView('GAMethods', 'TestScreen')
 			setMsgDebug('Screen view logged successfully')
 		} catch (error) {
@@ -25,6 +27,7 @@ export default function GAMethods() {
 				timestamp: new Date().toISOString(),
 				user_id: 'test_user_123'
 			}
+			Logger.log('Usuário testando logEvent com dados:', eventData)
 			Tracking.ga.logEvent('button_click', eventData)
 			setMsgDebug('Event logged successfully: ' + JSON.stringify(eventData))
 		} catch (error) {

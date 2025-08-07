@@ -1,9 +1,12 @@
 import Eitri from "eitri-bifrost";
 import App from "../App";
+import Logger from "../Logger";
 
 export default class GAService {
   static logScreenView = (currentPage, pageClass = "") => {
     try {
+      Logger.log('Enviando logScreenView:', { screen: currentPage, screenClass: pageClass })
+      
       if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.currentScreen) {
         Eitri.exposedApis.fb.currentScreen({
           screen: currentPage,
@@ -15,10 +18,12 @@ export default class GAService {
             screenClass: pageClass,
           });
         }
+        Logger.log('logScreenView enviado com sucesso')
       } else {
         console.log(
           "[Analytics] Eitri.exposedApis.fb.logScreenView not available",
         );
+        Logger.warn('Firebase logScreenView não disponível')
       }
     } catch (error) {
       console.error("[Analytics] Error on logScreenView", error.message);
@@ -31,6 +36,8 @@ export default class GAService {
       ...data,
     };
 
+    Logger.log('Enviando logEvent:', { eventName: event, data: params })
+
     // tentativa pelo fb
     try {
       Eitri.exposedApis.fb.logEvent({ eventName: event, data: params });
@@ -40,6 +47,7 @@ export default class GAService {
           data: params,
         });
       }
+      Logger.log('logEvent enviado com sucesso:', event)
       return;
     } catch (error) {
       console.error("[Analytics] Error on logEvent", error.message);
@@ -71,6 +79,8 @@ export default class GAService {
   static sendCampaignDetails = segments => {
 		if (!segments) return null
 
+		Logger.log('Processando detalhes de campanha:', segments)
+
 		const utmParams = {}
 		for (const key of Object.keys(segments)) {
 			const normalizedKey = key.replace(/[_-]/g, '').toLowerCase()
@@ -85,8 +95,11 @@ export default class GAService {
 		}
 
     if (Object.keys(utmParams).length > 0) {
+      console.log('[SHARED] Campaign segments details sent to GA')
       GAService.logEvent('campaign_details', utmParams)
-		}
+		} else {
+      Logger.warn('Nenhum parâmetro UTM válido encontrado')
+    }
 	}
 
   // TODO: Implementar métodos de ecommerce para GA (https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag)
