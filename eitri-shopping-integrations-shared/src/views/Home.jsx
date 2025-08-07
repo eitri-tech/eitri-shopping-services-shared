@@ -44,6 +44,22 @@ export default function Home(props) {
     console.log("Data obtained in HTTP call:", data);
   };
 
+  const navigateToGA = () => {
+    Eitri.navigation.navigate({ screen: "GAMethods" });
+  };
+
+  const navigateToStorage = () => {
+    Eitri.navigation.navigate({ screen: "StorageMethods" });
+  };
+
+  const navigateToApp = () => {
+    Eitri.navigation.navigate({ screen: "AppMethods" });
+  };
+
+  const navigateToGAEcommerce = () => {
+    Eitri.navigation.navigate({ screen: "GAEcommerceMethods" });
+  };
+
   return (
     <Window
       bottomInset
@@ -89,8 +105,12 @@ export default function Home(props) {
             result of this request will be displayed in your terminal.
           </Text>
         </View>
-        <View paddingHorizontal="small" paddingBottom="large">
+        <View paddingHorizontal="small" paddingBottom="large" gap={10}>
           <Button block label="Make Request" onPress={makeRequest} />
+          <Button block label="Test Google Analytics" onPress={navigateToGA} />
+          <Button block label="Test GA E-commerce" onPress={navigateToGAEcommerce} />
+          <Button block label="Test Storage" onPress={navigateToStorage} />
+          <Button block label="Test App Config" onPress={navigateToApp} />
         </View>
       </View>
     </Window>
