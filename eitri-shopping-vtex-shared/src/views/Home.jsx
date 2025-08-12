@@ -71,6 +71,12 @@ export default function Home() {
 					onPress={() => navigateTo('StoreMethods')}
 					label='Métodos de loja'
 				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('GraphqlSearchMethods')}
+					label='Métodos de Busca'
+				/>
 			</View>
 		</Window>
 	)

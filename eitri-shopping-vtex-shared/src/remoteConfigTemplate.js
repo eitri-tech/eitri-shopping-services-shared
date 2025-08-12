@@ -7,10 +7,10 @@
 const remoteConfigTemplate = {
   ecommerceProvider: "VTEX", // Não utilizado.,
   providerInfo: {
-    account: "torratorra", //* Conta VTEX
-    faststore: "lojastorra", //* Project ID do Faststore
+    account: "your_account", //* Conta VTEX
+    faststore: "your_id", //* Project ID do Faststore
     vtexCmsUrl: "https://euentregobr.myvtex.com/", // URL do CMS VTEX - necessário apenas se o CMS estiver estiver em uma conta diferente da principal.
-    host: "www.lojastorra.com.br", //* Host público do e-commerce
+    host: "your_vtex_url", //* Host público do e-commerce
   },
   appConfigs: {
     clarityId: "YOUR_CLARITY_ID", // ID do Clarity
@@ -27,7 +27,7 @@ const remoteConfigTemplate = {
     },
   },
   storePreferences: {
-    displayCompanyName: "Lojas Torra", //* Nome da loja para exibição.
+    displayCompanyName: "StoreName", //* Nome da loja para exibição.
     currencyCode: "BRL", // Código da moeda.
     locale: "pt-BR", // Localidade.
     segments: {
@@ -75,8 +75,8 @@ const remoteConfigTemplate = {
         initParams: {
           tabIndex: 3,
           route: "LandingPage",
-          landingPageName: "CartaoTorra",
-          pageTitle: "Cartão Torra",
+          landingPageName: "PageName",
+          pageTitle: "PageTitle",
         },
       },
       {
