@@ -249,8 +249,10 @@ export default class VtexCartService {
 		return response.data
 	}
 
-	static async getClientProfileByEmail(email) {
-		const response = await VtexCaller.get(`api/checkout/pub/profiles?email=${email}`)
+	static async getClientProfileByEmail(email, ensureComplete = false) {
+		const response = await VtexCaller.get(
+			`api/checkout/pub/profiles?email=${email}&ensureComplete=${ensureComplete}`
+		)
 		return response.data
 	}
 
