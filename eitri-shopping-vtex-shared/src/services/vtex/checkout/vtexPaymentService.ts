@@ -7,7 +7,8 @@ import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 
 type PaymentOptions = {
-	cardInfo: {
+	fields: {
+		accountId: string
 		holderName: string
 		cardNumber: string
 		validationCode: string
@@ -130,7 +131,7 @@ export default class VtexPaymentService {
 					installmentsInterestRate: payment?.installmentsInterestRate ?? 0,
 					installmentsValue: payment?.installmentsValue ?? '',
 					referenceValue: payment?.referenceValue,
-					fields: options?.cardInfo,
+					fields: options?.fields,
 					transaction: {
 						id: startTransactionReturn.id,
 						merchantName: startTransactionReturn.merchantTransactionName

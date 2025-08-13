@@ -249,7 +249,12 @@ export default class VtexCheckoutService {
 	}
 
 	/// TODO: Migrar o pagamento para VtexPaymentService.executePayment. GiftCard e PIX já estão lá
-	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
+
+	static async payV2(cart, options) {
+		return await Vtex.checkout.pay(cart, null, null, null, options, true)
+	}
+
+	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options, useNewFlow = false) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')
 
@@ -276,7 +281,11 @@ export default class VtexCheckoutService {
 
 		//Cartão de Crédito
 		if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
-			return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
+			if (useNewFlow) {
+				return await VtexPaymentService.executePayment(cart, options)
+			} else {
+				return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
+			}
 		}
 
 		//Promissoria
