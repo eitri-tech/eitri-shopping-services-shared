@@ -9,11 +9,11 @@ export default function CheckoutMethods() {
 	const addUser = async () => {
 		try {
 			await Vtex.checkout.addUserData({
-				email: '',
-				firstName: '',
-				lastName: '',
+				email: 'kexibod969@cronack.com',
+				firstName: 'Teste',
+				lastName: 'Teste',
 				documentType: 'cpf',
-				document: '',
+				document: '249.758.540-74',
 				phone: '(11) 91234-5678',
 				dob: '1990-05-15',
 				isCorporate: false,
@@ -69,15 +69,15 @@ export default function CheckoutMethods() {
 
 	const selectPayment = async () => {
 		const payment = {
-			paymentSystem: 125,
-			paymentSystemName: 'Pix',
-			group: 'instantPaymentPaymentGroup',
+			paymentSystem: 4,
+			paymentSystemName: 'Mastercard',
+			group: 'creditCardPaymentGroup',
 			installments: 1,
 			installmentsInterestRate: 0,
-			installmentsValue: 18878,
-			value: 18878,
-			referenceValue: 18878,
-			hasDefaultBillingAddress: false
+			installmentsValue: 112500,
+			value: 112500,
+			referenceValue: 112500,
+			hasDefaultBillingAddress: true
 		}
 		const giftCard = {
 			redemptionCode: '',
@@ -86,7 +86,7 @@ export default function CheckoutMethods() {
 
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
-				payments: [],
+				payments: [payment],
 				giftCards: []
 			})
 			console.log(result?.paymentData?.payments)
@@ -106,9 +106,36 @@ export default function CheckoutMethods() {
 				document: '15538275035',
 				dueDate: null,
 				holderName: 'Joao teste',
-				validationCode: null
+				validationCode: null,
+				billingAddress: {}
 			}
-			const result = await Vtex.checkout.pay(cart, cardInfo)
+
+			const payload = {
+				fields: {
+					holderName: 'Joao Teste',
+					cardNumber: '1111222233334444',
+					validationCode: '123',
+					dueDate: '12/26',
+					address: {
+						street: 'Rua Guame',
+						complement: '',
+						number: '12',
+						city: 'Rio de Janeiro',
+						reference: '',
+						neighborhood: 'Grajau',
+						state: 'Rio de Janeiro',
+						country: 'Brasil',
+						postalCode: '20541290'
+					}
+				},
+				captchaToken: '',
+				captchaSiteKey: '',
+				savePersonalData: true,
+				optinNewsLetter: false,
+				interestValue: 0
+			}
+
+			const result = await Vtex.checkout.payV2(cart, payload)
 			// const result = await Vtex.checkout.executePayment(cart, cardInfo)
 			console.log(result)
 		} catch (e) {
