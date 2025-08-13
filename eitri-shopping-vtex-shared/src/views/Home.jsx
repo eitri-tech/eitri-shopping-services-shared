@@ -13,7 +13,7 @@ export default function Home() {
 			providerInfo: {
 				account: 'eitripartnerbr',
 				host: 'https://www.eitripartnerbr.com.br',
-				faststore: 'polishop-eitri-app',
+				faststore: 'eitripartnerbr',
 				domain: 'https://www.eitripartnerbr.com.br',
 				vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			},
