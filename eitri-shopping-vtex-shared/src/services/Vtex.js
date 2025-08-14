@@ -61,15 +61,6 @@ export default class Vtex {
 	}
 
 	static buildSession = async (segments, update) => {
-		if (Vtex.configs.sendGACampaignAlongSession) {
-			try {
-				GAService.sendCampaignDetails(segments)
-				console.log('[SHARED] Campaign segments details sent to GA')
-			} catch (e) {
-				console.error('[SHARED] Error send campaign_details', e)
-			}
-		}
-
 		try {
 			if (segments) {
 				const _public = {}
