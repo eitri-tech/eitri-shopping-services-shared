@@ -253,6 +253,15 @@ export default class VtexCheckoutService {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')
 
+		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+		if (!hasEitriTag) {
+			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
+				...cart?.marketingData,
+				marketingTags: newMarketingTags
+			})
+		}
+
 		const payment = cart.paymentData?.payments[0]
 		const giftCard = cart.paymentData?.giftCards?.[0]
 
