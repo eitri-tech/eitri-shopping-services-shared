@@ -248,13 +248,21 @@ export default class VtexCheckoutService {
 		}
 	}
 
-	/// TODO: Migrar o pagamento para VtexPaymentService.executePayment. GiftCard e PIX já estão lá
-
 	static async payV2(cart, options) {
-		return await Vtex.checkout.pay(cart, null, null, null, options, true)
+		console.log('==========Iniciando pagamento==========')
+		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+		if (!hasEitriTag) {
+			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
+				...cart?.marketingData,
+				marketingTags: newMarketingTags
+			})
+		}
+		return await VtexPaymentService.executePayment(cart, options)
 	}
 
-	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options, useNewFlow = false) {
+	/// TODO: Migrar o pagamento para VtexPaymentService.executePayment. GiftCard e PIX já estão lá
+	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')
 
@@ -290,11 +298,7 @@ export default class VtexCheckoutService {
 
 		//Cartão de Crédito
 		if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
-			if (useNewFlow) {
-				return await VtexPaymentService.executePayment(cart, options)
-			} else {
-				return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
-			}
+			return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
 		}
 
 		//Promissoria
