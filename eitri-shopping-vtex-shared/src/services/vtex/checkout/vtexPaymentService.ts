@@ -73,7 +73,9 @@ export default class VtexPaymentService {
 				optinNewsLetter: options?.optinNewsLetter ?? false,
 				value: cart.value,
 				referenceValue: cart.value,
-				interestValue: options?.interestValue ?? 0
+				interestValue: options?.interestValue ?? 0,
+				recaptchaKey: options?.captchaSiteKey,
+				recaptchaToken: options?.captchaToken
 			}
 
 			Logger.log('====> Iniciando transação payload', payload)
