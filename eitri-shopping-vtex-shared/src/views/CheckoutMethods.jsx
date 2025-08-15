@@ -9,7 +9,7 @@ export default function CheckoutMethods() {
 	const addUser = async () => {
 		try {
 			await Vtex.checkout.addUserData({
-				email: 'kexibod969@cronack.com',
+				email: 'kexibod96900@cronack.com',
 				firstName: 'Teste',
 				lastName: 'Teste',
 				documentType: 'cpf',
@@ -68,15 +68,24 @@ export default function CheckoutMethods() {
 	}
 
 	const selectPayment = async () => {
+		const cart = await Vtex.cart.getCurrentOrCreateCart()
+
+		const paymentSystem = 2
+		const installmentsNumber = 3
+
+		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
+		const installmentOption = cart?.paymentData.installmentOptions.find(i => i.paymentSystem === pay.id.toString())
+		const installment = installmentOption.installments.find(i => i.count === installmentsNumber)
+
 		const payment = {
-			paymentSystem: 4,
-			paymentSystemName: 'Mastercard',
-			group: 'creditCardPaymentGroup',
-			installments: 1,
-			installmentsInterestRate: 0,
-			installmentsValue: 112500,
-			value: 112500,
-			referenceValue: 112500,
+			paymentSystem: pay.id,
+			paymentSystemName: pay.name,
+			group: pay.groupName,
+			installments: installment.count,
+			installmentsInterestRate: installment.interestRate,
+			installmentsValue: installment.value,
+			value: installment.total,
+			referenceValue: cart.value,
 			hasDefaultBillingAddress: true
 		}
 		const giftCard = {
@@ -99,21 +108,11 @@ export default function CheckoutMethods() {
 	const pay = async () => {
 		try {
 			const cart = await Vtex.cart.getCurrentOrCreateCart()
-			const cardInfo = {
-				bin: '11112222',
-				cardNumber: '1111222233334444',
-				deviceFingerprint: '77615142',
-				document: '15538275035',
-				dueDate: null,
-				holderName: 'Joao teste',
-				validationCode: null,
-				billingAddress: {}
-			}
 
 			const payload = {
 				fields: {
 					holderName: 'Joao Teste',
-					cardNumber: '1111222233334444',
+					cardNumber: '4929 0917 7269 4617',
 					validationCode: '123',
 					dueDate: '12/26',
 					address: {
@@ -131,8 +130,7 @@ export default function CheckoutMethods() {
 				captchaToken: '',
 				captchaSiteKey: '',
 				savePersonalData: true,
-				optinNewsLetter: false,
-				interestValue: 0
+				optinNewsLetter: false
 			}
 
 			const result = await Vtex.checkout.payV2(cart, payload)
