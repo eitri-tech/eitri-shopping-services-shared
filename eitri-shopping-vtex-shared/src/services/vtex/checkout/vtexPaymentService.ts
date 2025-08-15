@@ -30,7 +30,6 @@ type PaymentOptions = {
 	captchaSiteKey: string
 	savePersonalData: boolean
 	optinNewsLetter: boolean
-	interestValue: number
 }
 
 type StartTransactionReturn = {
@@ -64,16 +63,17 @@ export default class VtexPaymentService {
 	}
 
 	static async startTransaction(cart: any, options?: PaymentOptions): Promise<StartTransactionReturn> {
-		console.log('====> Iniciando transação', cart.orderFormId)
+		const valuePayments = cart?.paymentData?.payments?.reduce((acc, payment) => payment.value + acc, 0)
+		const giftValuePayments = cart?.paymentData?.giftCards?.reduce((acc, giftCard) => giftCard.value + acc, 0)
+		const value = valuePayments + giftValuePayments
 
 		try {
 			const payload = {
 				referenceId: cart.orderFormId,
 				savePersonalData: options?.savePersonalData ?? true,
 				optinNewsLetter: options?.optinNewsLetter ?? false,
-				value: cart.value,
+				value: value,
 				referenceValue: cart.value,
-				interestValue: options?.interestValue ?? 0,
 				recaptchaKey: options?.captchaSiteKey,
 				recaptchaToken: options?.captchaToken
 			}
@@ -129,9 +129,9 @@ export default class VtexPaymentService {
 					paymentSystem: payment?.paymentSystem,
 					installments: payment?.installments,
 					currencyCode: App.configs?.storePreferences?.currencyCode || 'BRL',
+					installmentsInterestRate: payment?.merchantSellerPayments?.[0]?.interestRate ?? 0,
 					value: payment?.value,
-					installmentsInterestRate: payment?.installmentsInterestRate ?? 0,
-					installmentsValue: payment?.installmentsValue ?? '',
+					installmentsValue: payment?.merchantSellerPayments?.[0]?.value ?? payment?.value,
 					referenceValue: payment?.referenceValue,
 					fields: options?.fields,
 					transaction: {
