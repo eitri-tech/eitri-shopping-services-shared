@@ -2,10 +2,14 @@ import GAService from "./GAService";
 import App from "../App";
 
 export default class GAVtexInternalService {
-  static _autoSendIsOff = () => {
+  static _autoSendIsOff = (event) => {
+    const autoTriggerGAEvents = App.configs.appConfigs?.autoTriggerGAEvents
+    if (event && autoTriggerGAEvents && Array.isArray(autoTriggerGAEvents)) {
+      return !autoTriggerGAEvents.includes(event)
+    }
     return !(App.configs.appConfigs?.autoTriggerGAEvents ?? true);
   };
-
+  
   static _resolveCategory = (item) => {
     let ids =
       item.productCategoryIds?.split("/").filter(Boolean) ||
@@ -39,7 +43,8 @@ export default class GAVtexInternalService {
 
   static addItemToCart = (addedItems, cart) => {
     try {
-      if (GAVtexInternalService._autoSendIsOff()) return;
+      const eventName = 'add_to_cart'
+      if (GAVtexInternalService._autoSendIsOff(eventName)) return;
       const _addedItems = Array.isArray(addedItems) ? addedItems : [addedItems];
 
       const products = _addedItems
@@ -56,7 +61,7 @@ export default class GAVtexInternalService {
         items: items,
       };
 
-      GAService.logEvent("add_to_cart", params);
+      GAService.logEvent(eventName, params);
     } catch (e) {
       console.error("Error on analytics addItemToCart", e);
     }
@@ -64,7 +69,8 @@ export default class GAVtexInternalService {
 
   static removeItemFromCart = (index, cart) => {
     try {
-      if (GAVtexInternalService._autoSendIsOff()) return;
+      const eventName = 'remove_from_cart'
+      if (GAVtexInternalService._autoSendIsOff(eventName)) return;
 
       const itemRemoved = cart.items[index];
 
@@ -76,15 +82,16 @@ export default class GAVtexInternalService {
         items: items,
       };
 
-      GAService.logEvent("remove_from_cart", params);
+      GAService.logEvent(eventName, params);
     } catch (e) {
       console.error("Error on analytics removeItemFromCart", e);
     }
   };
 
   static addShippingInfo = (cart) => {
-    if (GAVtexInternalService._autoSendIsOff()) return;
     try {
+      const eventName = 'add_shipping_info'
+      if (GAVtexInternalService._autoSendIsOff(eventName)) return;
       const items = cart.items.map((item) => {
         const categories = GAVtexInternalService._resolveCategory(item);
 
@@ -113,15 +120,16 @@ export default class GAVtexInternalService {
         items: items,
       };
 
-      GAService.logEvent("add_shipping_info", params);
+      GAService.logEvent(eventName, params);
     } catch (error) {
       console.error("[SHARED] Error on addShippingInfo", error);
     }
   };
 
   static addPaymentInfo = (cart) => {
-    if (GAVtexInternalService._autoSendIsOff()) return;
     try {
+      const eventName = 'add_payment_info'
+      if (GAVtexInternalService._autoSendIsOff(eventName)) return;
       const items = cart.items.map((item) => {
         const categories = GAVtexInternalService._resolveCategory(item);
 
@@ -153,15 +161,16 @@ export default class GAVtexInternalService {
         items: items,
       };
 
-      GAService.logEvent("add_payment_info", params);
+      GAService.logEvent(eventName, params);
     } catch (error) {
-      GAService.logError("Error on begin checkout", error);
+      GAService.logError("Error add_payment_info", error);
     }
   };
 
   static purchase = (cart, orderId) => {
     try {
-      if (GAVtexInternalService._autoSendIsOff()) return;
+      const eventName = 'purchase'
+      if (GAVtexInternalService._autoSendIsOff(eventName)) return;
 
       const items = cart.items.map((item) => {
         const categories = GAVtexInternalService._resolveCategory(item);
@@ -189,7 +198,7 @@ export default class GAVtexInternalService {
         items: items,
       };
 
-      GAService.logEvent("purchase", params);
+      GAService.logEvent(eventName, params);
     } catch (error) {
       GAService.logError("Error on purchase", error);
     }
