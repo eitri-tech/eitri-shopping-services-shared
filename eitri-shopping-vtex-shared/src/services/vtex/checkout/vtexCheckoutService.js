@@ -120,6 +120,16 @@ export default class VtexCheckoutService {
 		return response.data
 	}
 
+	static async removeAccount(accountId) {
+		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		const response = await VtexCaller.post(
+			`api/checkout/pub/orderForm/${orderFormId}/paymentAccount/${accountId}/remove`
+		)
+
+		return response.data
+	}
+
 	// PAGAMENTO COMEÇA AQUI //
 	static extractCookieValues(cookieString) {
 		const vtexChkoAuthRegex = /Vtex_CHKO_Auth=(.*?);/
