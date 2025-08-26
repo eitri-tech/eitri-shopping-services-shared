@@ -26,7 +26,12 @@ export default class VtexCatalogService {
 	}
 
 	static async getProductById(productId) {
-		const result = await VtexCaller.get(`api/catalog_system/pub/products/search?fq=productId:${productId}`)
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `&sc=${salesChannel}`
+		}
+		const result = await VtexCaller.get(`api/catalog_system/pub/products/search?fq=productId:${productId}${sc}`)
 		return Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null
 	}
 
@@ -65,7 +70,12 @@ export default class VtexCatalogService {
 	}
 
 	static async getSimilarProducts(productId) {
-		let url = `api/catalog_system/pub/products/crossselling/similars/${productId}`
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		let url = `api/catalog_system/pub/products/crossselling/similars/${productId}${sc}`
 		const result = await VtexCaller.get(url)
 
 		if (!result || result?.data.length === 0) return []
@@ -75,19 +85,36 @@ export default class VtexCatalogService {
 	}
 
 	static async legacySearch(search) {
-		let url = `api/catalog_system/pub/products/search/${search}`
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		let url = `api/catalog_system/pub/products/search/${search}${sc}`
 		const result = await VtexCaller.get(url)
 		return result.data
 	}
 
 	static async legacyParamsSearch(params) {
-		let url = `api/catalog_system/pub/products/search?${params}`
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		let url = `api/catalog_system/pub/products/search?${params}${sc}`
 		const result = await VtexCaller.get(url)
 		return result.data
 	}
 
 	static async getWhoSawAlsoSaw(productId) {
-		const result = await VtexCaller.get(`api/catalog_system/pub/products/crossselling/whosawalsosaw/${productId}`)
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		const result = await VtexCaller.get(
+			`api/catalog_system/pub/products/crossselling/whosawalsosaw/${productId}${sc}`
+		)
 		return result?.data
 	}
 
@@ -97,7 +124,12 @@ export default class VtexCatalogService {
 	}
 
 	static async getProductBySlug(slug) {
-		let url = `api/catalog_system/pub/products/search/${slug}/p`
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		let url = `api/catalog_system/pub/products/search/${slug}/p${sc}`
 		const result = await VtexCaller.get(url)
 		return result?.data
 	}
