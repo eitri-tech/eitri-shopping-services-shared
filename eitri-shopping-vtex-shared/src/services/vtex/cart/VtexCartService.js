@@ -3,6 +3,7 @@ import StorageService from '../../StorageService'
 import Logger from '../../Logger'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import Vtex from '../../Vtex'
+import getSalesChannel from '../_helpers/getSalesChannel'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -144,7 +145,7 @@ export default class VtexCartService {
 					item?.seller ??
 					seller ??
 					sellers?.find(i => i.sellerDefault)?.sellerId ??
-					item?.sellers?.[0].sellerId ??
+					item?.sellers?.[0]?.sellerId ??
 					'1'
 			}
 
@@ -160,7 +161,7 @@ export default class VtexCartService {
 
 			let url = `api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`
 
-			const _salesChannel = salesChannel ?? Vtex.configs.salesChannel
+			const _salesChannel = salesChannel ?? (await getSalesChannel())
 
 			if (_salesChannel) {
 				url += `&sc=${_salesChannel}`
@@ -171,7 +172,6 @@ export default class VtexCartService {
 			GAVtexInternalService.addItemToCart(itemToSend, addToCartRes.data)
 
 			VtexCartService._CACHED_CART = addToCartRes.data
-
 			return addToCartRes.data
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
@@ -290,9 +290,7 @@ export default class VtexCartService {
 				`api/checkout/pub/pickup-points?&postalCode=${postalCode}&countryCode=${countryCode}`
 			)
 		} else {
-			response = await VtexCaller.get(
-				`api/checkout/pub/pickup-points?geoCoordinates=${longitude};${latitude}`
-			)
+			response = await VtexCaller.get(`api/checkout/pub/pickup-points?geoCoordinates=${longitude};${latitude}`)
 		}
 
 		return response.data

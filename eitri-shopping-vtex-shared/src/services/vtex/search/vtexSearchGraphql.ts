@@ -11,6 +11,7 @@ import { searchSuggestionReturn } from './graphqlReturn/SearchSuggestionReturn'
 import { ProductRecommendationsInput } from './types/ProductRecommendationsInput'
 import { suggestionReturn } from './graphqlReturn/SuggestionReturn'
 import { AutoCompleteSearchSuggestionInput } from './types/AutoCompleteSearchSuggestionInput'
+import getSalesChannel from '../_helpers/getSalesChannel'
 
 export default class VtexSearchGraphql {
 	static toGraphQLArgs(obj: any) {
@@ -39,7 +40,7 @@ export default class VtexSearchGraphql {
 	static async productSearch(searchInput: ProductSearchInput, returnProperties?: any): Promise<any> {
 		const { host } = Vtex.configs
 
-		const salesChannel = Vtex.configs.salesChannel
+		const salesChannel = await getSalesChannel()
 		if (salesChannel) {
 			searchInput.salesChannel = salesChannel
 		}
