@@ -10,14 +10,14 @@ export default function Home() {
 	const init = async () => {
 		// const a = new Date().getTime()
 		await App.tryAutoConfigure({
-			providerInfo: {
-				account: 'eitripartnerbr',
-				host: 'https://www.eitripartnerbr.com.br',
-				faststore: 'eitripartnerbr',
-				domain: 'https://www.eitripartnerbr.com.br',
-				vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
-			},
-			verbose: true,
+			// providerInfo: {
+			// 	account: 'eitripartnerbr',
+			// 	host: 'https://www.eitripartnerbr.com.br',
+			// 	faststore: 'eitripartnerbr',
+			// 	domain: 'https://www.eitripartnerbr.com.br',
+			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
+			// },
+			verbose: false,
 			gaVerbose: false
 		})
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
