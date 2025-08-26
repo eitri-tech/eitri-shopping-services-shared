@@ -6,7 +6,7 @@ export default function CatalogMethods() {
 	}
 
 	const getProduct = async () => {
-		const product = await Vtex.catalog.getProductById('2000800')
+		const product = await Vtex.catalog.getProductById('5137')
 		console.log(product)
 	}
 
