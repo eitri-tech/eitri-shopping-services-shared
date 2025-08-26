@@ -6,7 +6,19 @@ import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 
 export default class VtexCatalogService {
 	static getSearchOptions = () => {
-		return Vtex.configs.searchOptions
+		const salesChannel = Vtex.configs.salesChannel
+
+		console.log('salesChannel', salesChannel)
+
+		const opt = Vtex.configs.searchOptions || {}
+
+		console.log('opt1', salesChannel)
+
+		if (salesChannel) {
+			opt['salesChannel'] = salesChannel
+		}
+		console.log(opt)
+		return opt
 	}
 
 	static filterAvailableProductsOnly = products => {

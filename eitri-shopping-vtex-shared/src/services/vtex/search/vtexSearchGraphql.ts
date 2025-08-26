@@ -38,6 +38,12 @@ export default class VtexSearchGraphql {
 
 	static async productSearch(searchInput: ProductSearchInput, returnProperties?: any): Promise<any> {
 		const { host } = Vtex.configs
+
+		const salesChannel = Vtex.configs.salesChannel
+		if (salesChannel) {
+			searchInput.salesChannel = salesChannel
+		}
+
 		const query = this.toGraphQLArgs(searchInput)
 
 		const body = {
