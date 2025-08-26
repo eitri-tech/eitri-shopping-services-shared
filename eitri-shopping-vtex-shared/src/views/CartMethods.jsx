@@ -11,13 +11,16 @@ export default function CartMethods() {
 	}
 
 	const addToCart = async () => {
-		const item = {
-			id: '1001',
-			quantity: 1,
-			seller: '1'
+		try {
+			const item = {
+				id: '1001',
+				quantity: 1,
+				seller: '1'
+			}
+			const cart = await Vtex.cart.addItem(item)
+		} catch (e) {
+			console.error('loadProduct: Error', e)
 		}
-
-		const cart = await Vtex.cart.addItem(item)
 	}
 
 	const removeFromCart = async () => {

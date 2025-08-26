@@ -3,10 +3,11 @@ import Vtex from '../../Vtex'
 import Eitri from 'eitri-bifrost'
 import objectToQueryString from '../_helpers/objectToQueryString'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
+import getSalesChannel from '../_helpers/getSalesChannel'
 
 export default class VtexCatalogService {
-	static getSearchOptions = () => {
-		const salesChannel = Vtex.configs.salesChannel
+	static getSearchOptions = async () => {
+		const salesChannel = await getSalesChannel()
 
 		const opt = Vtex.configs.searchOptions || {}
 
@@ -30,7 +31,7 @@ export default class VtexCatalogService {
 	}
 
 	static async searchProduct(text, options = {}) {
-		const defaultOptions = VtexCatalogService.getSearchOptions()
+		const defaultOptions = await VtexCatalogService.getSearchOptions()
 		const queryString = objectToQueryString({ ...defaultOptions, ...options })
 		const result = await VtexCaller.get(`api/io/_v/api/intelligent-search/product_search?q=${text}&${queryString}`)
 		if (!result || result?.data.length === 0) return []
@@ -45,7 +46,7 @@ export default class VtexCatalogService {
 	}
 
 	static async getProductsByFacets(facet, options = {}) {
-		const defaultOptions = VtexCatalogService.getSearchOptions()
+		const defaultOptions = await VtexCatalogService.getSearchOptions()
 		const queryString = objectToQueryString({ ...defaultOptions, ...options })
 		const response = await VtexCaller.get(
 			`api/io/_v/api/intelligent-search/product_search/${facet}?${queryString}`,
@@ -57,7 +58,7 @@ export default class VtexCatalogService {
 	}
 
 	static async getPossibleFacets(facets, options = {}) {
-		const defaultOptions = VtexCatalogService.getSearchOptions()
+		const defaultOptions = await VtexCatalogService.getSearchOptions()
 		const queryString = objectToQueryString({ ...defaultOptions, ...options })
 		const response = await VtexCaller.get(`api/io/_v/api/intelligent-search/facets/${facets}?${queryString}`)
 		return response.data

@@ -17,7 +17,7 @@ export default function Home() {
 			// 	domain: 'https://www.eitripartnerbr.com.br',
 			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			// },
-			verbose: false,
+			verbose: true,
 			gaVerbose: false
 		})
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
