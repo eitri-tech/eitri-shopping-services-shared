@@ -99,7 +99,7 @@ export default class VtexCatalogService {
 		const salesChannel = await getSalesChannel()
 		let sc = ''
 		if (salesChannel) {
-			sc = `?sc=${salesChannel}`
+			sc = `&sc=${salesChannel}`
 		}
 		let url = `api/catalog_system/pub/products/search?${params}${sc}`
 		const result = await VtexCaller.get(url)
