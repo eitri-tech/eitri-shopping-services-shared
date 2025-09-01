@@ -14,21 +14,8 @@ export default class VtexSessionService {
 		return response.data
 	}
 
-	static lastResponse: { data: any; time: number } | null = null
 	static async getSession(items: string = '*'): Promise<any> {
-		const now = Date.now()
-
-		if (
-			this.lastResponse &&
-			now - this.lastResponse.time < 60_000 // 1 minuto
-		) {
-			console.log('cached')
-			return this.lastResponse.data
-		}
-
 		const response = await VtexCaller.get(`api/sessions?items=${items}`)
-		this.lastResponse = { data: response.data, time: now }
-
 		return response.data
 	}
 

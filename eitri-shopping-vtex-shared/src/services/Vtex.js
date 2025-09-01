@@ -54,47 +54,47 @@ export default class Vtex {
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		Vtex.buildSession({ ...configSegments, ...utmParams }).then(session => {
-			Vtex.configs.session = session
-		})
+		// Vtex.buildSession({ ...configSegments, ...utmParams }).then(session => {
+		// 	Vtex.configs.session = session
+		// })
 
 		Vtex.customer.executeRefreshToken()
 	}
 
 	static buildSession = async (segments, update) => {
-		if (Vtex.configs.sendGACampaignAlongSession) {
-			try {
-				GAService.sendCampaignDetails(segments)
-				console.log('[SHARED] Campaign segments details sent to GA')
-			} catch (e) {
-				console.error('[SHARED] Error send campaign_details', e)
-			}
-		}
-
-		try {
-			if (segments) {
-				const _public = {}
-
-				for (const key in segments) {
-					if (segments[key] !== null) {
-						_public[key] = { value: segments[key] }
-					}
-				}
-
-				let result
-				if (update) {
-					result = await VtexCaller.patch(`api/sessions`, { public: _public })
-				} else {
-					result = await VtexCaller.post(`api/sessions`, { public: _public })
-				}
-
-				return result?.data
-			}
-			return null
-		} catch (e) {
-			console.error('[SHARED] Error configuring segments', e)
-			return null
-		}
+		// if (Vtex.configs.sendGACampaignAlongSession) {
+		// 	try {
+		// 		GAService.sendCampaignDetails(segments)
+		// 		console.log('[SHARED] Campaign segments details sent to GA')
+		// 	} catch (e) {
+		// 		console.error('[SHARED] Error send campaign_details', e)
+		// 	}
+		// }
+		//
+		// try {
+		// 	if (segments) {
+		// 		const _public = {}
+		//
+		// 		for (const key in segments) {
+		// 			if (segments[key] !== null) {
+		// 				_public[key] = { value: segments[key] }
+		// 			}
+		// 		}
+		//
+		// 		let result
+		// 		if (update) {
+		// 			result = await VtexCaller.patch(`api/sessions`, { public: _public })
+		// 		} else {
+		// 			result = await VtexCaller.post(`api/sessions`, { public: _public })
+		// 		}
+		//
+		// 		return result?.data
+		// 	}
+		// 	return null
+		// } catch (e) {
+		// 	console.error('[SHARED] Error configuring segments', e)
+		// 	return null
+		// }
 	}
 
 	static tryAutoConfigure = async overwrites => {

@@ -36,6 +36,8 @@ export default class VtexCustomerService {
 	}
 
 	static async loginWithEmailAndPassword(email, password) {
+		await CookieService.clearAllCookies()
+
 		await VtexCustomerService._startLogin(email)
 
 		const loginRes = await VtexCaller.post(
@@ -55,10 +57,14 @@ export default class VtexCustomerService {
 		const { data } = loginRes
 		const { authStatus } = data
 
+		await VtexSessionService.createSession()
+
 		return authStatus
 	}
 
 	static async sendAccessKeyByEmail(email) {
+		await CookieService.clearAllCookies()
+
 		await VtexCustomerService._startLogin(email)
 
 		const loginRes = await VtexCaller.post(
@@ -97,6 +103,8 @@ export default class VtexCustomerService {
 
 		const { data } = loginRes
 		const { authStatus } = data
+
+		await VtexSessionService.createSession()
 
 		return authStatus
 	}
@@ -287,7 +295,7 @@ export default class VtexCustomerService {
 
 	static async isLoggedIn() {
 		const session = await VtexSessionService.getSession()
-		return !!session?.namespaces?.profile?.isAuthenticated
+		return !!session?.namespaces?.profile?.isAuthenticated?.value
 	}
 
 	static async cancelOrder(orderId, payload = {}) {

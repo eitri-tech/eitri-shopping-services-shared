@@ -9,19 +9,19 @@ export default class App {
 	}
 
 	static tryAutoConfigure = async overwrites => {
-		try {
-			console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
-			Eitri.eventBus.subscribe({
-				channel: Vtex.customer.CHANNEL_UTM_PARAMS_KEY,
-				broadcast: true,
-				callback: segments => {
-					console.log('Executando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
-					Vtex.updateSegmentSession(segments)
-				}
-			})
-		} catch (e) {
-			console.error('Erro ao configurar eventBus', e)
-		}
+		// try {
+		// 	console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
+		// 	Eitri.eventBus.subscribe({
+		// 		channel: Vtex.customer.CHANNEL_UTM_PARAMS_KEY,
+		// 		broadcast: true,
+		// 		callback: segments => {
+		// 			console.log('Executando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
+		// 			Vtex.updateSegmentSession(segments)
+		// 		}
+		// 	})
+		// } catch (e) {
+		// 	console.error('Erro ao configurar eventBus', e)
+		// }
 
 		let remoteConfig
 		try {
