@@ -5,6 +5,7 @@ import Logger from '../../Logger'
 import vtexCartService from '../cart/VtexCartService'
 import VtexCheckoutService from '../checkout/vtexCheckoutService'
 import StorageService from '../../StorageService'
+import CookieService from '../../CookieService'
 
 export default class VtexCaller {
 	static _mountUrl = (baseUrl, path) => {
@@ -21,30 +22,34 @@ export default class VtexCaller {
 			'accept': 'application/json'
 		}
 
-		const tokenData = await vtexCustomerService.getCustomerToken()
+		const cookies = await CookieService.getCookieHeader()
 
-		if (tokenData) {
-			const account = Vtex.configs.account
-			headers['VtexIdclientAutCookie'] = tokenData.token
-			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
-		}
+		console.log('Headers=========>', cookies)
 
-		if (Vtex.configs.session) {
-			if (headers['Cookie']) {
-				headers['Cookie'] += `;vtex_segment=${Vtex.configs?.session?.segmentToken}`
-			} else {
-				headers['Cookie'] = `vtex_segment=${Vtex.configs?.session?.segmentToken}`
-			}
-		}
+		headers['Cookie'] = cookies
 
-		const paymentAuth = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
-		if (paymentAuth) {
-			if (headers['Cookie']) {
-				headers['Cookie'] += `;CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
-			} else {
-				headers['Cookie'] = `CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
-			}
-		}
+		// if (tokenData) {
+		// 	const account = Vtex.configs.account
+		// 	headers['VtexIdclientAutCookie'] = tokenData.token
+		// 	headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
+		// }
+		//
+		// if (Vtex.configs.session) {
+		// 	if (headers['Cookie']) {
+		// 		headers['Cookie'] += `;vtex_segment=${Vtex.configs?.session?.segmentToken}`
+		// 	} else {
+		// 		headers['Cookie'] = `vtex_segment=${Vtex.configs?.session?.segmentToken}`
+		// 	}
+		// }
+		//
+		// const paymentAuth = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+		// if (paymentAuth) {
+		// 	if (headers['Cookie']) {
+		// 		headers['Cookie'] += `;CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
+		// 	} else {
+		// 		headers['Cookie'] = `CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
+		// 	}
+		// }
 
 		return headers
 	}
@@ -71,6 +76,8 @@ export default class VtexCaller {
 
 		Logger.log('==Resposta do Get Recebida===')
 
+		await CookieService.setCookiesFromResponse(res)
+
 		return res
 	}
 
@@ -95,6 +102,8 @@ export default class VtexCaller {
 			}
 		})
 
+		await CookieService.setCookiesFromResponse(res)
+
 		return res
 	}
 
@@ -118,6 +127,8 @@ export default class VtexCaller {
 				...options.headers
 			}
 		})
+
+		await CookieService.setCookiesFromResponse(res)
 
 		return res
 	}

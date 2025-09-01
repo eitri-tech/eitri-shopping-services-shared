@@ -4,6 +4,8 @@ import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import App from '../../App'
 import extractCookies from '../_helpers/extractCookies'
+import CookieService from '../../CookieService'
+import VtexSessionService from '../session/vtexSessionService'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -17,7 +19,7 @@ export default class VtexCustomerService {
 	static async _startLogin(email) {
 		const { account } = Vtex.configs
 
-		const startLoginRes = await VtexCaller.post(
+		await VtexCaller.post(
 			`api/vtexid/pub/authentication/startlogin`,
 			{
 				accountName: account,
@@ -31,12 +33,6 @@ export default class VtexCustomerService {
 				}
 			}
 		)
-
-		const vssCookie = extractCookies(startLoginRes, '_vss')
-
-		if (vssCookie) {
-			VtexCustomerService.cookieValue = vssCookie
-		}
 	}
 
 	static async loginWithEmailAndPassword(email, password) {
@@ -51,21 +47,13 @@ export default class VtexCustomerService {
 			{
 				headers: {
 					'Content-Type': 'multipart/form-data',
-					'accept': '*/*',
-					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
+					'accept': '*/*'
 				}
 			}
 		)
 
-		const refreshToken = extractCookies(loginRes, 'vid_rt')
-
 		const { data } = loginRes
 		const { authStatus } = data
-
-		if (authStatus === 'Success') {
-			await VtexCustomerService.setCustomerData('email', email)
-			await VtexCustomerService._processPostLogin(data, refreshToken)
-		}
 
 		return authStatus
 	}
@@ -82,8 +70,7 @@ export default class VtexCustomerService {
 			{
 				headers: {
 					'Content-Type': 'multipart/form-data',
-					'accept': '*/*',
-					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
+					'accept': '*/*'
 				}
 			}
 		)
@@ -103,21 +90,13 @@ export default class VtexCustomerService {
 			{
 				headers: {
 					'Content-Type': 'multipart/form-data',
-					'accept': '*/*',
-					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
+					'accept': '*/*'
 				}
 			}
 		)
 
-		const refreshToken = extractCookies(loginRes, 'vid_rt')
-
 		const { data } = loginRes
 		const { authStatus } = data
-
-		if (authStatus === 'Success') {
-			await VtexCustomerService.setCustomerData('email', email)
-			await VtexCustomerService._processPostLogin(data, refreshToken)
-		}
 
 		return authStatus
 	}
@@ -191,14 +170,14 @@ export default class VtexCustomerService {
             console.log("WebFlow Timeout: Facebook button was not found or ready in time.");
           }, 10000);
         `
-		});
+		})
 
-		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`));
+		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`))
 
 		if (finishNavigation) {
-			await VtexCustomerService._processPostSocialLogin(finishNavigation.url);
+			await VtexCustomerService._processPostSocialLogin(finishNavigation.url)
 		} else {
-			throw new Error('Facebook login failed');
+			throw new Error('Facebook login failed')
 		}
 	}
 
@@ -268,6 +247,7 @@ export default class VtexCustomerService {
 	}
 
 	static async logout() {
+		CookieService.clearAllCookies()
 		VtexCustomerService.notifyLogoutToExposedApis()
 		StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 		StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
@@ -306,14 +286,8 @@ export default class VtexCustomerService {
 	}
 
 	static async isLoggedIn() {
-		const savedToken = await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
-		if (!savedToken) {
-			return false
-		}
-		return (
-			savedToken.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >=
-			Math.floor(Date.now() / 1000)
-		)
+		const session = await VtexSessionService.getSession()
+		return !!session?.namespaces?.profile?.isAuthenticated
 	}
 
 	static async cancelOrder(orderId, payload = {}) {
@@ -348,20 +322,7 @@ export default class VtexCustomerService {
 		return StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
 	}
 
-	static async getCustomerProfile(_token) {
-		let token
-
-		if (_token) {
-			token = _token
-		} else {
-			const tokenData = await VtexCustomerService.getCustomerToken()
-			token = tokenData?.token
-		}
-
-		if (!token) {
-			throw new Error('User not logged in')
-		}
-
+	static async getCustomerProfile() {
 		const body = {
 			query: 'query Profile @context(scope: "private", sender: "vtex.my-account@1.29.0") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate } }'
 		}
@@ -382,13 +343,6 @@ export default class VtexCustomerService {
 	}
 
 	static async updateCustomerProfile(profile) {
-		const tokenData = await VtexCustomerService.getCustomerToken()
-		let token = tokenData?.token
-
-		if (!token) {
-			throw new Error('User not logged in')
-		}
-
 		const body = {
 			query: 'mutation UpdateProfile($profile: ProfileInput) @context(sender: "vtex.my-account@1.29.0") @runtimeMeta(hash: "ed3962923c6d433ceef1bd1156882fca341d263600e70595af2674fbed0ea549") { updateProfile(fields: $profile) { cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate __typename } }',
 			variables: {
@@ -411,7 +365,7 @@ export default class VtexCustomerService {
 		return result?.data
 	}
 
-	static async newsletterSubscribe(email) { }
+	static async newsletterSubscribe(email) {}
 
 	/**
 	 * Extrai parâmetros UTM de uma string de query ou de um objeto e salva no Storage.
@@ -519,34 +473,15 @@ export default class VtexCustomerService {
 	}
 
 	static async executeRefreshToken() {
-		const { account } = Vtex.configs
-
-		const res = await VtexCustomerService.getStorageCustomerToken()
-
-		if (!res || !res.accountAuthCookieId) return
-		if (res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC > Math.floor(Date.now() / 1000)) {
-			return null
-		}
-
-		if (res?.refreshToken && res?.token) {
-			const loginRes = await VtexCaller.post(
-				`api/vtexid/refreshtoken/webstore`,
-				{},
-				{
-					headers: {
-						accept: '*/*',
-						Cookie: `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}`
-					}
+		await VtexCaller.post(
+			`api/vtexid/refreshtoken/webstore`,
+			{},
+			{
+				headers: {
+					accept: '*/*'
 				}
-			)
-
-			const refreshToken = extractCookies(loginRes, 'vid_rt')
-			const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
-
-			if (newToken && refreshToken) {
-				await VtexCustomerService.setCustomerToken(newToken, refreshToken, res?.accountAuthCookieId, newToken)
 			}
-		}
+		)
 	}
 
 	static async _processPostLogin(loginData, refreshToken) {

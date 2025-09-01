@@ -17,7 +17,7 @@ export default function Home() {
 			// 	domain: 'https://www.eitripartnerbr.com.br',
 			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			// },
-			verbose: true,
+			verbose: false,
 			gaVerbose: false
 		})
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
@@ -86,6 +86,12 @@ export default function Home() {
 					color='background-color'
 					onPress={() => navigateTo('GraphqlSearchMethods')}
 					label='Métodos de Busca'
+				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('SessionMethods')}
+					label='Métodos de Sessão'
 				/>
 			</View>
 		</Window>

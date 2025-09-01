@@ -19,10 +19,6 @@ export default class StorageService {
 		try {
 			const account = Vtex.configs.account
 			const _key = `${account}_${key}`
-			// Logger.info("StorageService", "setStorageJSON", "Setting storage item", {
-			//   key: _key,
-			//   item,
-			// });
 			return Eitri.sharedStorage.setItem(_key, JSON.stringify(item))
 		} catch (e) {
 			console.error('Erro ao salvar item no storage', e)
@@ -33,13 +29,6 @@ export default class StorageService {
 		const account = Vtex.configs.account
 		const _key = `${account}_${key}`
 		const data = await Eitri.sharedStorage.getItem(_key)
-		// Logger.info(
-		//   "StorageService",
-		//   "getStorageJSON",
-		//   "Getting storage item",
-		//   _key,
-		//   data,
-		// );
 		if (data) {
 			try {
 				return JSON.parse(data)

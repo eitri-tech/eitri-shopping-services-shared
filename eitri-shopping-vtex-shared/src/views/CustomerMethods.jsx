@@ -8,7 +8,11 @@ export default function CustomerMethods() {
 	const [newPass, setNewPass] = useState('')
 
 	const sendEmail = async () => {
-		await Vtex.customer.sendAccessKeyByEmail(email)
+		try {
+			await Vtex.customer.sendAccessKeyByEmail(email)
+		} catch (e) {
+			console.log('sendAccessKeyByEmail error', e)
+		}
 	}
 
 	const loginWithEmailAndAccessKey = async () => {
