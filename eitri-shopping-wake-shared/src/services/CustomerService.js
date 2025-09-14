@@ -1,408 +1,393 @@
-import Eitri from "eitri-bifrost";
-import GraphqlService from "./GraphqlService";
-import StorageService from "./StorageService";
-import { ApiError } from "./Api";
+import Eitri from 'eitri-bifrost'
+import GraphqlService from './GraphqlService'
+import StorageService from './StorageService'
+import { ApiError } from './Api'
 import {
-  queryAddWishlistProduct,
-  queryCreateAddress,
-  queryCreateCustomer,
-  queryCustomer,
-  queryCustomerAccessTokenRenew,
-  queryGetCustomerWishlist,
-  queryLogin,
-  queryRemoveAddress,
-  queryRemoveWishlistProduct,
-  querySimpleCustomer,
-  queryUpdateAddress,
-  queryCustomerCompletePartialRegistration,
-  queryCustomerPasswordChange,
-  querySimpleLogin,
-  queryCustomerOrders,
-  queryCustomerUpdate,
-} from "../queries/Customer";
-import { Wake } from "../export";
+	queryAddWishlistProduct,
+	queryCreateAddress,
+	queryCreateCustomer,
+	queryCustomer,
+	queryCustomerAccessTokenRenew,
+	queryGetCustomerWishlist,
+	queryLogin,
+	queryRemoveAddress,
+	queryRemoveWishlistProduct,
+	querySimpleCustomer,
+	queryUpdateAddress,
+	queryCustomerCompletePartialRegistration,
+	queryCustomerPasswordChange,
+	querySimpleLogin,
+	queryCustomerOrders,
+	queryCustomerUpdate
+} from '../queries/Customer'
+import { Wake } from '../export'
 
 export default class CustomerService {
-  static STORAGE_USER_TOKEN_KEY = "user_key";
+	static STORAGE_USER_TOKEN_KEY = 'user_key'
 
-  static MSG_ERROR = {
-    INVALID_LOGIN: "Invalid login",
-  };
+	static MSG_ERROR = {
+		INVALID_LOGIN: 'Invalid login'
+	}
 
-  /**
-   * Faz login do usuário.
-   * @param {string} input - Login do usuário.
-   * @param {string} pass - Senha do usuário.
-   */
-  static async customerAuthenticatedLogin(input, pass) {
-    try {
-      const response = await GraphqlService.query(queryLogin, {
-        input: input,
-        pass: pass,
-      });
+	/**
+	 * Faz login do usuário.
+	 * @param {string} input - Login do usuário.
+	 * @param {string} pass - Senha do usuário.
+	 */
+	static async customerAuthenticatedLogin(input, pass) {
+		try {
+			const response = await GraphqlService.query(queryLogin, {
+				input: input,
+				pass: pass
+			})
 
-      const data = response.data;
+			const data = response.data
 
-      CustomerService.saveCustomerTokenOnStorage(data);
+			CustomerService.saveCustomerTokenOnStorage(data)
 
-      return data;
-    } catch (e) {
-      console.error(
-        "[SHARED] [customerAuthenticatedLogin] Falha ao realizar login",
-        e,
-      );
-      throw e;
-    }
-  }
+			return data
+		} catch (e) {
+			console.error('[SHARED] [customerAuthenticatedLogin] Falha ao realizar login', e)
+			throw e
+		}
+	}
 
-  static async createCustomer(customer) {
-    try {
-      const response = await GraphqlService.query(queryCreateCustomer, {
-        input: customer,
-      });
+	static async createCustomer(customer) {
+		try {
+			const response = await GraphqlService.query(queryCreateCustomer, {
+				input: customer
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [createCustomer] Erro ao criar customer", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+			throw e
+		}
+	}
 
-  static async customerSimpleLoginStart(email) {
-    try {
-      const response = await GraphqlService.query(querySimpleLogin, {
-        input: email,
-      });
+	static async customerSimpleLoginStart(email) {
+		try {
+			const response = await GraphqlService.query(querySimpleLogin, {
+				input: email
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [createCustomer] Erro ao criar customer", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+			throw e
+		}
+	}
 
-  static async customerUpdate(customer) {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async customerUpdate(customer) {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(queryCustomerUpdate, {
-        customerAccessToken: savedToken,
-        input: customer,
-      });
+			const response = await GraphqlService.query(queryCustomerUpdate, {
+				customerAccessToken: savedToken,
+				input: customer
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [updateCustomer] Erro ao atualizar customer", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [updateCustomer] Erro ao atualizar customer', e)
+			throw e
+		}
+	}
 
-  static async customerCompletePartialRegistration(customerAccessToken, input) {
-    try {
-      const response = await GraphqlService.query(
-        queryCustomerCompletePartialRegistration,
-        {
-          customerAccessToken,
-          input,
-        },
-      );
+	static async customerCompletePartialRegistration(customerAccessToken, input) {
+		try {
+			const response = await GraphqlService.query(queryCustomerCompletePartialRegistration, {
+				customerAccessToken,
+				input
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [createCustomer] Erro ao criar customer", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+			throw e
+		}
+	}
 
-  static async customerPasswordChange(
-    customerAccessToken,
-    currentPassword,
-    newPassword,
-  ) {
-    try {
-      const response = await GraphqlService.query(queryCustomerPasswordChange, {
-        customerAccessToken,
-        input: {
-          currentPassword,
-          newPasswordConfirmation: newPassword,
-          newPassword,
-        },
-      });
+	static async customerPasswordChange(customerAccessToken, currentPassword, newPassword) {
+		try {
+			const response = await GraphqlService.query(queryCustomerPasswordChange, {
+				customerAccessToken,
+				input: {
+					currentPassword,
+					newPasswordConfirmation: newPassword,
+					newPassword
+				}
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [customerPasswordChange] Erro ao mudar senha", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [customerPasswordChange] Erro ao mudar senha', e)
+			throw e
+		}
+	}
 
-  static async getSimpleCustomer() {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async getSimpleCustomer() {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(querySimpleCustomer, {
-        customerAccessToken: savedToken,
-      });
+			const response = await GraphqlService.query(querySimpleCustomer, {
+				customerAccessToken: savedToken
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [getCustomer] Erro ao busca customer", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [getCustomer] Erro ao busca customer', e)
+			throw e
+		}
+	}
 
-  static async getCustomer() {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async getCustomer() {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(queryCustomer, {
-        customerAccessToken: savedToken,
-      });
+			const response = await GraphqlService.query(queryCustomer, {
+				customerAccessToken: savedToken
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [getCustomer] Erro ao busca customer", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [getCustomer] Erro ao busca customer', e)
+			throw e
+		}
+	}
 
-  static async saveCustomerTokenOnStorage(data) {
-    return StorageService.setStorageJSON(
-      CustomerService.STORAGE_USER_TOKEN_KEY,
-      data,
-    );
-  }
+	static async saveCustomerTokenOnStorage(data) {
+		return StorageService.setStorageJSON(CustomerService.STORAGE_USER_TOKEN_KEY, data)
+	}
 
-  static async getCustomerToken() {
-    const loginData = await StorageService.getStorageJSON(
-      CustomerService.STORAGE_USER_TOKEN_KEY,
-    );
-    if (!loginData?.validUntil) {
-      return null;
-    }
-    const now = new Date();
-    const expDate = new Date(loginData.validUntil);
+	static async getCustomerToken() {
+		const loginData = await StorageService.getStorageJSON(CustomerService.STORAGE_USER_TOKEN_KEY)
+		if (!loginData?.validUntil) {
+			return null
+		}
+		const now = new Date()
+		const expDate = new Date(loginData.validUntil)
 
-    if (now.getTime() > expDate.getTime()) {
-      try {
-        const response = await GraphqlService.query(
-          queryCustomerAccessTokenRenew,
-          {
-            customerAccessToken: loginData.token,
-          },
-        );
+		if (now.getTime() > expDate.getTime()) {
+			try {
+				const response = await GraphqlService.query(queryCustomerAccessTokenRenew, {
+					customerAccessToken: loginData.token
+				})
 
-        const data = response.data;
+				const data = response.data
 
-        CustomerService.saveCustomerTokenOnStorage({ ...loginData, ...data });
+				CustomerService.saveCustomerTokenOnStorage({ ...loginData, ...data })
 
-        return response.data.token;
-      } catch (e) {
-        return null;
-      }
-    } else {
-      return loginData.token;
-    }
-  }
+				return response.data.token
+			} catch (e) {
+				return null
+			}
+		} else {
+			return loginData.token
+		}
+	}
 
-  static async createAddress(address) {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async createAddress(address) {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(queryCreateAddress, {
-        address,
-        customerAccessToken: savedToken,
-      });
+			const response = await GraphqlService.query(queryCreateAddress, {
+				address,
+				customerAccessToken: savedToken
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [createAddress] Erro ao criar endereço", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [createAddress] Erro ao criar endereço', e)
+			throw e
+		}
+	}
 
-  static async updateAddress(addressId, address) {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async updateAddress(addressId, address) {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(queryUpdateAddress, {
-        address,
-        customerAccessToken: savedToken,
-        id: addressId,
-      });
+			const response = await GraphqlService.query(queryUpdateAddress, {
+				address,
+				customerAccessToken: savedToken,
+				id: addressId
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [createAddress] Erro ao criar endereço", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [createAddress] Erro ao criar endereço', e)
+			throw e
+		}
+	}
 
-  static async removeAddress(addressId) {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async removeAddress(addressId) {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(queryRemoveAddress, {
-        customerAccessToken: savedToken,
-        id: addressId,
-      });
+			const response = await GraphqlService.query(queryRemoveAddress, {
+				customerAccessToken: savedToken,
+				id: addressId
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [removeAddress] Erro ao remover endereço", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [removeAddress] Erro ao remover endereço', e)
+			throw e
+		}
+	}
 
-  static async isLoggedIn() {
-    const savedToken = await CustomerService.getCustomerToken();
-    if (savedToken) {
-      return true;
-    }
-    return false;
-  }
+	static async isLoggedIn() {
+		const savedToken = await CustomerService.getCustomerToken()
+		if (savedToken) {
+			return true
+		}
+		return false
+	}
 
-  static async logout() {
-    await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY);
-    return true;
-  }
+	static async logout() {
+		await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
+		return true
+	}
 
-  static async getWishList() {
-    const token = await CustomerService.getCustomerToken();
-    if (!token) {
-      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401);
-    }
+	static async getWishList() {
+		const token = await CustomerService.getCustomerToken()
+		if (!token) {
+			throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+		}
 
-    const response = await GraphqlService.query(queryGetCustomerWishlist, {
-      customerAccessToken: token,
-    });
-    return response?.customer?.wishlist?.products || null;
-  }
+		const response = await GraphqlService.query(queryGetCustomerWishlist, {
+			customerAccessToken: token
+		})
+		return response?.customer?.wishlist?.products || null
+	}
 
-  static async addWishlistProduct(productId) {
-    const token = await CustomerService.getCustomerToken();
-    if (!token) {
-      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401);
-    }
+	static async addWishlistProduct(productId) {
+		const token = await CustomerService.getCustomerToken()
+		if (!token) {
+			throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+		}
 
-    const response = await GraphqlService.query(queryAddWishlistProduct, {
-      customerAccessToken: token,
-      productId: parseInt(productId),
-    });
-    return response?.wishlistAddProduct || null;
-  }
+		const response = await GraphqlService.query(queryAddWishlistProduct, {
+			customerAccessToken: token,
+			productId: parseInt(productId)
+		})
+		return response?.wishlistAddProduct || null
+	}
 
-  static async removeWishlistProduct(productId) {
-    const token = await CustomerService.getCustomerToken();
-    if (!token) {
-      throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401);
-    }
+	static async removeWishlistProduct(productId) {
+		const token = await CustomerService.getCustomerToken()
+		if (!token) {
+			throw new ApiError(CustomerService.MSG_ERROR.INVALID_LOGIN, 401)
+		}
 
-    const response = await GraphqlService.query(queryRemoveWishlistProduct, {
-      customerAccessToken: token,
-      productId: parseInt(productId),
-    });
-    return response?.wishlistRemoveProduct || null;
-  }
+		const response = await GraphqlService.query(queryRemoveWishlistProduct, {
+			customerAccessToken: token,
+			productId: parseInt(productId)
+		})
+		return response?.wishlistRemoveProduct || null
+	}
 
-  static async getAddressByZipCode(zipCode) {
-    try {
-      const response = await Eitri.http.get(
-        `${Wake.configs.apiHost}/Login/Cadastro/BuscaEnderecoPorCep?cep=${zipCode}`,
-      );
-      return response.data;
-    } catch (e) {
-      console.error(
-        "[SHARED] [getAddressByZipCode] Erro ao buscar endereço pelo CEP",
-        e,
-      );
-      throw e;
-    }
-  }
+	static async getAddressByZipCode(zipCode) {
+		try {
+			const response = await GraphqlService.query(
+				`query ($cep: CEP! ) {
+					  address(cep:$cep) {
+						city
+						country
+						neighborhood
+						state
+						street
+						cep
+					  }
+				}`,
+				{
+					cep: zipCode
+				}
+			)
+			return response.address
+		} catch (e) {
+			console.error('[SHARED] [getAddressByZipCode] Erro ao buscar endereço pelo CEP', e)
+			throw e
+		}
+	}
 
-  static async customerPasswordRecovery(email) {
-    try {
-      const response = await GraphqlService.query(
-        `
+	static async customerPasswordRecovery(email) {
+		try {
+			const response = await GraphqlService.query(
+				`
           mutation ($input: String! ) {
             customerPasswordRecovery(input: $input) {
               isSuccess
             }
           }`,
-        {
-          input: email,
-        },
-      );
+				{
+					input: email
+				}
+			)
 
-      return response;
-    } catch (e) {
-      console.error(
-        "[SHARED] [customerPasswordRecovery] Erro ao solicitar email",
-        e,
-      );
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [customerPasswordRecovery] Erro ao solicitar email', e)
+			throw e
+		}
+	}
 
-  static async customerPasswordChangeByRecovery(key, newPassword) {
-    try {
-      const response = await GraphqlService.query(
-        `
+	static async customerPasswordChangeByRecovery(key, newPassword) {
+		try {
+			const response = await GraphqlService.query(
+				`
           mutation ($input: CustomerPasswordChangeByRecoveryInputGraphInput!){
             customerPasswordChangeByRecovery(input: $input) {
               isSuccess
             }
           }`,
-        {
-          key,
-          newPassword,
-          newPasswordConfirmation: newPassword,
-        },
-      );
+				{
+					key,
+					newPassword,
+					newPasswordConfirmation: newPassword
+				}
+			)
 
-      return response;
-    } catch (e) {
-      console.error(
-        "[SHARED] [customerPasswordChangeByRecovery] Erro ao recuperar senha",
-        e,
-      );
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [customerPasswordChangeByRecovery] Erro ao recuperar senha', e)
+			throw e
+		}
+	}
 
-  static async getCustomerOrders() {
-    try {
-      const savedToken = await CustomerService.getCustomerToken();
-      if (!savedToken) {
-        return null;
-      }
+	static async getCustomerOrders() {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
 
-      const response = await GraphqlService.query(queryCustomerOrders, {
-        customerAccessToken: savedToken,
-      });
+			const response = await GraphqlService.query(queryCustomerOrders, {
+				customerAccessToken: savedToken
+			})
 
-      return response;
-    } catch (e) {
-      console.error("[SHARED] [getCustomerOrders] Erro ao obter pedidos", e);
-      throw e;
-    }
-  }
+			return response
+		} catch (e) {
+			console.error('[SHARED] [getCustomerOrders] Erro ao obter pedidos', e)
+			throw e
+		}
+	}
 }
