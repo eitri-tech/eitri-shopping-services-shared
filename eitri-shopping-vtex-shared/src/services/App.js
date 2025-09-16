@@ -8,6 +8,39 @@ export default class App {
 		gaVerbose: false
 	}
 
+	static mergeOverwrites = (obj1, obj2) => {
+		const result = { ...obj1 }
+		for (const key in obj2) {
+			if (obj2[key] instanceof Object && key in obj1 && obj1[key] instanceof Object) {
+				result[key] = App.mergeOverwrites(obj1[key], obj2[key])
+			} else {
+				result[key] = obj2[key]
+			}
+		}
+		return result
+	}
+
+	static initClarity = async clarityId => {
+		try {
+			if (clarityId) {
+				await Eitri.tracking.clarity.init(clarityId)
+			}
+		} catch (error) {
+			console.error('[SHARED] Error ao inicializar Clarity', error)
+		}
+	}
+
+	static setStatusBarTextColor = async statusBarTextColor => {
+		try {
+			if (statusBarTextColor) {
+				const color = statusBarTextColor === 'white' ? 'setStatusBarTextWhite' : 'setStatusBarTextBlack'
+				window.EITRI.connector.invokeMethod(color)
+			}
+		} catch (e) {
+			console.error('Erro ao configurar statusBarTextColor', e)
+		}
+	}
+
 	static tryAutoConfigure = async overwrites => {
 		// try {
 		// 	console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
@@ -23,14 +56,8 @@ export default class App {
 		// 	console.error('Erro ao configurar eventBus', e)
 		// }
 
-		let remoteConfig
-		try {
-			const _remoteConfig = await Eitri.environment.getRemoteConfigs()
-			remoteConfig = { ..._remoteConfig, ...overwrites }
-		} catch (error) {
-			console.error('[SHARED] Error getRemoteConfigs', error)
-			throw error
-		}
+		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
+		let remoteConfig = App.mergeOverwrites(_remoteConfig, overwrites)
 
 		try {
 			console.log('[SHARED] ********* Config Vtex encontrada, configurando automaticamente *******')
@@ -42,24 +69,11 @@ export default class App {
 			throw error
 		}
 
-		try {
-			if (remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId) {
-				const clarityId = remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId
-				ClarityService.init(clarityId)
-			}
-		} catch (error) {
-			console.error('[SHARED] Error ao inicializar Clarity', error)
-		}
+		App.initClarity(remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId)
+
+		App.setStatusBarTextColor(remoteConfig?.appConfigs?.statusBarTextColor)
 
 		try {
-			if (remoteConfig?.appConfigs?.statusBarTextColor) {
-				const color =
-					remoteConfig.appConfigs.statusBarTextColor === 'white'
-						? 'setStatusBarTextWhite'
-						: 'setStatusBarTextBlack'
-				window.EITRI.connector.invokeMethod(color)
-			}
-
 			App.configs = {
 				...App.configs,
 				...remoteConfig

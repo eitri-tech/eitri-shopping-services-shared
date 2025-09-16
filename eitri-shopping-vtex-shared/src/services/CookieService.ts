@@ -31,7 +31,7 @@ export default class CookieService {
 		}
 	}
 
-	static getCookieHeader = async (): Promise<string> => {
+	static readonly getCookieHeader = async (): Promise<string> => {
 		try {
 			const cookies = await CookieService.getAllCookies()
 			console.log('cookies', cookies)
@@ -39,6 +39,7 @@ export default class CookieService {
 				.map(([k, v]) => `${k}=${v}`)
 				.join('; ')
 		} catch (e) {
+			console.error('Erro ao obter cookies', e)
 			return ''
 		}
 	}
