@@ -24,7 +24,7 @@ export default class VtexCaller {
 
 		const cookies = await CookieService.getCookieHeader()
 
-		console.log('Headers=========>', cookies)
+		// console.log('Headers=========>', cookies)
 
 		headers['Cookie'] = cookies
 

@@ -8,7 +8,6 @@ export default function Home() {
 	}, [])
 
 	const init = async () => {
-		// const a = new Date().getTime()
 		await App.tryAutoConfigure({
 			// providerInfo: {
 			// 	account: 'eitripartnerbr',
@@ -20,11 +19,12 @@ export default function Home() {
 			verbose: false,
 			gaVerbose: false
 		})
-		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
+		navigateTo('')
 		// await Vtex.cart.setOrderFormId('c9bcc5e093f9457382c5079efd04f3c7')
 	}
 
 	const navigateTo = async path => {
+		if (!path) return
 		Eitri.navigation.navigate({ path })
 	}
 

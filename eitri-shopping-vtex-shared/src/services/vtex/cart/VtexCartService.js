@@ -4,14 +4,44 @@ import Logger from '../../Logger'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import Vtex from '../../Vtex'
 import getSalesChannel from '../_helpers/getSalesChannel'
+import VtexSessionService from '@/services/vtex/session/vtexSessionService'
+import Eitri from 'eitri-bifrost'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
 	static _CACHED_CART = null
 
+	static async getMarketingTag() {
+		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+
+		if (remoteConfig?.storePreferences?.marketingTag) {
+			return remoteConfig?.storePreferences?.marketingTag
+		}
+
+		const { applicationData } = await Eitri.getConfigs()
+		const plataform = applicationData?.platform
+
+		if (remoteConfig?.storePreferences?.androidMarketingTag && plataform === 'android') {
+			return remoteConfig?.storePreferences?.androidMarketingTag
+		}
+
+		if (remoteConfig?.storePreferences?.iosMarketingTag && plataform === 'ios') {
+			return remoteConfig?.storePreferences?.iosMarketingTag
+		}
+
+		return 'eitri-shop'
+	}
+
 	static async assertMarketingData(cart) {
 		try {
-			const { segments, marketingTag } = Vtex.configs
+			const session = await VtexSessionService.getSession()
+			const marketingTag = await VtexCartService.getMarketingTag()
+
+			let segments = {}
+			Object.keys(session?.namespaces?.public)?.forEach(key => {
+				segments[key] = session?.namespaces?.public[key].value
+			})
+
 			const currentMarketingTags = { ...cart?.marketingData }
 			const payload = {}
 

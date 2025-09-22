@@ -1,6 +1,5 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from './Vtex'
-import ClarityService from './tracking/ClarityService'
 
 export default class App {
 	static configs = {

@@ -2,7 +2,7 @@ import Vtex from '../services/Vtex'
 import Eitri from 'eitri-bifrost'
 
 export default function CustomerMethods() {
-	const [email, setEmail] = useState('')
+	const [email, setEmail] = useState('wagnerfq@gmail.com')
 	const [accessKey, setAccessKey] = useState('')
 	const [password, setPassword] = useState('')
 	const [newPass, setNewPass] = useState('')
