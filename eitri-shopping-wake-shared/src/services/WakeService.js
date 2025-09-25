@@ -31,15 +31,15 @@ export default class WakeService {
 	}
 
 	static configure = remoteConfig => {
-		const { providerInfo, marketingTag, ...rest } = remoteConfig
+		const { providerInfo = {}, marketingTag, ...rest } = remoteConfig
 
-		if (providerInfo.host && !providerInfo.host.startsWith('https://')) {
+		if (providerInfo?.host && !providerInfo.host.startsWith('https://')) {
 			providerInfo.host = 'https://' + providerInfo.host
 		}
-		if (providerInfo.cartHost && !providerInfo.cartHost.startsWith('https://')) {
+		if (providerInfo?.cartHost && !providerInfo.cartHost.startsWith('https://')) {
 			providerInfo.cartHost = 'https://' + providerInfo.cartHost
 		}
-		if (providerInfo.apiHost && !providerInfo.apiHost.startsWith('https://')) {
+		if (providerInfo?.apiHost && !providerInfo.apiHost.startsWith('https://')) {
 			providerInfo.apiHost = 'https://' + providerInfo.apiHost
 		}
 
