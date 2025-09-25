@@ -11,5 +11,6 @@ module.exports = {
 	'id': '79465ce9-361c-4a35-9ed6-57feeb7c19d0',
 	'organizationId': 'cf5660ee-bf90-42cd-9a43-9d2c69ee3c89',
 	'organization': {},
-	'sharedVersion': 'v2'
+	'sharedVersion': 'v2',
+	'type': 'module'
 }

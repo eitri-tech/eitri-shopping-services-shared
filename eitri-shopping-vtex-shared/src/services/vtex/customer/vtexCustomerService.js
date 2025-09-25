@@ -2,7 +2,6 @@ import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
 import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
-import App from '../../App'
 import extractCookies from '../_helpers/extractCookies'
 
 export default class VtexCustomerService {
@@ -191,14 +190,14 @@ export default class VtexCustomerService {
             console.log("WebFlow Timeout: Facebook button was not found or ready in time.");
           }, 10000);
         `
-		});
+		})
 
-		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`));
+		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`))
 
 		if (finishNavigation) {
-			await VtexCustomerService._processPostSocialLogin(finishNavigation.url);
+			await VtexCustomerService._processPostSocialLogin(finishNavigation.url)
 		} else {
-			throw new Error('Facebook login failed');
+			throw new Error('Facebook login failed')
 		}
 	}
 
@@ -411,7 +410,7 @@ export default class VtexCustomerService {
 		return result?.data
 	}
 
-	static async newsletterSubscribe(email) { }
+	static async newsletterSubscribe(email) {}
 
 	/**
 	 * Extrai parâmetros UTM de uma string de query ou de um objeto e salva no Storage.
