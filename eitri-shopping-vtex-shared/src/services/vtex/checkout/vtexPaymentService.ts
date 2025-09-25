@@ -1,6 +1,7 @@
 import Logger from '../../Logger'
 import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
+// @ts-ignore
 import Eitri from 'eitri-bifrost'
 import App from '../../App'
 import Vtex from '../../Vtex'
