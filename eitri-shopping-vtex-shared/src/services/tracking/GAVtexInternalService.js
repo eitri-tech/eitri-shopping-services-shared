@@ -184,7 +184,7 @@ export default class GAVtexInternalService {
       const params = {
         currency: "BRL",
         // value: totalItemPrice,
-        value: cart?.value / 100,
+        value: cart?.value && cart.value > 0 ? cart.value / 100 : 0,
         transaction_id: orderId,
         shipping: shippingPrice,
         items: items,
