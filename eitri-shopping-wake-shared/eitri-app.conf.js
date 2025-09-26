@@ -4,7 +4,7 @@ module.exports = {
 	'slug': 'eitri-shopping-wake-shared',
 	'eitri-luminus': '1.65.6',
 	'eitri-bifrost': '2.9.0',
-	'version': '1.2.0',
+	'version': '1.2.1',
 	'messageVersion': 'adiciona busca de lojas',
 	'public-key': '1c832aa6-6172-4640-82b1-0708d8aaf4fd',
 	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',
