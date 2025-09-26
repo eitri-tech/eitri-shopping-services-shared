@@ -7,7 +7,7 @@ module.exports = {
 	'version': '1.4.4',
 	'messageVersion': 'Fix legacy search',
 	'public-key': '0b837c87-a494-4521-9b0f-5ac49db5af9c',
-	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',
+	'applicationId': 'da49310a-bb57-4c91-baa7-ef790c9b5fa5',
 	'id': '79465ce9-361c-4a35-9ed6-57feeb7c19d0',
 	'organizationId': 'cf5660ee-bf90-42cd-9a43-9d2c69ee3c89',
 	'organization': {},

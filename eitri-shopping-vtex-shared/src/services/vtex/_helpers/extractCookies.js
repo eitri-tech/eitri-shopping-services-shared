@@ -3,7 +3,7 @@ export default function extractCookies(response, cookieName) {
 	if (!response || !response.headers || !cookieName) {
 		return null
 	}
-
+	console.log('extractCookies', response?.headers)
 	const regex = new RegExp(`${cookieName}=(.*?);`, 'i')
 	const test = response?.headers['set-cookie']?.match(regex)
 

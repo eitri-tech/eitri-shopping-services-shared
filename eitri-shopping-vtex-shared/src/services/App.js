@@ -57,7 +57,7 @@ export default class App {
 					remoteConfig.appConfigs.statusBarTextColor === 'white'
 						? 'setStatusBarTextWhite'
 						: 'setStatusBarTextBlack'
-				window.EITRI.connector.invokeMethod(color)
+				// window.EITRI.connector.invokeMethod(color)
 			}
 
 			App.configs = {
