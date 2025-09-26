@@ -14,8 +14,8 @@ export default class WakeService {
 	static category = CategoryService
 	static cart = CartService
 	static customer = CustomerService
-	static checkout = CheckoutService
 	static store = StoreService
+	static checkout = CheckoutService
 
 	static configs = {
 		verbose: false,
