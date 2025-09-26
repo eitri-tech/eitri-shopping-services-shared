@@ -177,7 +177,7 @@ const checkoutModel = `
       type
       value
     }
-`;
+`
 
 export const queryCheckoutCustomerAssociate = `
 mutation($customerAccessToken: String!, $checkoutId: Uuid!) {
@@ -187,7 +187,7 @@ mutation($customerAccessToken: String!, $checkoutId: Uuid!) {
   ) {
     ${checkoutModel}
 }
-}`;
+}`
 
 export const queryCheckoutAddressAssociate = `
 mutation($customerAccessToken: String!, $addressId: ID!, $checkoutId: Uuid!) {
@@ -198,12 +198,14 @@ mutation($customerAccessToken: String!, $addressId: ID!, $checkoutId: Uuid!) {
   ) {
       ${checkoutModel}
   }
-}`;
+}`
 
 export const queryShippingQuotes = `
 query($checkoutId: Uuid!) {
   shippingQuotes(checkoutId: $checkoutId, useSelectedAddress: true) {
     deadline
+    deadlineInHours
+    distributionCenterId
     name
     products {
       productVariantId
@@ -213,7 +215,7 @@ query($checkoutId: Uuid!) {
     type
     value
   }
-}`;
+}`
 
 export const queryCheckoutSelectShippingQuote = `
 mutation(
@@ -228,7 +230,7 @@ checkoutSelectShippingQuote(
   ) {
     ${checkoutModel}
     }
-}`;
+}`
 
 export const queryPaymentMethods = `
 query($checkoutId: Uuid!) {
@@ -237,7 +239,7 @@ query($checkoutId: Uuid!) {
     name
     imageUrl
   }
-}`;
+}`
 
 export const queryCheckoutSelectPaymentMethod = `
 mutation($checkoutId: Uuid!, $paymentMethodId: ID!) {
@@ -247,7 +249,7 @@ mutation($checkoutId: Uuid!, $paymentMethodId: ID!) {
   ) {
     ${checkoutModel}
 }
-}`;
+}`
 
 export const queryCheckoutComplete = `
 mutation (
@@ -264,7 +266,7 @@ mutation (
   ) {
   ${checkoutModel}
   }
-}`;
+}`
 
 export const queryCheckoutSelectInstallment = `
 mutation (
@@ -279,7 +281,7 @@ mutation (
   ) {
   ${checkoutModel}
   }
-}`;
+}`
 
 export const queryCheckoutAddCoupon = `
 mutation (
@@ -294,7 +296,7 @@ mutation (
   ) {
     ${checkoutModel}
   }
-}`;
+}`
 
 export const queryCheckoutRemoveCoupon = `
 mutation (
@@ -305,7 +307,7 @@ mutation (
   ) {
     ${checkoutModel}
   }
-}`;
+}`
 
 export const queryAddCheckoutMetadata = `
 mutation (
@@ -320,7 +322,7 @@ mutation (
       key value
     }
   }
-}`;
+}`
 
 export const queryCheckoutUseCheckingAccount = `
 mutation (
@@ -334,11 +336,11 @@ mutation (
   ) {
     ${checkoutModel}
   }
-}`;
+}`
 
 export const queryCheckoutReset = `
 mutation ( $checkoutId: Uuid! ) {
   checkoutReset( checkoutId: $checkoutId, types:[PAYMENT] ) {
     isSuccess
   }
-}`;
+}`
