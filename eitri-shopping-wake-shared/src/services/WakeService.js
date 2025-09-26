@@ -6,6 +6,7 @@ import CartService from './CartService'
 import CustomerService from './CustomerService'
 import CheckoutService from './CheckoutService'
 import ClarityService from './tracking/ClarityService'
+import StoreService from './StoreService'
 
 export default class WakeService {
 	static graphQl = GraphqlService
@@ -14,6 +15,7 @@ export default class WakeService {
 	static cart = CartService
 	static customer = CustomerService
 	static checkout = CheckoutService
+	static store = StoreService
 
 	static configs = {
 		verbose: false,
