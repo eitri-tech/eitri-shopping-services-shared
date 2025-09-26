@@ -301,10 +301,8 @@ export default class CheckoutService {
 
   static async addCheckoutMetadata(checkoutId, metadata) {
     const eitriMetadata = { key: "utmSource", value: "eitri-shop" };
-    if (Array.isArray(metadata)) {
-      metadata.push(eitriMetadata);
-    } else {
-      metadata = [eitriMetadata];
+    if (!Array.isArray(metadata) || metadata.length == 0) {
+      metadata = [eitriMetadata]
     }
 
     try {
