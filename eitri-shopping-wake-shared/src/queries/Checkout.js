@@ -344,3 +344,17 @@ mutation ( $checkoutId: Uuid! ) {
     isSuccess
   }
 }`
+
+export const queryCheckoutPartnerAssociate = `
+mutation($pat: String!, $cId: Uuid!){
+  checkoutPartnerAssociate (partnerAccessToken: $pat, checkoutId: $cId){
+    ${checkoutModel}
+  }
+}`
+
+export const queryCheckoutPartnerDisassociate = `
+mutation($cId: Uuid!){
+  checkoutPartnerDisassociate (checkoutId: $cId){
+    ${checkoutModel}
+  }
+}`
