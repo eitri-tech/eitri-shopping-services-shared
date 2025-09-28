@@ -6,6 +6,7 @@ import CartService from './CartService'
 import CustomerService from './CustomerService'
 import CheckoutService from './CheckoutService'
 import ClarityService from './tracking/ClarityService'
+import StoreService from './StoreService'
 
 export default class WakeService {
 	static graphQl = GraphqlService
@@ -13,6 +14,7 @@ export default class WakeService {
 	static category = CategoryService
 	static cart = CartService
 	static customer = CustomerService
+	static store = StoreService
 	static checkout = CheckoutService
 
 	static configs = {
@@ -98,6 +100,15 @@ export default class WakeService {
 			}
 		} catch (error) {
 			console.log('[SHARED] Error App configure ', error)
+		}
+
+		try {
+			if (remoteConfig?.appConfigs?.partnerId) {
+				console.log('[SHARED] ********* Configurando PartnerAccessToken *******')
+				await StoreService.loadPartnerAccessToken(remoteConfig?.appConfigs?.partnerId)
+			}
+		} catch (error) {
+			console.log('[SHARED] Error PartnerAccessToken', error)
 		}
 
 		console.log(`[SHARED] App WAKE ${WakeService.configs.account} configurado com sucesso`)

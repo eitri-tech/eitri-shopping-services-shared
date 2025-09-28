@@ -21,6 +21,7 @@ import {
 	queryCustomerUpdate
 } from '../queries/Customer'
 import { Wake } from '../export'
+import StoreService from '@/services/StoreService'
 
 export default class CustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_key'
@@ -43,7 +44,7 @@ export default class CustomerService {
 
 			const data = response.data
 
-			CustomerService.saveCustomerTokenOnStorage(data)
+			await CustomerService.saveCustomerTokenOnStorage(data)
 
 			return data
 		} catch (e) {
@@ -264,6 +265,7 @@ export default class CustomerService {
 
 	static async logout() {
 		await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
+		await StoreService.removeCustomerPartnerAccessToken()
 		return true
 	}
 
