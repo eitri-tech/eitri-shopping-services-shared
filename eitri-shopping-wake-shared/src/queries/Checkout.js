@@ -318,9 +318,20 @@ mutation (
     checkoutId: $checkoutId
     metadata: $metadata
   ) {
-    metadata {
-      key value
-    }
+    ${checkoutModel}
+  }
+}`
+
+export const queryRemoveCheckoutMetadata = `
+mutation (
+  $checkoutId: Uuid!,
+  $keys: [String]!
+) {
+  checkoutRemoveMetadata(
+    checkoutId: $checkoutId
+    keys: $keys
+  ) {
+    ${checkoutModel}
   }
 }`
 

@@ -14,6 +14,7 @@ import {
 	queryCheckoutSelectShippingQuote,
 	queryCheckoutUseCheckingAccount,
 	queryPaymentMethods,
+	queryRemoveCheckoutMetadata,
 	queryShippingQuotes
 } from '../queries/Checkout'
 import CartService from './CartService'
@@ -261,6 +262,22 @@ export default class CheckoutService {
 			const response = await GraphqlService.query(queryAddCheckoutMetadata, {
 				checkoutId,
 				metadata
+			})
+
+			return response
+		} catch (e) {
+			console.error('[SHARED] [addCheckoutMetadata]', e)
+			throw e
+		}
+	}
+
+	static async checkoutRemoveMetadata(keys) {
+		try {
+			const checkoutId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+			const response = await GraphqlService.query(queryRemoveCheckoutMetadata, {
+				checkoutId,
+				keys
 			})
 
 			return response
