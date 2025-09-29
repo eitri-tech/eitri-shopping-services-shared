@@ -137,9 +137,112 @@ export default function CheckoutMethod() {
 		await getCheckout()
 	}
 
+	const addMetadata = async () => {
+		try {
+			let checkout = await WakeService.cart.getCheckout()
+			const response = await WakeService.checkout.addCheckoutMetadata(checkout.checkoutId, [
+				{
+					key: 'metadado_teste',
+					value: 'teste'
+				},
+				{
+					key: 'metadado_teste_2',
+					value: 'teste'
+				}
+			])
+			console.log('response addMetadata >>', response)
+		} catch (e) {
+			console.error('addMetadata', e)
+		}
+	}
+
+	const removeMetadata = async () => {
+		try {
+			const response = await WakeService.checkout.checkoutRemoveMetadata(['metadado_teste'])
+			console.log('response removeMetadata >>', response)
+		} catch (e) {
+			console.error('removeMetadata', e)
+		}
+	}
+
 	const back = () => {
 		Eitri.navigation.back()
 	}
+
+	const METHODS = [
+		{
+			label: 'Cria novo carrinho',
+			onPress: newCart
+		},
+		{
+			label: 'Login',
+			onPress: login
+		},
+		{
+			label: 'Get Checkout',
+			onPress: getCheckout
+		},
+		{
+			label: 'Add Item to Cart',
+			onPress: addItemCart
+		},
+		{
+			label: 'Associa usuário ao carrinho',
+			onPress: customerAssociate
+		},
+		{
+			label: 'Associa endereço ao carrinho',
+			onPress: addressAssociate
+		},
+		{
+			label: 'Opções de frete',
+			onPress: getShippingQuotes
+		},
+		{
+			label: 'Selecionar frete',
+			onPress: setShippingQuotes
+		},
+		{
+			label: 'Formas de pagamento',
+			onPress: getPaymentMethods
+		},
+		{
+			label: 'Setar forma de pagamento',
+			onPress: setPaymentMethod
+		},
+		{
+			label: 'Definir parcelas cartão',
+			onPress: setInstallments
+		},
+		{
+			label: 'Adicionar cupom',
+			onPress: checkoutAddCoupon
+		},
+		{
+			label: 'Usar Crédito da Conta',
+			onPress: useCashback
+		},
+		{
+			label: 'Resetar pagamento',
+			onPress: resetCheckout
+		},
+		{
+			label: 'Associar parceiro',
+			onPress: associateCheckoutPartner
+		},
+		{
+			label: 'Desassociar parceiro',
+			onPress: disassociateCheckoutPartner
+		},
+		{
+			label: 'Adicionar metadados',
+			onPress: addMetadata
+		},
+		{
+			label: 'Remover metadados',
+			onPress: removeMetadata
+		}
+	]
 
 	return (
 		<Window
@@ -168,245 +271,22 @@ export default function CheckoutMethod() {
 					</View>
 				)}
 
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={newCart}
-						label={`Cria novo carrinho`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={login}
-						label={`Login`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={getCheckout}
-						label={`Get Checkout`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={addItemCart}
-						label={`Add Item to Cart`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={customerAssociate}
-						label={`Associa usuário ao carrinho`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={addressAssociate}
-						label={`Associa endereço ao carrinho`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={getShippingQuotes}
-						label={`Opções de frete`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={setShippingQuotes}
-						label={`Selecionar frete`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={getPaymentMethods}
-						label={`Formas de pagamento`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={setPaymentMethod}
-						label={`Setar forma de pagamento`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={setInstallments}
-						label={`Definir parcelas cartão`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={checkoutAddCoupon}
-						label={`Adicionar cupom`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={useCashback}
-						label={`Usar Crédito da Conta`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={resetCheckout}
-						label={`Resetar pagamento`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={associateCheckoutPartner}
-						label={`Associar parceiro`}
-					/>
-				</View>
-
-				<View
-					padding='large'
-					direction='column'
-					justifyContent='center'
-					alignItems='center'
-					width='100%'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						onPress={disassociateCheckoutPartner}
-						label={`Desassociar parceiro`}
-					/>
-				</View>
+				{METHODS.map((method, idx) => (
+					<View
+						padding='large'
+						direction='column'
+						justifyContent='center'
+						alignItems='center'
+						width='100%'
+						gap={10}>
+						<Button
+							wide
+							color='background-color'
+							onPress={method.onPress}
+							label={method.label}
+						/>
+					</View>
+				))}
 
 				<View
 					marginTop='large'
