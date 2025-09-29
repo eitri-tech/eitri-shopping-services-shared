@@ -1,23 +1,22 @@
 import Eitri from 'eitri-bifrost'
-import Logger from './Logger'
-import Vtex from './Vtex'
+import App from '@/services/App'
 
 export default class StorageService {
 	static async setStorageItem(key, item) {
-		const account = Vtex.configs.account
+		const account = App.getAccount()
 		const _key = `${account}_${key}`
 		return Eitri.sharedStorage.setItem(_key, item)
 	}
 
 	static async getStorageItem(key) {
-		const account = Vtex.configs.account
+		const account = App.getAccount()
 		const _key = `${account}_${key}`
 		return Eitri.sharedStorage.getItem(_key)
 	}
 
 	static async setStorageJSON(key, item) {
 		try {
-			const account = Vtex.configs.account
+			const account = App.getAccount()
 			const _key = `${account}_${key}`
 			return Eitri.sharedStorage.setItem(_key, JSON.stringify(item))
 		} catch (e) {
@@ -26,7 +25,7 @@ export default class StorageService {
 	}
 
 	static async getStorageJSON(key) {
-		const account = Vtex.configs.account
+		const account = App.getAccount()
 		const _key = `${account}_${key}`
 		const data = await Eitri.sharedStorage.getItem(_key)
 		if (data) {
@@ -42,7 +41,7 @@ export default class StorageService {
 	}
 
 	static async removeItem(key) {
-		const account = Vtex.configs.account
+		const account = App.getAccount()
 		const _key = `${account}_${key}`
 		return await Eitri.sharedStorage.removeItem(_key)
 	}

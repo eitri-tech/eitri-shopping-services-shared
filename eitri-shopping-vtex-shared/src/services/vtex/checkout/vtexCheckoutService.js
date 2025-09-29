@@ -198,8 +198,9 @@ export default class VtexCheckoutService {
 		console.time('setPaymentMethod')
 
 		try {
+			const account = App.getAccount()
 			const result = await Eitri.http.post(
-				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
+				`https://${account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
 				payload,
 				{
 					headers: {
@@ -260,9 +261,10 @@ export default class VtexCheckoutService {
 
 	static async payV2(cart, options) {
 		console.log('==========Iniciando pagamento==========')
-		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+		const marketingTag = await App.getMarketingTag()
+		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === marketingTag)
 		if (!hasEitriTag) {
-			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), marketingTag]
 			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
 				...cart?.marketingData,
 				marketingTags: newMarketingTags
@@ -275,10 +277,10 @@ export default class VtexCheckoutService {
 	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')
-
-		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+		const marketingTag = await App.getMarketingTag()
+		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === marketingTag)
 		if (!hasEitriTag) {
-			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), marketingTag]
 			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
 				...cart?.marketingData,
 				marketingTags: newMarketingTags
@@ -345,8 +347,9 @@ export default class VtexCheckoutService {
 
 	static async getPixStatus(transactionId, paymentId) {
 		try {
+			const account = App.getAccount()
 			const result = await Eitri.http.get(
-				`https://${Vtex.configs.account}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
+				`https://${account}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
 				{
 					headers: {
 						'accept': 'application/json, text/javascript, */*; q=0.01',

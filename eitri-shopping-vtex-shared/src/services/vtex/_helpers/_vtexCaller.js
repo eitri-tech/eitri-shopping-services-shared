@@ -1,10 +1,5 @@
 import Eitri from 'eitri-bifrost'
-import Vtex from '../../Vtex'
-import vtexCustomerService from '../customer/vtexCustomerService'
 import Logger from '../../Logger'
-import vtexCartService from '../cart/VtexCartService'
-import VtexCheckoutService from '../checkout/vtexCheckoutService'
-import StorageService from '../../StorageService'
 import CookieService from '../../CookieService'
 
 export default class VtexCaller {
@@ -55,7 +50,7 @@ export default class VtexCaller {
 	}
 
 	static async get(path, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || App.getApi()
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -82,7 +77,7 @@ export default class VtexCaller {
 	}
 
 	static async post(path, data, options = {}, baseUrl, overrideHeaders) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || App.getApi()
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = overrideHeaders || (await VtexCaller._getHeaders())
 
@@ -108,7 +103,7 @@ export default class VtexCaller {
 	}
 
 	static async patch(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || App.getApi()
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 

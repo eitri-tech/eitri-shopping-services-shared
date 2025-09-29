@@ -1,7 +1,4 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Eitri from 'eitri-bifrost'
-import VtexCatalogService from '../catalog/vtexCatalogService'
-import Vtex from '../../Vtex'
 import VtexCustomerService from '../customer/vtexCustomerService'
 
 export default class VtexWishlistService {
@@ -24,8 +21,8 @@ export default class VtexWishlistService {
 				to: to
 			}
 		}
-
-		const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, Vtex.configs.host)
+		const host = App.getHost()
+		const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, host)
 		return response.data
 	}
 
@@ -46,8 +43,8 @@ export default class VtexWishlistService {
 				name: name
 			}
 		}
-
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const host = App.getHost()
+		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, host)
 		return response.data
 	}
 
@@ -72,8 +69,8 @@ export default class VtexWishlistService {
 				name: listName
 			}
 		}
-
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const host = App.getHost()
+		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, host)
 		return response.data
 	}
 
@@ -93,8 +90,8 @@ export default class VtexWishlistService {
 				productId: productId
 			}
 		}
-
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const host = App.getHost()
+		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, host)
 		return response.data
 	}
 }

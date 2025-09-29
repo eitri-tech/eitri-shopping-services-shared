@@ -3,7 +3,6 @@ import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
 import Eitri from 'eitri-bifrost'
 import App from '../../App'
-import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 
 type PaymentOptions = {
@@ -168,8 +167,10 @@ export default class VtexPaymentService {
 
 			Logger.log('====> Setando o método de pagamento com o payload', paymentsMethods)
 
+			const account = App.getAccount()
+
 			await Eitri.http.post(
-				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`,
+				`https://${account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`,
 				paymentsMethods,
 				{
 					headers: {

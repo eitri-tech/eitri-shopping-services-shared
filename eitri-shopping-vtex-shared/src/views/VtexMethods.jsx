@@ -4,26 +4,26 @@ import Vtex from '../services/Vtex'
 export default function VtexMethods() {
 	const [msgDebug, setMsgDebug] = useState(null)
 
-  const getConfig = async () => {
-		setMsgDebug(Vtex.configs)
-  }
-  
+	const getConfig = async () => {
+		// setMsgDebug(Vtex.configs)
+	}
+
 	const showSession = async () => {
-		setMsgDebug(Vtex.configs.session)
-  }
-  
-  const updateSegments = async () => {
-    const newSegments = {
-      utmCampaign: 'testEitri',
-      utm_source: 'eitri-Teste',
-      'utm-medium': 'mobile'
-    }
-    try {
-      await Vtex.customer.saveUtmParams(newSegments)
-    } catch (e) {
-      console.error('Erro ao atualizar segmentos', e)
-    }
-		
+		// setMsgDebug(Vtex.configs.session)
+	}
+
+	const updateSegments = async () => {
+		const newSegments = {
+			'utmCampaign': 'testEitri',
+			'utm_source': 'eitri-Teste',
+			'utm-medium': 'mobile'
+		}
+		try {
+			await Vtex.customer.saveUtmParams(newSegments)
+		} catch (e) {
+			console.error('Erro ao atualizar segmentos', e)
+		}
+
 		setMsgDebug(newSegments)
 	}
 
@@ -45,8 +45,8 @@ export default function VtexMethods() {
 				justifyContent='center'
 				alignItems='center'
 				overflow='scroll'
-        width='100%'>
-        <Button
+				width='100%'>
+				<Button
 					wide
 					color='background-color'
 					onPress={getConfig}
@@ -57,9 +57,9 @@ export default function VtexMethods() {
 					color='background-color'
 					onPress={showSession}
 					label='Ver Session e segmentos'
-        />
-        
-        <Button
+				/>
+
+				<Button
 					wide
 					color='background-color'
 					onPress={updateSegments}
@@ -80,7 +80,8 @@ export default function VtexMethods() {
 								direction='column'
 								overflow='scroll'>
 								{Object.keys(msgDebug).map((item, index) => (
-									<Text key={item}
+									<Text
+										key={item}
 										display='flex'
 										borderWidth='hairline'
 										borderColor='primary-700'>
@@ -94,9 +95,10 @@ export default function VtexMethods() {
 									<View
 										gap={12}
 										direction='column'
-                      overflow='scroll'>
+										overflow='scroll'>
 										{msgDebug.map((item, index) => (
-                      <Text key={JSON.stringify(item)}
+											<Text
+												key={JSON.stringify(item)}
 												display='flex'
 												borderWidth='hairline'
 												borderColor='primary-700'>

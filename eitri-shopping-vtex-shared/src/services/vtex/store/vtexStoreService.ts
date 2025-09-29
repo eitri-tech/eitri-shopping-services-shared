@@ -1,5 +1,5 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Vtex from '../../Vtex'
+import App from '@/services/App'
 
 type AuthConfig = {
 	passwordAuthentication: boolean
@@ -17,7 +17,7 @@ type AuthConfig = {
 
 export default class VtexStoreService {
 	static async getLoginProviders(scope?: String, accountName?: String): Promise<AuthConfig> {
-		const { account } = Vtex.configs
+		const account = App.getAccount()
 		const response = await VtexCaller.get(
 			`api/vtexid/pub/authentication/providers?scope=${scope || account}&accountName=${accountName || account}`
 		)

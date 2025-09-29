@@ -7,7 +7,6 @@ import VtexWishlistService from './vtex/wishlist/vtexWishlistService'
 import VtexCaller from './vtex/_helpers/_vtexCaller'
 import VtexStoreService from './vtex/store/vtexStoreService'
 import App from './App'
-import GAService from './tracking/GAService'
 import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
 import VtexSessionService from './vtex/session/vtexSessionService'
 
@@ -78,24 +77,24 @@ export default class Vtex {
 		}
 	}
 
-	static tryAutoConfigure = async overwrites => {
-		return await App.tryAutoConfigure(overwrites)
-	}
-
 	static async updateSegmentSession(utmParams) {
 		if (!utmParams) return null
 
-		const configSegments = Vtex.configs?.segments || {}
+		const storeOptions = App.getStoreOptions()
+		const configSegments = storeOptions?.segments || {}
 
 		const segments = { ...configSegments, ...utmParams }
-		const session = await Vtex.buildSession(segments, true)
-		Vtex.configs.session = session
-		Vtex.configs.segments = segments
+		await Vtex.buildSession(segments, true)
 	}
 
 	static async refreshSegmentSession() {
 		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 		Vtex.updateSegmentSession(utmParams)
+	}
+
+	static async startSession(utmParams) {
+		await Vtex.buildSession()
+		await Vtex.buildSession(utmParams)
 	}
 
 	static catalog = VtexCatalogService

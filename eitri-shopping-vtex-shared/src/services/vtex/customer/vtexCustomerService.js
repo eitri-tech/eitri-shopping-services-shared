@@ -17,7 +17,7 @@ export default class VtexCustomerService {
 	static TIME_EXPIRES_UTM_PARAMS_IN_DAYS = 30
 
 	static async _startLogin(email) {
-		const { account } = Vtex.configs
+		const account = App.getAccount()
 
 		await VtexCaller.post(
 			`api/vtexid/pub/authentication/startlogin`,
@@ -110,9 +110,11 @@ export default class VtexCustomerService {
 	}
 
 	static async loginWithGoogle() {
+		const host = App.getHost()
+
 		let webFlowRes = await Eitri.webFlow.start({
-			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
-			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
+			startUrl: `${host}/login?returnUrl=/account`,
+			stopPattern: `${host}/api/vtexid/oauth/finish`,
 			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
 			keepLoadingScreenUntilDomainChange: true,
@@ -150,9 +152,11 @@ export default class VtexCustomerService {
 	}
 
 	static async loginWithFacebook() {
+		const host = App.getHost()
+
 		let webFlowRes = await Eitri.webFlow.start({
-			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
-			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
+			startUrl: `${host}/login?returnUrl=/account`,
+			stopPattern: `${host}/api/vtexid/oauth/finish`,
 			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
 			keepLoadingScreenUntilDomainChange: true,
@@ -334,7 +338,7 @@ export default class VtexCustomerService {
 		const body = {
 			query: 'query Profile @context(scope: "private", sender: "vtex.my-account@1.29.0") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate } }'
 		}
-
+		const host = App.getHost()
 		const result = await VtexCaller.post(
 			`_v/private/graphql/v1`,
 			body,
@@ -344,7 +348,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			host
 		)
 
 		return result?.data
@@ -357,7 +361,7 @@ export default class VtexCustomerService {
 				profile: profile
 			}
 		}
-
+		const host = App.getHost()
 		const result = await VtexCaller.post(
 			`_v/private/graphql/v1`,
 			body,
@@ -367,7 +371,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			host
 		)
 
 		return result?.data

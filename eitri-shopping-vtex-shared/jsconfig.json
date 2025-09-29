@@ -2,20 +2,20 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "eitri-luminus": [
-        "/Users/calindra/.eitri/eitri-shopping-vtex-shared/node_modules/eitri-app-components"
+      "@/*": [
+        "./src/*"
+      ],
+      "react": [
+        "/Users/calindra/.eitri/eitri-shopping-vtex-shared/node_modules/react"
       ],
       "react/jsx-runtime": [
         "/Users/calindra/.eitri/eitri-shopping-vtex-shared/node_modules/react/jsx-dev-runtime"
       ],
-      "@/*": [
-        "./src/*"
+      "eitri-luminus": [
+        "/Users/calindra/.eitri/eitri-shopping-vtex-shared/node_modules/eitri-app-components"
       ],
       "eitri-bifrost": [
         "/Users/calindra/.eitri/eitri-shopping-vtex-shared/node_modules/eitri-bifrost"
-      ],
-      "react": [
-        "/Users/calindra/.eitri/eitri-shopping-vtex-shared/node_modules/react"
       ]
     },
     "target": "ESNext",
