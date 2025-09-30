@@ -4,6 +4,7 @@ import Logger from '../../Logger'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import Vtex from '../../Vtex'
 import getSalesChannel from '../_helpers/getSalesChannel'
+import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -12,41 +13,32 @@ export default class VtexCartService {
 	static async assertMarketingData(cart) {
 		try {
 			const { segments, marketingTag } = Vtex.configs
-			const currentMarketingTags = { ...cart?.marketingData }
-			const payload = {}
+			const currentMarketingTags = cart?.marketingData?.marketingTags || []
+			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 
-			const keys = [
-				{ segmentKey: 'utm_source', tagKey: 'utmSource' },
-				{ segmentKey: 'utm_medium', tagKey: 'utmMedium' },
-				{ segmentKey: 'utm_campaign', tagKey: 'utmCampaign' },
-				{ segmentKey: 'utm_ipage', tagKey: 'utmipage' },
-				{ segmentKey: 'utmi_part', tagKey: 'utmiPart' },
-				{ segmentKey: 'utmi_campaign', tagKey: 'utmiCampaign' }
-			]
-
-			keys.forEach(({ segmentKey, tagKey }) => {
-				if (segments?.[segmentKey] || currentMarketingTags?.[tagKey]) {
-					if (segments?.[segmentKey] !== currentMarketingTags?.[tagKey]) {
-						payload[tagKey] = segments?.[segmentKey]
-						delete currentMarketingTags[tagKey]
-					}
-				}
-			})
-
-			if (!currentMarketingTags?.marketingTags?.includes(marketingTag)) {
-				payload.marketingTags = [marketingTag]
-				delete currentMarketingTags.marketingTags
+			const mergedSegments = {
+				...segments,
+				...utmParams
 			}
 
-			if (Object.keys(payload).length > 0) {
-				const toUpdate = { ...currentMarketingTags, ...payload }
-				Logger.info('===> Atualizando marketing data no carrinho', toUpdate)
+			currentMarketingTags.some(tag => tag === marketingTag) || currentMarketingTags.push(marketingTag)
 
-				await VtexCaller.post(
-					`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`,
-					toUpdate
-				)
+			const marketingData = {
+				utmSource: mergedSegments?.utm_source,
+				utmMedium: mergedSegments?.utm_medium,
+				utmCampaign: mergedSegments?.utm_campaign,
+				utmipage: mergedSegments?.utmi_page,
+				utmiPart: mergedSegments?.utmi_part,
+				utmiCampaign: mergedSegments?.utmi_campaign,
+				marketingTags: currentMarketingTags
 			}
+
+			Logger.info('===> Atualizando marketing data no carrinho', marketingData)
+
+			await VtexCaller.post(
+				`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`,
+				marketingData
+			)
 		} catch (e) {
 			console.error('Erro ao adicionar marketing data', e)
 		}
