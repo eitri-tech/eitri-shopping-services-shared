@@ -1,6 +1,12 @@
 import Vtex from '../services/Vtex'
 
 export default function CheckoutMethods() {
+	const cleanCart = async () => {
+		console.log('clearCart')
+		const cart = await Vtex.cart.clearCart()
+		console.log('carrinho=====>', cart.orderFormId)
+	}
+
 	const getCart = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 		console.log('carrinho=====>', cart.orderFormId)
@@ -9,7 +15,7 @@ export default function CheckoutMethods() {
 	const addUser = async () => {
 		try {
 			await Vtex.checkout.addUserData({
-				email: 'kexibod96900@cronack.com',
+				email: 'wagnerfq@gmail.com',
 				firstName: 'Teste',
 				lastName: 'Teste',
 				documentType: 'cpf',
@@ -68,32 +74,34 @@ export default function CheckoutMethods() {
 	}
 
 	const selectPayment = async () => {
-		const cart = await Vtex.cart.getCurrentOrCreateCart()
-
-		const paymentSystem = 2
-		const installmentsNumber = 3
-
-		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
-		const installmentOption = cart?.paymentData.installmentOptions.find(i => i.paymentSystem === pay.id.toString())
-		const installment = installmentOption.installments.find(i => i.count === installmentsNumber)
-
-		const payment = {
-			paymentSystem: pay.id,
-			paymentSystemName: pay.name,
-			group: pay.groupName,
-			installments: installment.count,
-			installmentsInterestRate: installment.interestRate,
-			installmentsValue: installment.value,
-			value: installment.total,
-			referenceValue: cart.value,
-			hasDefaultBillingAddress: true
-		}
-		const giftCard = {
-			redemptionCode: '',
-			inUse: true
-		}
-
 		try {
+			const cart = await Vtex.cart.getCurrentOrCreateCart()
+
+			const paymentSystem = 2
+			const installmentsNumber = 1
+
+			const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
+			const installmentOption = cart?.paymentData.installmentOptions.find(
+				i => i.paymentSystem === pay.id.toString()
+			)
+			const installment = installmentOption.installments.find(i => i.count === installmentsNumber)
+
+			const payment = {
+				paymentSystem: pay.id,
+				paymentSystemName: pay.name,
+				group: pay.groupName,
+				installments: installment.count,
+				installmentsInterestRate: installment.interestRate,
+				installmentsValue: installment.value,
+				value: installment.total,
+				referenceValue: cart.value,
+				hasDefaultBillingAddress: true
+			}
+			const giftCard = {
+				redemptionCode: '',
+				inUse: true
+			}
+
 			const result = await Vtex.checkout.selectPaymentOption({
 				payments: [payment],
 				giftCards: []
@@ -153,6 +161,12 @@ export default function CheckoutMethods() {
 				justifyContent='center'
 				alignItems='center'
 				width='100%'>
+				<Button
+					wide
+					color='background-color'
+					onPress={cleanCart}
+					label='Limpar carrinho'
+				/>
 				<Button
 					wide
 					color='background-color'

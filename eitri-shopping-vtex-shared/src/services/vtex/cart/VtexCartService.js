@@ -6,6 +6,7 @@ import Vtex from '../../Vtex'
 import getSalesChannel from '../_helpers/getSalesChannel'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import Eitri from 'eitri-bifrost'
+import CookieService from '@/services/CookieService'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -42,41 +43,19 @@ export default class VtexCartService {
 				segments[key] = session?.namespaces?.public[key].value
 			})
 
-			const currentMarketingTags = { ...cart?.marketingData }
-			const payload = {}
-
-			const keys = [
-				{ segmentKey: 'utm_source', tagKey: 'utmSource' },
-				{ segmentKey: 'utm_medium', tagKey: 'utmMedium' },
-				{ segmentKey: 'utm_campaign', tagKey: 'utmCampaign' },
-				{ segmentKey: 'utm_ipage', tagKey: 'utmipage' },
-				{ segmentKey: 'utmi_part', tagKey: 'utmiPart' },
-				{ segmentKey: 'utmi_campaign', tagKey: 'utmiCampaign' }
-			]
-
-			keys.forEach(({ segmentKey, tagKey }) => {
-				if (segments?.[segmentKey] || currentMarketingTags?.[tagKey]) {
-					if (segments?.[segmentKey] !== currentMarketingTags?.[tagKey]) {
-						payload[tagKey] = segments?.[segmentKey]
-						delete currentMarketingTags[tagKey]
-					}
-				}
-			})
-
-			if (!currentMarketingTags?.marketingTags?.includes(marketingTag)) {
-				payload.marketingTags = [marketingTag]
-				delete currentMarketingTags.marketingTags
+			const payload = {
+				utmSource: segments?.utm_source,
+				utmMedium: segments?.utm_medium,
+				utmCampaign: segments?.utm_campaign,
+				utmipage: segments?.utmi_page,
+				utmiPart: segments?.utmi_part,
+				utmiCampaign: segments?.utmi_campaign,
+				marketingTags: [marketingTag]
 			}
 
-			if (Object.keys(payload).length > 0) {
-				const toUpdate = { ...currentMarketingTags, ...payload }
-				Logger.info('===> Atualizando marketing data no carrinho', toUpdate)
+			Logger.info('===> Atualizando marketing data no carrinho', payload)
 
-				await VtexCaller.post(
-					`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`,
-					toUpdate
-				)
-			}
+			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, payload)
 		} catch (e) {
 			console.error('Erro ao adicionar marketing data', e)
 		}
@@ -103,10 +82,12 @@ export default class VtexCartService {
 	static async generateNewCart() {
 		try {
 			console.log('Gerando novo carrinho')
-			const path = 'api/checkout/pub/orderForm'
+			const path = 'api/checkout/pub/orderForm?forceNewCart=true'
 			const response = await VtexCaller.get(path)
 
 			const cart = response.data
+
+			await VtexSessionService.createSession()
 
 			VtexCartService.assertMarketingData(cart)
 

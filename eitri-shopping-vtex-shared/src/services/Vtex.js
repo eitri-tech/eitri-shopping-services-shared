@@ -51,7 +51,7 @@ export default class Vtex {
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		Vtex.buildSession(remoteConfig)
+		// Vtex.buildSession(remoteConfig)
 
 		Vtex.customer.executeRefreshToken()
 	}

@@ -1,6 +1,5 @@
 import Logger from '../../Logger'
 import VtexCaller from '../_helpers/_vtexCaller'
-import extractCookies from '../_helpers/extractCookies'
 import Eitri from 'eitri-bifrost'
 import App from '../../App'
 import Vtex from '../../Vtex'
@@ -35,8 +34,6 @@ type PaymentOptions = {
 type StartTransactionReturn = {
 	id: string
 	orderGroup: string
-	Vtex_CHKO_Auth: string
-	CheckoutDataAccess: string
 	merchantTransactionId: string
 	merchantTransactionName: string
 }
@@ -97,14 +94,9 @@ export default class VtexPaymentService {
 
 			const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
 
-			const Vtex_CHKO_Auth = extractCookies(result, 'Vtex_CHKO_Auth')
-			const CheckoutDataAccess = extractCookies(result, 'CheckoutDataAccess=VTEX_CHK_Order_Auth')
-
 			const dataReturn = {
 				id,
 				orderGroup,
-				Vtex_CHKO_Auth,
-				CheckoutDataAccess,
 				merchantTransactionId: merchantTransaction?.id,
 				merchantTransactionName: merchantTransaction?.merchantName
 			}
@@ -174,9 +166,7 @@ export default class VtexPaymentService {
 				{
 					headers: {
 						'accept': 'application/json, text/javascript, */*; q=0.01',
-						'content-type': 'application/json',
-						'user-agent':
-							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
+						'content-type': 'application/json'
 					}
 				}
 			)
@@ -196,10 +186,7 @@ export default class VtexPaymentService {
 			await VtexCaller.post(`/api/checkout/pub/gatewayCallback/${startTransactionReturn.orderGroup}`, null, {
 				headers: {
 					'accept': 'application/json, text/javascript, */*; q=0.01',
-					'content-type': 'application/json',
-					'user-agent':
-						'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
-					'Cookie': `Vtex_CHKO_Auth=${startTransactionReturn.Vtex_CHKO_Auth};CheckoutDataAccess=VTEX_CHK_Order_Auth=${startTransactionReturn.CheckoutDataAccess}`
+					'content-type': 'application/json'
 				}
 			})
 

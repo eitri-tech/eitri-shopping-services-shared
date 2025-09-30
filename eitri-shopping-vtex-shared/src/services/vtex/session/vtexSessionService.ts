@@ -7,8 +7,6 @@ type Session = {
 }
 
 export default class VtexSessionService {
-	static SESSION_KEY = 'session'
-
 	static async createSession(payload: any = {}): Promise<Session> {
 		const response = await VtexCaller.post(`api/sessions`, payload)
 		return response.data
@@ -27,13 +25,5 @@ export default class VtexSessionService {
 	static async getSegments(): Promise<any> {
 		const response = await VtexCaller.patch(`api/segments`)
 		return response.data
-	}
-
-	static async saveLocalSession(payload: any): Promise<any> {
-		await StorageService.setStorageJSON(VtexSessionService.SESSION_KEY, payload)
-	}
-
-	static async getLocalSession(): Promise<any> {
-		await StorageService.getStorageJSON(VtexSessionService.SESSION_KEY)
 	}
 }

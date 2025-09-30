@@ -19,12 +19,14 @@ export default class CookieService {
 	static setCookiesFromResponse = async (response: any) => {
 		try {
 			const rawCookieStr = response.headers['set-cookie']
+
 			if (!rawCookieStr) return
 
 			const stored = await this.getStoredCookies()
 
 			// Divide por vírgula mas garante que não vai quebrar datas de expires
-			const cookies = rawCookieStr.match(/[^,]+=[^;]+;[^,]*/g) || []
+			const cookies = rawCookieStr.split(/,(?=[^ ;]+=)/) || []
+
 			cookies.forEach((cookieStr: string) => {
 				const parts = cookieStr.split(';').map(p => p.trim())
 				const [cookieName, ...cookieValueParts] = parts[0].split('=')
@@ -55,8 +57,7 @@ export default class CookieService {
 					stored[cookieName.trim()] = cookieData
 				}
 			})
-
-			// console.log('stored', stored)
+			console.log('Cookies setados', stored)
 			await StorageService.setStorageJSON(CookieService.COOKIE_KEY, stored)
 		} catch (e) {
 			console.error('Erro ao setar cookies', e)
@@ -94,7 +95,6 @@ export default class CookieService {
 	static readonly getCookieHeader = async (): Promise<string> => {
 		try {
 			const cookies = await CookieService.getAllCookies()
-			//console.log('cookies', cookies)
 			return Object.entries(cookies)
 				.map(([k, v]) => `${k}=${v}`)
 				.join('; ')
@@ -109,6 +109,35 @@ export default class CookieService {
 			await StorageService.removeItem(CookieService.COOKIE_KEY)
 		} catch (e) {
 			console.error('Erro ao limpar cookies', e)
+		}
+	}
+
+	static deleteCookie = async (name: string): Promise<void> => {
+		if (!name) return
+		try {
+			const stored = await this.getStoredCookies()
+			if (stored && Object.prototype.hasOwnProperty.call(stored, name)) {
+				delete stored[name]
+				await StorageService.setStorageJSON(CookieService.COOKIE_KEY, stored)
+			}
+		} catch (e) {
+			console.error('Erro ao deletar cookie', name, e)
+		}
+	}
+
+	static deleteAuthCookies = async (): Promise<void> => {
+		try {
+			const stored = await this.getStoredCookies()
+			const names = Object.keys(stored).filter(
+				n => n.startsWith('VtexIdclientAutCookie') || n.startsWith('Vtex_CHKO_Auth')
+			)
+			if (names.length === 0) return
+			for (const name of names) {
+				delete stored[name]
+			}
+			await StorageService.setStorageJSON(CookieService.COOKIE_KEY, stored)
+		} catch (e) {
+			console.error('Erro ao deletar cookies de autenticação VTEX', e)
 		}
 	}
 }

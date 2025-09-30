@@ -1,6 +1,7 @@
 import App from '../services/App'
 import Eitri from 'eitri-bifrost'
 import { Vtex } from '../export'
+import CookieService from '@/services/CookieService'
 
 export default function Home() {
 	useEffect(() => {
@@ -19,7 +20,20 @@ export default function Home() {
 			verbose: false,
 			gaVerbose: false
 		})
+		await Vtex.session.createSession()
+		await Vtex.session.updateSession({
+			public: {
+				utm_source: {
+					value: ''
+				},
+				utm_campaign: {
+					value: 'test'
+				}
+			}
+		})
+		console.log('Session:', await CookieService.getAllCookies())
 		navigateTo('')
+
 		// await Vtex.cart.setOrderFormId('c9bcc5e093f9457382c5079efd04f3c7')
 	}
 

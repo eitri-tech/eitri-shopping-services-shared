@@ -36,8 +36,6 @@ export default class VtexCustomerService {
 	}
 
 	static async loginWithEmailAndPassword(email, password) {
-		await CookieService.clearAllCookies()
-
 		await VtexCustomerService._startLogin(email)
 
 		const loginRes = await VtexCaller.post(
@@ -57,14 +55,12 @@ export default class VtexCustomerService {
 		const { data } = loginRes
 		const { authStatus } = data
 
-		await VtexSessionService.createSession()
+		await VtexSessionService.updateSession()
 
 		return authStatus
 	}
 
 	static async sendAccessKeyByEmail(email) {
-		await CookieService.clearAllCookies()
-
 		await VtexCustomerService._startLogin(email)
 
 		const loginRes = await VtexCaller.post(
@@ -104,7 +100,7 @@ export default class VtexCustomerService {
 		const { data } = loginRes
 		const { authStatus } = data
 
-		await VtexSessionService.createSession()
+		await VtexSessionService.updateSession()
 
 		return authStatus
 	}
@@ -223,20 +219,16 @@ export default class VtexCustomerService {
 			{
 				headers: {
 					'Content-Type': 'multipart/form-data',
-					'accept': '*/*',
-					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
+					'accept': '*/*'
 				}
 			}
 		)
-
-		const refreshToken = extractCookies(loginRes, 'vid_rt')
 
 		const { data } = loginRes
 		const { authStatus } = data
 
 		if (authStatus === 'Success') {
 			await VtexCustomerService.setCustomerData('email', email)
-			await VtexCustomerService._processPostLogin(data, refreshToken)
 		}
 
 		return authStatus
@@ -255,10 +247,11 @@ export default class VtexCustomerService {
 	}
 
 	static async logout() {
-		CookieService.clearAllCookies()
+		await CookieService.deleteAuthCookies()
 		VtexCustomerService.notifyLogoutToExposedApis()
-		StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
-		StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
+		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		await VtexSessionService.updateSession()
 		return
 	}
 
@@ -295,7 +288,8 @@ export default class VtexCustomerService {
 
 	static async isLoggedIn() {
 		const session = await VtexSessionService.getSession()
-		return !!session?.namespaces?.profile?.isAuthenticated?.value
+		console.log('isLoggedIn', session)
+		return Boolean(session?.namespaces?.profile?.isAuthenticated?.value === 'true')
 	}
 
 	static async cancelOrder(orderId, payload = {}) {
