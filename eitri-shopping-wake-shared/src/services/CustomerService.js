@@ -94,7 +94,7 @@ export default class CustomerService {
 				)
 			}
 
-			return response
+			return response?.customerSimpleLoginVerifyAnwser
 		} catch (e) {
 			console.error('[SHARED] [customerSimpleLoginVerifyAnwser] Erro simple login customer', e)
 			throw e
