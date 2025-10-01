@@ -73,9 +73,9 @@ export default class CustomerService {
 				input: email
 			})
 
-			return response
+			return response?.data
 		} catch (e) {
-			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+			console.error('[SHARED] [customerSimpleLoginStart] Erro ao iniciar', e)
 			throw e
 		}
 	}
