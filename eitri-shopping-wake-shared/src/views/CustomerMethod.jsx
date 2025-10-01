@@ -57,7 +57,7 @@ export default function CustomerMethod() {
 	}
 
 	const simpleLogin = async () => {
-		const result = await WakeService.customer.customerSimpleLoginStart('wagnerfq@gmail.com')
+		const result = await WakeService.customer.customerSimpleLoginStart('lehono7648@gddcorp.com')
 		console.log('create >>', result)
 	}
 
@@ -71,13 +71,11 @@ export default function CustomerMethod() {
 	}
 
 	const completeRegistration = async () => {
-		const token =
-			'gCxlWVnAbxXE9RIcSjWgw+kV/lwtXjdui94PFM6Rzzniiqm0TqVIcBAK1hHmM+b3M8Ey5TPxyfez2Gc5Ejm5yT1ljv5q64P7bLngL30VUxovIrwQ3rx53i22d2mT/EtVr+B6v2l+0pY/CpkUkz4rsRqf5ghNmGCxrR1PYYboFmMsyMzkUFlWkkwBUOG7LZhb4PkE0Putlzrw1bUEtSowgGsMYemMQ16Whu/3X1mXanLe5L6Pko78B6OG2A3+CLJf5fnDnOt6wulO68fUP5jiOA=='
 		const customer = {
 			birthDate: '1986-08-07T00:00:00',
-			cpf: '582.277.180-78',
+			cpf: '133.111.360-12',
 			customerType: 'PERSON',
-			email: 'neposod158@nozamas.com',
+			email: 'lehono7648@gddcorp.com',
 			fullName: 'Alice Agatha da Cunha',
 			gender: 'MALE',
 			newsletter: false,
@@ -86,7 +84,7 @@ export default function CustomerMethod() {
 			primaryPhoneAreaCode: '97',
 			primaryPhoneNumber: '98775-1482'
 		}
-		const result = await WakeService.customer.customerCompletePartialRegistration(token, customer)
+		const result = await WakeService.customer.customerCompletePartialRegistration(customer)
 		console.log('create >>', result)
 	}
 
