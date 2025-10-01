@@ -79,6 +79,47 @@ query ($customerAccessToken:String!) {
   }
 }`
 
+export const queryCustomerSimple = `
+query ($customerAccessToken:String!) {
+  customer(customerAccessToken:$customerAccessToken) {
+    addresses {
+      address
+      address2
+      addressDetails
+      addressNumber
+      cep
+      city
+      country
+      email
+      id
+      neighborhood
+      phone
+      receiverName
+      referencePoint
+      state
+    }
+    birthDate
+    phoneNumber
+    mobilePhoneNumber
+    businessPhoneNumber
+    customerId
+    customerName
+    email
+    gender
+    cpf
+    cnpj
+    companyName
+    creationDate
+    customerType
+    companyName
+    checkingAccountBalance
+    partners { 
+      name
+      partnerAccessToken
+    }
+  }
+}`
+
 export const queryCreateCustomer = `
 mutation ($input: CustomerCreateInput) {
   data: customerCreate(input: $input) {

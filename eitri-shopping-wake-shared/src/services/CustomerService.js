@@ -19,7 +19,8 @@ import {
 	querySimpleLogin,
 	queryCustomerOrders,
 	queryCustomerUpdate,
-	querySimpleLoginVerifyAnwser
+	querySimpleLoginVerifyAnwser,
+	queryCustomerSimple
 } from '../queries/Customer'
 import { Wake } from '../export'
 import StoreService from '@/services/StoreService'
@@ -172,14 +173,19 @@ export default class CustomerService {
 
 	static async getCustomer() {
 		try {
+			const accessTokenData = await CustomerService.getCustomerAccessTokenData()
+
 			const savedToken = await CustomerService.getCustomerToken()
-			if (!savedToken) {
+			if (!accessTokenData) {
 				return null
 			}
 
-			const response = await GraphqlService.query(queryCustomer, {
-				customerAccessToken: savedToken
-			})
+			const response = await GraphqlService.query(
+				accessTokenData.type === 'SIMPLE' ? queryCustomerSimple : queryCustomer,
+				{
+					customerAccessToken: savedToken
+				}
+			)
 
 			return response
 		} catch (e) {
