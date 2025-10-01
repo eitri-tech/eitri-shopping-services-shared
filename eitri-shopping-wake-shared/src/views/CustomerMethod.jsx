@@ -2,8 +2,6 @@ import Eitri from 'eitri-bifrost'
 import WakeService from '../services/WakeService'
 
 export default function CustomerMethod() {
-	const [loading, setLoading] = useState(true)
-	const [fullCart, setFullCart] = useState(null)
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [logged, setLogged] = useState(false)
@@ -59,7 +57,16 @@ export default function CustomerMethod() {
 	}
 
 	const simpleLogin = async () => {
-		const result = await WakeService.customer.customerSimpleLoginStart('neposod158@nozamas.com')
+		const result = await WakeService.customer.customerSimpleLoginStart('wagnerfq@gmail.com')
+		console.log('create >>', result)
+	}
+
+	const simpleLoginVerify = async () => {
+		const result = await WakeService.customer.customerSimpleLoginVerifyAnwser(
+			'wagnerfq@gmail.com',
+			'c428d3c3-e891-fd12-d696-2a5f9d810b11',
+			'7d182dd7-1ef4-ea10-7d9f-cdc7f5909205'
+		)
 		console.log('create >>', result)
 	}
 
@@ -227,6 +234,21 @@ export default function CustomerMethod() {
 						color='background-color'
 						onPress={simpleLogin}
 						label={`Simple Login`}
+					/>
+				</View>
+
+				<View
+					padding='large'
+					direction='column'
+					justifyContent='center'
+					alignItems='center'
+					width='100%'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						onPress={simpleLoginVerify}
+						label={`Simple Login Verificação`}
 					/>
 				</View>
 

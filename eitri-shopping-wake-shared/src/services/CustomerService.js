@@ -18,7 +18,8 @@ import {
 	queryCustomerPasswordChange,
 	querySimpleLogin,
 	queryCustomerOrders,
-	queryCustomerUpdate
+	queryCustomerUpdate,
+	querySimpleLoginVerifyAnwser
 } from '../queries/Customer'
 import { Wake } from '../export'
 import StoreService from '@/services/StoreService'
@@ -75,6 +76,27 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+			throw e
+		}
+	}
+
+	static async customerSimpleLoginVerifyAnwser(email, questionId, answerId) {
+		try {
+			const response = await GraphqlService.query(querySimpleLoginVerifyAnwser, {
+				input: email,
+				questionId,
+				answerId
+			})
+
+			if (response?.customerSimpleLoginVerifyAnwser?.customerAccessToken) {
+				await CustomerService.saveCustomerTokenOnStorage(
+					response?.customerSimpleLoginVerifyAnwser?.customerAccessToken
+				)
+			}
+
+			return response?.customerSimpleLoginVerifyAnwser
+		} catch (e) {
+			console.error('[SHARED] [customerSimpleLoginVerifyAnwser] Erro simple login customer', e)
 			throw e
 		}
 	}
@@ -195,6 +217,11 @@ export default class CustomerService {
 		} else {
 			return loginData.token
 		}
+	}
+
+	static async getCustomerAccessTokenData() {
+		const loginData = await StorageService.getStorageJSON(CustomerService.STORAGE_USER_TOKEN_KEY)
+		return loginData
 	}
 
 	static async createAddress(address) {
