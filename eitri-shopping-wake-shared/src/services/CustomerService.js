@@ -73,6 +73,10 @@ export default class CustomerService {
 				input: email
 			})
 
+			if (response?.data?.type === 'NEW' && response?.data?.customerAccessToken) {
+				await CustomerService.saveCustomerTokenOnStorage(response?.data?.customerAccessToken)
+			}
+
 			return response?.data
 		} catch (e) {
 			console.error('[SHARED] [customerSimpleLoginStart] Erro ao iniciar', e)
@@ -120,14 +124,23 @@ export default class CustomerService {
 		}
 	}
 
-	static async customerCompletePartialRegistration(customerAccessToken, input) {
+	static async customerCompletePartialRegistration(input) {
+		const savedToken = await CustomerService.getCustomerToken()
+		if (!savedToken) {
+			return null
+		}
+
 		try {
 			const response = await GraphqlService.query(queryCustomerCompletePartialRegistration, {
-				customerAccessToken,
+				customerAccessToken: savedToken,
 				input
 			})
 
-			return response
+			if (response.customerCompletePartialRegistration) {
+				await CustomerService.saveCustomerTokenOnStorage(response.customerCompletePartialRegistration)
+			}
+
+			return response.customerCompletePartialRegistration
 		} catch (e) {
 			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
 			throw e
