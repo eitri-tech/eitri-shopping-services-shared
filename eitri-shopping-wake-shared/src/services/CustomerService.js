@@ -74,7 +74,7 @@ export default class CustomerService {
 				input: email
 			})
 
-			if (response?.data?.type === 'NEW' && response?.data?.customerAccessToken) {
+			if (response?.data?.type !== 'NEW' && response?.data?.customerAccessToken) {
 				await CustomerService.saveCustomerTokenOnStorage(response?.data?.customerAccessToken)
 			}
 
@@ -125,15 +125,10 @@ export default class CustomerService {
 		}
 	}
 
-	static async customerCompletePartialRegistration(input) {
-		const savedToken = await CustomerService.getCustomerToken()
-		if (!savedToken) {
-			return null
-		}
-
+	static async customerCompletePartialRegistration(newCustomerAccessToken, input) {
 		try {
 			const response = await GraphqlService.query(queryCustomerCompletePartialRegistration, {
-				customerAccessToken: savedToken,
+				customerAccessToken: newCustomerAccessToken,
 				input
 			})
 

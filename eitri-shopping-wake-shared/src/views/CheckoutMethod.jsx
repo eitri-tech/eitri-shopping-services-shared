@@ -165,6 +165,15 @@ export default function CheckoutMethod() {
 		}
 	}
 
+	const checkoutClone = async () => {
+		try {
+			const response = await WakeService.checkout.checkoutClone()
+			console.log('response checkoutClone >>', response)
+		} catch (e) {
+			console.error('checkoutClone', e)
+		}
+	}
+
 	const back = () => {
 		Eitri.navigation.back()
 	}
@@ -241,6 +250,10 @@ export default function CheckoutMethod() {
 		{
 			label: 'Remover metadados',
 			onPress: removeMetadata
+		},
+		{
+			label: 'Clone checkout',
+			onPress: checkoutClone
 		}
 	]
 

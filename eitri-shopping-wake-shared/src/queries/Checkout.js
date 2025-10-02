@@ -369,3 +369,10 @@ mutation($cId: Uuid!){
     ${checkoutModel}
   }
 }`
+
+export const queryCheckoutClone = `
+mutation($cId: Uuid!){
+  checkoutClone (checkoutId: $cId){
+    ${checkoutModel}
+  }
+}`

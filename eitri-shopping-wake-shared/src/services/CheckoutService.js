@@ -3,6 +3,7 @@ import {
 	queryAddCheckoutMetadata,
 	queryCheckoutAddCoupon,
 	queryCheckoutAddressAssociate,
+	queryCheckoutClone,
 	queryCheckoutComplete,
 	queryCheckoutCustomerAssociate,
 	queryCheckoutPartnerAssociate,
@@ -352,6 +353,25 @@ export default class CheckoutService {
 			})
 
 			return response
+		} catch (e) {
+			console.error('[SHARED] [checkoutPartnerDisassociate] Erro ao desassociar parceiro no carrinho', e)
+			throw e
+		}
+	}
+
+	static async checkoutClone() {
+		try {
+			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+			if (!cartId) {
+				return null
+			}
+
+			const response = await GraphqlService.query(queryCheckoutClone, {
+				cId: cartId
+			})
+
+			return response?.checkoutClone
 		} catch (e) {
 			console.error('[SHARED] [checkoutPartnerDisassociate] Erro ao desassociar parceiro no carrinho', e)
 			throw e
