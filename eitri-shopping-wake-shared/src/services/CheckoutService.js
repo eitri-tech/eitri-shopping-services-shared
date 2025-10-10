@@ -135,25 +135,6 @@ export default class CheckoutService {
 		}
 	}
 
-	static async shippingQuotesByZipCode(zipCode) {
-		try {
-			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
-
-			if (!cartId) {
-				return null
-			}
-
-			const response = await GraphqlService.query(queryShippingQuotes, {
-				checkoutId: cartId
-			})
-
-			return response
-		} catch (e) {
-			console.error('[SHARED] [shippingQuotes] Erro ao buscar frete', e)
-			throw e
-		}
-	}
-
 	static async checkoutSelectShippingQuote(shippingQuoteId, additionalInformation) {
 		try {
 			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
