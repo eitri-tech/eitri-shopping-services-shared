@@ -201,8 +201,24 @@ mutation($customerAccessToken: String!, $addressId: ID!, $checkoutId: Uuid!) {
 }`
 
 export const queryShippingQuotes = `
-query($checkoutId: Uuid!) {
-  shippingQuotes(checkoutId: $checkoutId, useSelectedAddress: true) {
+query (
+  $checkoutId: Uuid
+  $useSelectedAddress: Boolean
+  $cep: CEP
+  $productVariantId: Long
+  $products: [productsInput]
+  $kits: [kitsInput]
+  $quantity: Int
+) {
+  shippingQuotes(
+    checkoutId: $checkoutId
+    useSelectedAddress: $useSelectedAddress
+    cep: $cep
+    productVariantId: $productVariantId
+    products: $products
+    kits: $kits
+    quantity: $quantity
+  ) {
     deadline
     deadlineInHours
     distributionCenterId
