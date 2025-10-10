@@ -75,17 +75,58 @@ export default class CheckoutService {
 		}
 	}
 
-	static async shippingQuotes(useSelectedAddress = true) {
+	/**
+	 * Obtém as cotações de frete (shipping quotes) a partir do checkout e dados de entrega.
+	 *
+	 * @async
+	 * @function shippingQuotes
+	 * @param {Object} options - Parâmetros opcionais para cálculo de frete.
+	 * @param {string} [options.cep] - CEP para cálculo do frete (string simples, ex: "01310930").
+	 * @param {number} [options.productVariantId] - ID da variação do produto (caso seja um único produto).
+	 * @param {number} [options.quantity] - Quantidade do produto (usado com `productVariantId`).
+	 * @param {Array<{productVariantId: number, quantity: number}>} [options.products] - Lista de produtos para cotação.
+	 * @param {Array<Object>} [options.kits] - Lista de kits (caso aplicável).
+	 *
+	 * @returns {Promise<Object|null>} Retorna a resposta da API GraphQL com as opções de frete, ou `null` se não houver `cartId`.
+	 *
+	 * @throws {Error} Caso ocorra erro na requisição GraphQL.
+	 *
+	 * @example
+	 * const quotes = await ShippingService.shippingQuotes({
+	 *   cep: "01310930",
+	 *   products: [{ productVariantId: 12345, quantity: 1 }]
+	 * })
+	 */
+	static async shippingQuotes(options = {}) {
 		try {
 			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
 			if (!cartId) {
+				console.warn('[SHARED] [shippingQuotes] Nenhum cartId encontrado')
 				return null
 			}
 
-			const response = await GraphqlService.query(queryShippingQuotes, {
-				checkoutId: cartId
-			})
+			const { cep, productVariantId, quantity, products, kits, checkoutId } = options
+
+			// Se houver produtos, kits ou productVariantId, ignora o checkoutId
+			const hasDirectQuote = !!(products?.length || kits?.length || productVariantId)
+
+			const variables = {
+				checkoutId: hasDirectQuote ? null : checkoutId || cartId,
+				cep: cep || null,
+				useSelectedAddress: !cep,
+				productVariantId: productVariantId || null,
+				quantity: quantity || null,
+				products: products || null,
+				kits: kits || null
+			}
+
+			const response = await GraphqlService.query(queryShippingQuotes, variables)
+
+			if (!response) {
+				console.warn('[SHARED] [shippingQuotes] Resposta vazia da API')
+				return null
+			}
 
 			return response
 		} catch (e) {

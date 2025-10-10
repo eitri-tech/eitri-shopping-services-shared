@@ -55,6 +55,7 @@ export default function CheckoutMethod() {
 	let shippingQuote = ''
 	const getShippingQuotes = async () => {
 		const response = await WakeService.checkout.shippingQuotes()
+		console.log('response >>', response)
 		shippingQuote = response.shippingQuotes[0].shippingQuoteId
 		console.log('response >>', response)
 	}
