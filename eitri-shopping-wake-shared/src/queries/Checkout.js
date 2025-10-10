@@ -117,6 +117,14 @@ const checkoutModel = `
         name
         number
       }
+      type
+      displayType
+      saveCard
+      minInstallmentValue
+      clickToPayDiscountValue
+      clickToPayPercentOfDiscount
+      hasClickToPay
+      value
     }
     updateDate
     completed
