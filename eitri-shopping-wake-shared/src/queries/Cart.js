@@ -117,6 +117,14 @@ const checkoutModel = `
         name
         number
       }
+      type
+      displayType
+      saveCard
+      minInstallmentValue
+      clickToPayDiscountValue
+      clickToPayPercentOfDiscount
+      hasClickToPay
+      value
     }
     updateDate
     completed
@@ -177,32 +185,32 @@ const checkoutModel = `
       type
       value
     }
-`;
+`
 
 export const queryGetCheckout = `
 query Checkout($checkoutId: String!, $customerAccessToken: String) {
   data: checkout(checkoutId:$checkoutId, customerAccessToken: $customerAccessToken) {
     ${checkoutModel}
   }
-}`;
+}`
 
 export const queryAddItem = `
 mutation AddToCart($checkoutId:Uuid!, $products:[CheckoutProductItemInput]!) {
   data: checkoutAddProduct(input:{id:$checkoutId, products:$products}) {
     ${checkoutModel}
   }
-}`;
+}`
 
 export const queryRemoveItem = `
 mutation RemoveFromCart($checkoutId:Uuid!, $products:[CheckoutProductItemInput]!) {
   data: checkoutRemoveProduct(input:{id:$checkoutId, products:$products}) {
     ${checkoutModel}
   }
-}`;
+}`
 
 export const queryCreteCheckout = `
 mutation {
   data: createCheckout() {
     ${checkoutModel}
   }
-}`;
+}`
