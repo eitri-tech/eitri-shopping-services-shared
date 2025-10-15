@@ -5,12 +5,7 @@ export default function GraphqlSearchMethods() {
 	const getProducts = async () => {
 		try {
 			const res = await Vtex.searchGraphql.productSearch({
-				selectedFacets: [
-					{
-						key: 'category-1',
-						value: 'masculino'
-					}
-				]
+				fullText: 'Panela'
 			})
 			console.log(res)
 		} catch (e) {

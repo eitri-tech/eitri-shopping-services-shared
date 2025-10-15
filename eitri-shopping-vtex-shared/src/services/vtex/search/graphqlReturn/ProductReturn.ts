@@ -7,6 +7,14 @@ export const productReturn = `{
 		name
 	}
 	description
+	clusterHighlights {
+    	id
+    	name
+    }
+   productClusters {
+  		id
+   		name
+   }
 	items {
 		itemId
 		name
