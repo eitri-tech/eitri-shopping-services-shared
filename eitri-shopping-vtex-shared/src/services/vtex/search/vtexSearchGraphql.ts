@@ -51,6 +51,7 @@ export default class VtexSearchGraphql {
 			query: `{ productSearch(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productSearchReturn}  }`
 		}
 
+		console.log('body', body)
 		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 		return response?.data?.data?.productSearch
 	}
