@@ -107,6 +107,11 @@ export default class WakeService {
 				console.log('[SHARED] ********* Configurando PartnerAccessToken *******')
 				await StoreService.loadPartnerAccessToken(remoteConfig?.appConfigs?.partnerId)
 			}
+
+			if (remoteConfig?.appConfigs?.partnerAccessToken) {
+				console.log('[SHARED] ********* Configurando PartnerAccessToken por token fixo *******')
+				await StoreService.setGlobalPartnerAccessToken(remoteConfig?.appConfigs?.partnerAccessToken)
+			}
 		} catch (error) {
 			console.log('[SHARED] Error PartnerAccessToken', error)
 		}
