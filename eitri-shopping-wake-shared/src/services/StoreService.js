@@ -45,7 +45,7 @@ export default class StoreService {
 
 	static async loadPartnerAccessToken(partnerId) {
 		const query = `query {
-				  partners(first:10){
+				  partners(first:50){
 					edges{
 						cursor
 					  node{
@@ -68,7 +68,7 @@ export default class StoreService {
 		const response = await GraphqlService.query(query)
 
 		let partners = response.partners.edges
-		const partner = partners.find(partner => partner.node.id === partnerId)
+		const partner = partners.find(partner => partner.node.id === partnerId || partner.node.partnerId === partnerId)
 		if (partner) {
 			await StoreService.setGlobalPartnerAccessToken(partner.node.partnerAccessToken)
 		}
