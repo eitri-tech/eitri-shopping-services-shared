@@ -4,6 +4,7 @@ import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import App from '../../App'
 import extractCookies from '../_helpers/extractCookies'
+import { sendDatadogLog } from '@/services/Datadog'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -191,14 +192,14 @@ export default class VtexCustomerService {
             console.log("WebFlow Timeout: Facebook button was not found or ready in time.");
           }, 10000);
         `
-		});
+		})
 
-		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`));
+		const finishNavigation = webFlowRes?.recordedNavigation?.find(n => n.url.includes(`api/vtexid/oauth/finish`))
 
 		if (finishNavigation) {
-			await VtexCustomerService._processPostSocialLogin(finishNavigation.url);
+			await VtexCustomerService._processPostSocialLogin(finishNavigation.url)
 		} else {
-			throw new Error('Facebook login failed');
+			throw new Error('Facebook login failed')
 		}
 	}
 
@@ -411,7 +412,7 @@ export default class VtexCustomerService {
 		return result?.data
 	}
 
-	static async newsletterSubscribe(email) { }
+	static async newsletterSubscribe(email) {}
 
 	/**
 	 * Extrai parâmetros UTM de uma string de query ou de um objeto e salva no Storage.
@@ -519,33 +520,66 @@ export default class VtexCustomerService {
 	}
 
 	static async executeRefreshToken() {
-		const { account } = Vtex.configs
+		try {
+			const { account } = Vtex.configs
 
-		const res = await VtexCustomerService.getStorageCustomerToken()
+			const res = await VtexCustomerService.getStorageCustomerToken()
 
-		if (!res || !res.accountAuthCookieId) return
-		if (res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC > Math.floor(Date.now() / 1000)) {
-			return null
-		}
-
-		if (res?.refreshToken && res?.token) {
-			const loginRes = await VtexCaller.post(
-				`api/vtexid/refreshtoken/webstore`,
-				{},
-				{
-					headers: {
-						accept: '*/*',
-						Cookie: `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}`
-					}
-				}
-			)
-
-			const refreshToken = extractCookies(loginRes, 'vid_rt')
-			const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
-
-			if (newToken && refreshToken) {
-				await VtexCustomerService.setCustomerToken(newToken, refreshToken, res?.accountAuthCookieId, newToken)
+			if (!res || !res.accountAuthCookieId) return
+			if (
+				res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >
+				Math.floor(Date.now() / 1000)
+			) {
+				return null
 			}
+
+			if (res?.refreshToken && res?.token) {
+				const loginRes = await VtexCaller.post(
+					`api/vtexid/refreshtoken/webstore`,
+					{},
+					{
+						headers: {
+							accept: '*/*',
+							Cookie: `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}`
+						}
+					}
+				)
+
+				const refreshToken = extractCookies(loginRes, 'vid_rt')
+				const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
+
+				if (newToken && refreshToken) {
+					await VtexCustomerService.setCustomerToken(
+						newToken,
+						refreshToken,
+						res?.accountAuthCookieId,
+						newToken
+					)
+					sendDatadogLog(
+						'executeRefreshToken',
+						null,
+						{
+							message: 'Refresh token executado com sucesso. Setando novos tokens'
+						},
+						{
+							newToken: newToken.slice(0, 10),
+							refreshToken: refreshToken.slice(0, 10),
+							accountAuthCookieId: res?.accountAuthCookieId?.slice(0, 10)
+						}
+					)
+				} else {
+					sendDatadogLog('executeRefreshToken', null, {
+						message: 'Refresh token executado sem novos tokens na resposta'
+					})
+				}
+			} else {
+				sendDatadogLog('executeRefreshToken', null, {
+					message: 'Com token mas sem os valores de refresh token',
+					...res
+				})
+			}
+		} catch (e) {
+			sendDatadogLog('executeRefreshToken', e)
 		}
 	}
 
