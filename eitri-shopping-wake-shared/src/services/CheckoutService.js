@@ -23,7 +23,7 @@ import CustomerService from './CustomerService'
 import objectToQueryString from '../utils/objectToQueryString'
 import StorageService from './StorageService'
 import GAWakeInternalService from './tracking/GAWakeInternalService'
-import StoreService from '@/services/StoreService'
+import StoreService from './StoreService'
 
 export default class CheckoutService {
 	static PAYMENT_METHODS = null
