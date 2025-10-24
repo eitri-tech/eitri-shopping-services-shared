@@ -24,17 +24,18 @@ import objectToQueryString from '../utils/objectToQueryString'
 import StorageService from './StorageService'
 import GAWakeInternalService from './tracking/GAWakeInternalService'
 import StoreService from './StoreService'
+import { sendLogError, sendLogOrderAccepted } from '@/services/Datadog'
 
 export default class CheckoutService {
 	static PAYMENT_METHODS = null
 
 	static async checkoutCustomerAssociate() {
-		try {
-			const [cartId, token] = await Promise.all([
-				StorageService.getStorageItem(CartService.CART_KEY),
-				CustomerService.getCustomerToken()
-			])
+		const [cartId, token] = await Promise.all([
+			StorageService.getStorageItem(CartService.CART_KEY),
+			CustomerService.getCustomerToken()
+		])
 
+		try {
 			if (!cartId || !token) {
 				return null
 			}
@@ -47,17 +48,20 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutCustomerAssociate] Erro ao associar usuário no carrinho', e)
+			sendLogError(e, 'checkoutCustomerAssociate', {
+				cartId
+			})
 			throw e
 		}
 	}
 
 	static async checkoutAddressAssociate(addressId) {
-		try {
-			const [cartId, token] = await Promise.all([
-				StorageService.getStorageItem(CartService.CART_KEY),
-				CustomerService.getCustomerToken()
-			])
+		const [cartId, token] = await Promise.all([
+			StorageService.getStorageItem(CartService.CART_KEY),
+			CustomerService.getCustomerToken()
+		])
 
+		try {
 			if (!cartId || !token) {
 				return null
 			}
@@ -71,6 +75,9 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutAddressAssociate] Erro ao associar endereço no carrinho', e)
+			sendLogError(e, 'checkoutAddressAssociate', {
+				cartId
+			})
 			throw e
 		}
 	}
@@ -136,9 +143,9 @@ export default class CheckoutService {
 	}
 
 	static async checkoutSelectShippingQuote(shippingQuoteId, additionalInformation) {
-		try {
-			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
+		try {
 			if (!cartId) {
 				return null
 			}
@@ -154,6 +161,9 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutSelectShippingQuote] Erro ao selecionar frete', e)
+			sendLogError(e, 'checkoutSelectShippingQuote', {
+				cartId
+			})
 			throw e
 		}
 	}
@@ -180,9 +190,9 @@ export default class CheckoutService {
 	}
 
 	static async checkoutSelectPaymentMethod(paymentMethodId) {
-		try {
-			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
+		try {
 			if (!cartId) {
 				return null
 			}
@@ -197,17 +207,20 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutSelectPaymentMethod] Erro ao setar forma de pagamento', e)
+			sendLogError(e, 'checkoutSelectPaymentMethod', {
+				cartId
+			})
 			throw e
 		}
 	}
 
 	static async checkoutComplete(paymentData, comments) {
-		try {
-			const [cartId, token] = await Promise.all([
-				StorageService.getStorageItem(CartService.CART_KEY),
-				CustomerService.getCustomerToken()
-			])
+		const [cartId, token] = await Promise.all([
+			StorageService.getStorageItem(CartService.CART_KEY),
+			CustomerService.getCustomerToken()
+		])
 
+		try {
 			if (!cartId || !token) {
 				return null
 			}
@@ -221,11 +234,16 @@ export default class CheckoutService {
 				customerAccessToken: token
 			})
 
+			sendLogOrderAccepted(response.checkoutComplete)
+
 			GAWakeInternalService.purchase(response.checkoutComplete)
 
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
+			sendLogError(e, 'checkoutComplete', {
+				cartId
+			})
 			throw e
 		}
 	}

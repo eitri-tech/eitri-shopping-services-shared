@@ -3,8 +3,8 @@ import WakeService from '../services/WakeService'
 
 let cartId = 'c1e3c46b-1872-401d-85e6-b1c8f2c9c464'
 const userLogin = {
-	login: 'fulano@email.com',
-	pass: '123456'
+	login: '',
+	pass: ''
 }
 
 export default function CheckoutMethod() {
@@ -32,7 +32,7 @@ export default function CheckoutMethod() {
 	const addItemCart = async () => {
 		try {
 			console.log('add item cart')
-			const _fullCart = await WakeService.cart.addItems([{ productVariantId: 359042, quantity: 1 }])
+			const _fullCart = await WakeService.cart.addItems([{ productVariantId: 343779, quantity: 1 }])
 			console.log('add item cart result >>', _fullCart)
 			setFullCart(_fullCart)
 		} catch (error) {
@@ -85,7 +85,7 @@ export default function CheckoutMethod() {
 	const checkoutComplete = async () => {
 		//number=5511%206033%203083%201381&name=Wendell%20Lira&month=05&year=2026&expiry=05%2F2026&cvc=261&cpf=17744421086&telefone=21993774635&bandeira=mastercard&finger_print=7859779622c6a446b01587d50c23e13d9f548a46
 		const response = await WakeService.checkout.checkoutComplete('')
-		console.log('response >>', response)
+		console.log('response >>>>>', response)
 	}
 
 	const checkoutAddCoupon = async () => {
@@ -251,6 +251,10 @@ export default function CheckoutMethod() {
 		{
 			label: 'Remover metadados',
 			onPress: removeMetadata
+		},
+		{
+			label: 'Completar checkout',
+			onPress: checkoutComplete
 		},
 		{
 			label: 'Clone checkout',
