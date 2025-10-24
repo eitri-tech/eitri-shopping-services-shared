@@ -3,7 +3,7 @@ import Eitri from 'eitri-bifrost'
 import VtexCatalogService from '../catalog/vtexCatalogService'
 import Vtex from '../../Vtex'
 import VtexCustomerService from '../customer/vtexCustomerService'
-import decodeJwt from '@/services/vtex/_helpers/decodeJWT'
+import decodeJwt from '../_helpers/decodeJWT'
 
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
