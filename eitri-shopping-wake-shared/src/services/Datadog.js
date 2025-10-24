@@ -56,8 +56,6 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 
 export const sendLogOrderAccepted = async cart => {
 	try {
-		const environment = await Eitri.environment.getName()
-		if (environment === 'dev') return
 
 		const device = await Eitri.device.getInfos()
 
@@ -69,30 +67,34 @@ export const sendLogOrderAccepted = async cart => {
 				slug: window.__eitriAppConf?.slug,
 				applicationId: window.__eitriAppConf?.applicationId,
 				version: window.__eitriAppConf?.version,
-				cartId: cart?.orderFormId,
-				value: (cart.value / 100).toFixed(2),
+				cartId: cart?.checkoutId,
+				value: cart.total,
 				platform: device?.platform,
-				state: cart?.shippingData?.address?.state,
-				city: cart?.shippingData?.address?.city,
-				items: cart?.items?.map(item => {
+				state: cart?.selectedAddress?.state,
+				city: cart?.selectedAddress?.city,
+				items: cart?.products?.map(item => {
 					return {
-						id: item.id,
+						id: item.productVariantId,
 						productId: item.productId,
 						name: item.name,
-						price: (item.price / 100).toFixed(2),
+						price: item.price,
 						imageUrl: item.imageUrl
 					}
 				}),
-				payments: cart?.paymentData?.payments?.map(payment => {
-					const paymentSystem = cart?.paymentData?.paymentSystems?.find(
-						ps => ps.stringId === payment.paymentSystem
-					)
+				payments: cart?.orders?.map(order => {
 					return {
-						paymentSystemName: paymentSystem?.name || 'N/D'
+						paymentSystemName: order?.payment?.name || 'N/D'
 					}
 				})
 			}
 		}
+
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') {
+			console.log('Error', payload)
+			return
+		}
+
 
 		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
 			'Content-Type': 'application/json',
@@ -105,7 +107,7 @@ export const sendLogOrderAccepted = async cart => {
 
 export const sendLogError = async (error, method, data = {}) => {
 	try {
-		console.log('sendLogError >>')
+
 		const device = await Eitri.device.getInfos()
 
 		const payload = {

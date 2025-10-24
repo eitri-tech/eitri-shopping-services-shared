@@ -24,7 +24,7 @@ import objectToQueryString from '../utils/objectToQueryString'
 import StorageService from './StorageService'
 import GAWakeInternalService from './tracking/GAWakeInternalService'
 import StoreService from './StoreService'
-import { sendLogError } from '@/services/Datadog'
+import { sendLogError, sendLogOrderAccepted } from '@/services/Datadog'
 
 export default class CheckoutService {
 	static PAYMENT_METHODS = null
@@ -233,6 +233,8 @@ export default class CheckoutService {
 				checkoutId: cartId,
 				customerAccessToken: token
 			})
+
+			sendLogOrderAccepted(response.checkoutComplete)
 
 			GAWakeInternalService.purchase(response.checkoutComplete)
 
