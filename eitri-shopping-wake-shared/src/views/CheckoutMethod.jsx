@@ -3,8 +3,8 @@ import WakeService from '../services/WakeService'
 
 let cartId = 'c1e3c46b-1872-401d-85e6-b1c8f2c9c464'
 const userLogin = {
-	login: 'fulano@email.com',
-	pass: '123456'
+	login: 'wagnerfq@gmail.com',
+	pass: 'Abcd@1234'
 }
 
 export default function CheckoutMethod() {
@@ -32,7 +32,7 @@ export default function CheckoutMethod() {
 	const addItemCart = async () => {
 		try {
 			console.log('add item cart')
-			const _fullCart = await WakeService.cart.addItems([{ productVariantId: 359042, quantity: 1 }])
+			const _fullCart = await WakeService.cart.addItems([{ productVariantId: 371387, quantity: 1 }])
 			console.log('add item cart result >>', _fullCart)
 			setFullCart(_fullCart)
 		} catch (error) {
@@ -251,6 +251,10 @@ export default function CheckoutMethod() {
 		{
 			label: 'Remover metadados',
 			onPress: removeMetadata
+		},
+		{
+			label: 'Completar checkout',
+			onPress: checkoutComplete
 		},
 		{
 			label: 'Clone checkout',

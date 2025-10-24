@@ -3,7 +3,7 @@ module.exports = {
 	'title': 'eitri-shopping-wake-shared',
 	'slug': 'eitri-shopping-wake-shared',
 	'eitri-luminus': '1.65.6',
-	'eitri-bifrost': '2.9.0',
+	'eitri-bifrost': '3.10.0',
 	'version': '1.4.10',
 	'messageVersion': 'Partner token suportando token fixo',
 	'public-key': '1c832aa6-6172-4640-82b1-0708d8aaf4fd',
