@@ -3,7 +3,7 @@ import Vtex from '../../Vtex'
 import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
-import { sendDatadogLog, sendLogError } from '@/services/Datadog'
+import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -555,7 +555,7 @@ export default class VtexCustomerService {
 						newToken
 					)
 				} else {
-					sendDatadogLog(
+					sendDatadogWarningLog(
 						{
 							message: 'Refresh token executado sem novos tokens na resposta',
 							responseHeaders: loginRes?.headers,
@@ -565,7 +565,7 @@ export default class VtexCustomerService {
 					)
 				}
 			} else {
-				sendDatadogLog(
+				sendDatadogWarningLog(
 					{
 						message: 'Usuário não possui o refresh token',
 						creationTimeStamp: res.creationTimeStamp

@@ -9,6 +9,7 @@ import vtexCustomerService from '../customer/vtexCustomerService'
 import VtexPaymentService from './vtexPaymentService'
 import StorageService from '../../StorageService'
 import extractCookies from '../_helpers/extractCookies'
+import { sendLogError } from '@/services/Datadog'
 
 export default class VtexCheckoutService {
 	static VTEX_CHK_PAYMENT_AUTH = 'vtex_chk_payment_auth'
@@ -16,87 +17,110 @@ export default class VtexCheckoutService {
 	static async selectPaymentOption(paymentOption) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
 
-		const payload = {
-			payments: paymentOption.payments,
-			giftCards: paymentOption.giftCards
-		}
-
-		// Tem um erro na Vtex, quando existe gift card só é possível enviar o header VtexIdclientAutCookie_userId
-		let overrideHeaders = null
-		if (Array.isArray(payload?.giftCards) && payload?.giftCards.length > 0) {
-			const tokenData = await vtexCustomerService.getCustomerToken()
-			if (tokenData?.accountAuthCookieValue && tokenData?.accountAuthCookieId) {
-				overrideHeaders = {
-					Cookie: `VtexIdclientAutCookie_${tokenData.accountAuthCookieId}=${tokenData.accountAuthCookieValue}`
-				}
-			} else {
-				overrideHeaders = {}
+		try {
+			const payload = {
+				payments: paymentOption.payments,
+				giftCards: paymentOption.giftCards
 			}
+
+			// Tem um erro na Vtex, quando existe gift card só é possível enviar o header VtexIdclientAutCookie_userId
+			let overrideHeaders = null
+			if (Array.isArray(payload?.giftCards) && payload?.giftCards.length > 0) {
+				const tokenData = await vtexCustomerService.getCustomerToken()
+				if (tokenData?.accountAuthCookieValue && tokenData?.accountAuthCookieId) {
+					overrideHeaders = {
+						Cookie: `VtexIdclientAutCookie_${tokenData.accountAuthCookieId}=${tokenData.accountAuthCookieValue}`
+					}
+				} else {
+					overrideHeaders = {}
+				}
+			}
+
+			const response = await VtexCaller.post(
+				`api/checkout/pub/orderForm/${orderFormId}/attachments/paymentData`,
+				payload,
+				null,
+				null,
+				overrideHeaders
+			)
+
+			const paymentAuthCookie = extractCookies(response, 'CheckoutDataAccess=VTEX_CHK_Payment_Auth')
+
+			if (paymentAuthCookie) {
+				StorageService.setStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH, paymentAuthCookie)
+			} else {
+				StorageService.removeItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+			}
+
+			GAVtexInternalService.addPaymentInfo(response.data)
+
+			return response.data
+		} catch (e) {
+			const logData = {
+				orderFormId: orderFormId
+			}
+			sendLogError(e, 'selectPaymentOption', logData)
+			throw e
 		}
-
-		const response = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/attachments/paymentData`,
-			payload,
-			null,
-			null,
-			overrideHeaders
-		)
-
-		const paymentAuthCookie = extractCookies(response, 'CheckoutDataAccess=VTEX_CHK_Payment_Auth')
-
-		if (paymentAuthCookie) {
-			StorageService.setStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH, paymentAuthCookie)
-		} else {
-			StorageService.removeItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
-		}
-
-		GAVtexInternalService.addPaymentInfo(response.data)
-
-		return response.data
 	}
 
 	static async addShippingAddress(address) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
 
-		const payload = {
-			clearAddressIfPostalCodeNotFound: true,
-			selectedAddresses: [address]
-		}
-		const response = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
-			payload,
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json',
-					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-				}
+		try {
+			const payload = {
+				clearAddressIfPostalCodeNotFound: true,
+				selectedAddresses: [address]
 			}
-		)
+			const response = await VtexCaller.post(
+				`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
+				payload,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+					}
+				}
+			)
 
-		GAVtexInternalService.addShippingInfo(response.data)
+			GAVtexInternalService.addShippingInfo(response.data)
 
-		return response.data
+			return response.data
+		} catch (e) {
+			const logData = {
+				orderFormId: orderFormId
+			}
+			sendLogError(e, 'addShippingAddress', logData)
+			throw e
+		}
 	}
 
 	static async setLogisticInfo(logisticInfo) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
-
-		const response = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
-			logisticInfo,
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					'Accept': 'application/json',
-					'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+		try {
+			const response = await VtexCaller.post(
+				`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
+				logisticInfo,
+				{
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+					}
 				}
+			)
+
+			GAVtexInternalService.addShippingInfo(response.data)
+
+			return response.data
+		} catch (e) {
+			const logData = {
+				orderFormId: orderFormId
 			}
-		)
-
-		GAVtexInternalService.addShippingInfo(response.data)
-
-		return response.data
+			sendLogError(e, 'setLogisticInfo', logData)
+			throw e
+		}
 	}
 
 	static async addPromoCode(couponCode) {
@@ -111,13 +135,20 @@ export default class VtexCheckoutService {
 
 	static async addUserData(userData) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		try {
+			const response = await VtexCaller.post(
+				`api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
+				userData
+			)
 
-		const response = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
-			userData
-		)
-
-		return response.data
+			return response.data
+		} catch (e) {
+			const logData = {
+				orderFormId: orderFormId
+			}
+			sendLogError(e, 'setLogisticInfo', logData)
+			throw e
+		}
 	}
 
 	static async removeAccount(accountId) {
@@ -271,7 +302,7 @@ export default class VtexCheckoutService {
 		return await VtexPaymentService.executePayment(cart, options)
 	}
 
-	/// TODO: Migrar o pagamento para VtexPaymentService.executePayment. GiftCard e PIX já estão lá
+	/// Métodos antigos, usados apenas na versao 1 do checkout. USAR O PAYV2
 	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
 		console.log('==========Iniciando pagamento==========')
 		console.time('Pay total time')

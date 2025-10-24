@@ -1,12 +1,39 @@
 import Eitri from 'eitri-bifrost'
 
-export const sendDatadogLog = async (data = {}, method) => {
+export const sendDatadogWarningLog = async (data = {}, method) => {
 	try {
 		const environment = await Eitri.environment.getName()
 		if (environment === 'dev') return
 
 		const payload = {
-			origin: 'APP-SHOPPING',
+			origin: 'APP-SHOPPING-WARNING',
+			eventName: `${window.__eitriAppConf?.slug}`,
+			slug: `${window.__eitriAppConf?.slug}`,
+			version: window.__eitriAppConf?.version,
+			data: {
+				app: window.__eitriAppConf?.app || '',
+				applicationId: window.__eitriAppConf?.applicationId,
+				method: method || '',
+				...data
+			}
+		}
+
+		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
+			'Content-Type': 'application/json',
+			'application-id': window.__eitriAppConf?.applicationId
+		})
+	} catch (e) {
+		console.error('Erro ao setar user', e)
+	}
+}
+
+export const sendDatadogInfoLog = async (data = {}, method) => {
+	try {
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') return
+
+		const payload = {
+			origin: 'APP-SHOPPING-INFO',
 			eventName: `${window.__eitriAppConf?.slug}`,
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
@@ -55,6 +82,14 @@ export const sendLogOrderAccepted = async cart => {
 						price: (item.price / 100).toFixed(2),
 						imageUrl: item.imageUrl
 					}
+				}),
+				payments: cart?.paymentData?.payments?.map(payment => {
+					const paymentSystem = cart?.paymentData?.paymentSystems?.find(
+						ps => ps.stringId === payment.paymentSystem
+					)
+					return {
+						paymentSystemName: paymentSystem?.name || 'N/D'
+					}
 				})
 			}
 		}
@@ -76,7 +111,7 @@ export const sendLogError = async (error, method, data = {}) => {
 		const device = await Eitri.device.getInfos()
 
 		const payload = {
-			origin: 'APP-SHOPPING',
+			origin: 'APP-SHOPPING-ERROR',
 			eventName: `${window.__eitriAppConf?.slug}`,
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
