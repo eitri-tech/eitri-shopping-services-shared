@@ -5,6 +5,7 @@ import Eitri from 'eitri-bifrost'
 import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
+import { sendLogError, sendLogOrderAccepted } from '../../Datadog'
 
 type PaymentOptions = {
 	fields: {
@@ -51,15 +52,30 @@ type ProcessPaymentReturn = {
 
 export default class VtexPaymentService {
 	static async executePayment(cart: any, options?: PaymentOptions) {
-		const startTransactionReturn: StartTransactionReturn = await VtexPaymentService.startTransaction(cart, options)
+		try {
+			const startTransactionReturn: StartTransactionReturn = await VtexPaymentService.startTransaction(
+				cart,
+				options
+			)
 
-		await VtexPaymentService.setPaymentMethod(cart, startTransactionReturn, options)
+			await VtexPaymentService.setPaymentMethod(cart, startTransactionReturn, options)
 
-		const paymentProcessed: ProcessPaymentReturn = await VtexPaymentService.processPayment(startTransactionReturn)
+			const paymentProcessed: ProcessPaymentReturn =
+				await VtexPaymentService.processPayment(startTransactionReturn)
 
-		GAVtexInternalService.purchase(cart, paymentProcessed?.transactionId || paymentProcessed?.orderId)
+			GAVtexInternalService.purchase(cart, paymentProcessed?.transactionId || paymentProcessed?.orderId)
 
-		return paymentProcessed
+			sendLogOrderAccepted(cart)
+
+			return paymentProcessed
+		} catch (e) {
+			const logData = {
+				email: cart?.clientProfileData?.email,
+				orderFormId: cart?.orderFormId
+			}
+			sendLogError(e, 'startTransaction', logData)
+			throw e
+		}
 	}
 
 	static async startTransaction(cart: any, options?: PaymentOptions): Promise<StartTransactionReturn> {

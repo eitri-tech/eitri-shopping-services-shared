@@ -5,6 +5,7 @@ import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import Vtex from '../../Vtex'
 import getSalesChannel from '../_helpers/getSalesChannel'
 import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
+import { sendLogError } from '@/services/Datadog'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -129,6 +130,8 @@ export default class VtexCartService {
 	static async addItem({ id, item, itemId, salesChannel, quantity, seller, sellers }) {
 		const _quantity = item?.quantity ?? quantity ?? 1
 
+		let payload = null
+
 		try {
 			const itemToSend = {
 				id: id ?? itemId ?? item?.itemId ?? item?.id,
@@ -147,7 +150,7 @@ export default class VtexCartService {
 				orderFormId = cart.orderFormId
 			}
 
-			const payload = {
+			payload = {
 				orderItems: [itemToSend]
 			}
 
@@ -167,6 +170,7 @@ export default class VtexCartService {
 			return addToCartRes.data
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
+			sendLogError(e, 'addItem', payload)
 			throw e
 		}
 	}
