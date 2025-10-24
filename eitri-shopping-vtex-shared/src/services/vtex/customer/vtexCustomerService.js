@@ -2,9 +2,8 @@ import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
 import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
-import App from '../../App'
 import extractCookies from '../_helpers/extractCookies'
-import { sendDatadogLog } from '@/services/Datadog'
+import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -555,31 +554,27 @@ export default class VtexCustomerService {
 						res?.accountAuthCookieId,
 						newToken
 					)
-					sendDatadogLog(
-						'executeRefreshToken',
-						null,
-						{
-							message: 'Refresh token executado com sucesso. Setando novos tokens'
-						},
-						{
-							newToken: newToken.slice(0, 10),
-							refreshToken: refreshToken.slice(0, 10),
-							accountAuthCookieId: res?.accountAuthCookieId?.slice(0, 10)
-						}
-					)
 				} else {
-					sendDatadogLog('executeRefreshToken', null, {
-						message: 'Refresh token executado sem novos tokens na resposta'
-					})
+					sendDatadogWarningLog(
+						{
+							message: 'Refresh token executado sem novos tokens na resposta',
+							responseHeaders: loginRes?.headers,
+							response: loginRes?.data
+						},
+						'executeRefreshToken'
+					)
 				}
 			} else {
-				sendDatadogLog('executeRefreshToken', null, {
-					message: 'Com token mas sem os valores de refresh token',
-					...res
-				})
+				sendDatadogWarningLog(
+					{
+						message: 'Usuário não possui o refresh token',
+						creationTimeStamp: res.creationTimeStamp
+					},
+					'executeRefreshToken'
+				)
 			}
 		} catch (e) {
-			sendDatadogLog('executeRefreshToken', e)
+			sendLogError(e, 'executeRefreshToken')
 		}
 	}
 
