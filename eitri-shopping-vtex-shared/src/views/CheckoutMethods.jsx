@@ -9,7 +9,7 @@ export default function CheckoutMethods() {
 	const addUser = async () => {
 		try {
 			await Vtex.checkout.addUserData({
-				email: 'kexibod96900@cronack.com',
+				email: 'kexibod@cronack.com',
 				firstName: 'Teste',
 				lastName: 'Teste',
 				documentType: 'cpf',
