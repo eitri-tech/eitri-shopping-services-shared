@@ -69,11 +69,7 @@ export default class VtexPaymentService {
 
 			return paymentProcessed
 		} catch (e) {
-			const logData = {
-				email: cart?.clientProfileData?.email,
-				orderFormId: cart?.orderFormId
-			}
-			sendLogError(e, 'startTransaction', logData)
+			sendLogError(e, 'executePayment')
 			throw e
 		}
 	}

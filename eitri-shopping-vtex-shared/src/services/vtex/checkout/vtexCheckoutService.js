@@ -9,7 +9,7 @@ import vtexCustomerService from '../customer/vtexCustomerService'
 import VtexPaymentService from './vtexPaymentService'
 import StorageService from '../../StorageService'
 import extractCookies from '../_helpers/extractCookies'
-import { sendLogError } from '@/services/Datadog'
+import { sendLogError, sendLogOrderAccepted } from '@/services/Datadog'
 
 export default class VtexCheckoutService {
 	static VTEX_CHK_PAYMENT_AUTH = 'vtex_chk_payment_auth'
@@ -56,10 +56,7 @@ export default class VtexCheckoutService {
 
 			return response.data
 		} catch (e) {
-			const logData = {
-				orderFormId: orderFormId
-			}
-			sendLogError(e, 'selectPaymentOption', logData)
+			sendLogError(e, 'selectPaymentOption')
 			throw e
 		}
 	}
@@ -88,10 +85,7 @@ export default class VtexCheckoutService {
 
 			return response.data
 		} catch (e) {
-			const logData = {
-				orderFormId: orderFormId
-			}
-			sendLogError(e, 'addShippingAddress', logData)
+			sendLogError(e, 'addShippingAddress')
 			throw e
 		}
 	}
@@ -115,10 +109,7 @@ export default class VtexCheckoutService {
 
 			return response.data
 		} catch (e) {
-			const logData = {
-				orderFormId: orderFormId
-			}
-			sendLogError(e, 'setLogisticInfo', logData)
+			sendLogError(e, 'setLogisticInfo')
 			throw e
 		}
 	}
@@ -143,10 +134,7 @@ export default class VtexCheckoutService {
 
 			return response.data
 		} catch (e) {
-			const logData = {
-				orderFormId: orderFormId
-			}
-			sendLogError(e, 'setLogisticInfo', logData)
+			sendLogError(e, 'setLogisticInfo')
 			throw e
 		}
 	}
@@ -304,70 +292,82 @@ export default class VtexCheckoutService {
 
 	/// Métodos antigos, usados apenas na versao 1 do checkout. USAR O PAYV2
 	static async pay(cart, cardInfo, captchaToken, captchaSiteKey, options) {
-		console.log('==========Iniciando pagamento==========')
-		console.time('Pay total time')
+		try {
+			console.log('==========Iniciando pagamento==========')
+			console.time('Pay total time')
 
-		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
-		if (!hasEitriTag) {
-			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
-			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
-				...cart?.marketingData,
-				marketingTags: newMarketingTags
-			})
-		}
+			const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+			if (!hasEitriTag) {
+				const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+				await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
+					...cart?.marketingData,
+					marketingTags: newMarketingTags
+				})
+			}
 
-		const payment = cart.paymentData?.payments[0]
-		const giftCard = cart.paymentData?.giftCards?.[0]
+			const payment = cart.paymentData?.payments[0]
+			const giftCard = cart.paymentData?.giftCards?.[0]
 
-		if (giftCard && giftCard.value === cart.value) {
-			return await VtexPaymentService.executePayment(cart)
-		}
+			if (giftCard && giftCard.value === cart.value) {
+				return await VtexPaymentService.executePayment(cart)
+			}
 
-		const paymentSystem = cart.paymentData?.paymentSystems?.find(
-			system => system.stringId === payment?.paymentSystem
-		)
-
-		// Boleto bancário
-		if (paymentSystem?.groupName === 'bankInvoicePaymentGroup') {
-			return await VtexCheckoutService.payBankInvoice(cart)
-		}
-
-		// Pix
-		if (paymentSystem?.groupName === 'instantPaymentPaymentGroup') {
-			return await VtexPaymentService.executePayment(cart)
-		}
-
-		//Cartão de Crédito
-		if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
-			return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
-		}
-
-		//Promissoria
-		if (paymentSystem?.groupName === 'promissoryPaymentGroup') {
-			return await VtexCheckoutService.payPromissory(cart)
-		}
-
-		//Cartao de loja
-		const storeCardGroupName = App?.configs?.appConfigs.storeCardGroupName ?? ''
-		if (paymentSystem?.groupName === storeCardGroupName) {
-			return await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
-		}
-
-		const externalPaymentsImplementation = App?.configs?.appConfigs.externalPayments ?? []
-
-		if (
-			externalPaymentsImplementation.some(
-				externalPayment => externalPayment.externalGroupName === paymentSystem?.groupName
+			const paymentSystem = cart.paymentData?.paymentSystems?.find(
+				system => system.stringId === payment?.paymentSystem
 			)
-		) {
-			const res = await VtexCheckoutService.payExternalProvider(cart)
-			GAVtexInternalService.purchase(cart, res?.transactionId || res?.orderId)
-			return res
+
+			// Boleto bancário
+			if (paymentSystem?.groupName === 'bankInvoicePaymentGroup') {
+				sendLogOrderAccepted(cart)
+				return await VtexCheckoutService.payBankInvoice(cart)
+			}
+
+			// Pix
+			if (paymentSystem?.groupName === 'instantPaymentPaymentGroup') {
+				return await VtexPaymentService.executePayment(cart)
+			}
+
+			//Cartão de Crédito
+			if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
+				sendLogOrderAccepted(cart)
+				return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
+			}
+
+			//Promissoria
+			if (paymentSystem?.groupName === 'promissoryPaymentGroup') {
+				sendLogOrderAccepted(cart)
+				return await VtexCheckoutService.payPromissory(cart)
+			}
+
+			//Cartao de loja
+			const storeCardGroupName = App?.configs?.appConfigs.storeCardGroupName ?? ''
+			if (paymentSystem?.groupName === storeCardGroupName) {
+				sendLogOrderAccepted(cart)
+				return await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
+			}
+
+			const externalPaymentsImplementation = App?.configs?.appConfigs.externalPayments ?? []
+
+			if (
+				externalPaymentsImplementation.some(
+					externalPayment => externalPayment.externalGroupName === paymentSystem?.groupName
+				)
+			) {
+				const res = await VtexCheckoutService.payExternalProvider(cart)
+				sendLogOrderAccepted(cart)
+				GAVtexInternalService.purchase(cart, res?.transactionId || res?.orderId)
+				return res
+			}
+
+			console.time('Pay total time')
+
+			throw Error('Método de pagamento não suportado')
+		} catch (e) {
+			sendLogError(e, 'pay')
+			throw e
 		}
 
-		console.time('Pay total time')
 
-		throw Error('Método de pagamento não suportado')
 	}
 
 	static async executePayment(cart, options) {

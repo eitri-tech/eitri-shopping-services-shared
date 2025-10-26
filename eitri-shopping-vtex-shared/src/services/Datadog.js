@@ -1,9 +1,8 @@
 import Eitri from 'eitri-bifrost'
+import VtexCartService from '@/services/vtex/cart/VtexCartService'
 
 export const sendDatadogWarningLog = async (data = {}, method) => {
 	try {
-		const environment = await Eitri.environment.getName()
-		if (environment === 'dev') return
 
 		const payload = {
 			origin: 'APP-SHOPPING-WARNING',
@@ -11,11 +10,17 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				applicationId: window.__eitriAppConf?.applicationId,
 				method: method || '',
 				...data
 			}
+		}
+
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') {
+			console.warn('===Warning===', payload)
+			return
 		}
 
 		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
@@ -23,14 +28,12 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
 			'application-id': window.__eitriAppConf?.applicationId
 		})
 	} catch (e) {
-		console.error('Erro ao setar user', e)
+		console.error('Erro sendDatadogWarningLog', e)
 	}
 }
 
 export const sendDatadogInfoLog = async (data = {}, method) => {
 	try {
-		const environment = await Eitri.environment.getName()
-		if (environment === 'dev') return
 
 		const payload = {
 			origin: 'APP-SHOPPING-INFO',
@@ -38,11 +41,17 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				applicationId: window.__eitriAppConf?.applicationId,
 				method: method || '',
 				...data
 			}
+		}
+
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') {
+			console.warn('===Info===', payload)
+			return
 		}
 
 		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
@@ -50,14 +59,12 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 			'application-id': window.__eitriAppConf?.applicationId
 		})
 	} catch (e) {
-		console.error('Erro ao setar user', e)
+		console.error('Erro sendDatadogInfoLog', e)
 	}
 }
 
 export const sendLogOrderAccepted = async cart => {
 	try {
-		const environment = await Eitri.environment.getName()
-		if (environment === 'dev') return
 
 		const device = await Eitri.device.getInfos()
 
@@ -65,7 +72,7 @@ export const sendLogOrderAccepted = async cart => {
 			origin: 'APP-SHOPPING-ORDER-ACCEPTED',
 			eventName: window.__eitriAppConf?.slug,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				slug: window.__eitriAppConf?.slug,
 				applicationId: window.__eitriAppConf?.applicationId,
 				version: window.__eitriAppConf?.version,
@@ -94,21 +101,27 @@ export const sendLogOrderAccepted = async cart => {
 			}
 		}
 
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') {
+			console.warn('===OrderAccepted===', payload)
+			return
+		}
+
 		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
 			'Content-Type': 'application/json',
 			'application-id': window.__eitriAppConf?.applicationId
 		})
 	} catch (e) {
-		console.error('Erro ao order accepted', e)
+		console.error('Erro sendLogOrderAccepted', e)
 	}
 }
 
 export const sendLogError = async (error, method, data = {}) => {
 	try {
-		const environment = await Eitri.environment.getName()
-		if (environment === 'dev') return
 
 		const device = await Eitri.device.getInfos()
+
+		const cart = VtexCartService._CACHED_CART
 
 		const payload = {
 			origin: 'APP-SHOPPING-ERROR',
@@ -116,10 +129,12 @@ export const sendLogError = async (error, method, data = {}) => {
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				applicationId: window.__eitriAppConf?.applicationId,
 				device,
 				method: method || '',
+				email: cart?.clientProfileData?.email,
+				cartId: cart?.orderFormId,
 				error: {
 					message: error?.message,
 					stack: error?.stack,
@@ -130,11 +145,18 @@ export const sendLogError = async (error, method, data = {}) => {
 			}
 		}
 
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') {
+			console.warn('===sendLogError===', payload)
+			return
+		}
+
+
 		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
 			'Content-Type': 'application/json',
 			'application-id': window.__eitriAppConf?.applicationId
 		})
 	} catch (e) {
-		console.error('Erro ao setar user', e)
+		console.error('Erro sendLogError', e)
 	}
 }
