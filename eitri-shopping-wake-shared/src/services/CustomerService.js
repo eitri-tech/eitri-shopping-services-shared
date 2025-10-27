@@ -342,6 +342,14 @@ export default class CustomerService {
 			customerAccessToken: token,
 			productId: parseInt(productId)
 		})
+
+		Eitri.eventBus.publish({
+			channel: "addToWishlist",
+			data: {
+				productId
+			}
+		});
+
 		return response?.wishlistAddProduct || null
 	}
 
@@ -355,6 +363,14 @@ export default class CustomerService {
 			customerAccessToken: token,
 			productId: parseInt(productId)
 		})
+
+		Eitri.eventBus.publish({
+			channel: "removeFromWishlist",
+			data: {
+				productId
+			}
+		});
+
 		return response?.wishlistRemoveProduct || null
 	}
 
