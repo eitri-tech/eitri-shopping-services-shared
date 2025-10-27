@@ -66,7 +66,7 @@ export default class VtexWishlistService {
 			channel: "removeFromWishlist",
 			data: {
 				id,
-				response
+				response: response.data
 			}
 		});
 
@@ -108,7 +108,7 @@ export default class VtexWishlistService {
 			data: {
 				productId,
 				sku,
-				response
+				response: response.data
 			}
 		});
 
