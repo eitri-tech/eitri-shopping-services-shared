@@ -24,7 +24,7 @@ export default function WishListMethods() {
 
 	const removeItem = async () => {
 		try {
-			const itemId = '12'
+			const itemId = '0'
 			const res = await Vtex.wishlist.removeItem(itemId)
 			console.log('Item removido:', res)
 		} catch (e) {

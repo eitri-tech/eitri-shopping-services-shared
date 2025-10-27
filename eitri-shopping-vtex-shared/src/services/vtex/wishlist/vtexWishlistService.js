@@ -65,7 +65,8 @@ export default class VtexWishlistService {
 		Eitri.eventBus.publish({
 			channel: "removeFromWishlist",
 			data: {
-				id
+				id,
+				response
 			}
 		});
 
@@ -106,7 +107,8 @@ export default class VtexWishlistService {
 			channel: "addToWishlist",
 			data: {
 				productId,
-				sku
+				sku,
+				response
 			}
 		});
 
