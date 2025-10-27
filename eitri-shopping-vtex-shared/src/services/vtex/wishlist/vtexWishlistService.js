@@ -1,6 +1,5 @@
 import VtexCaller from '../_helpers/_vtexCaller'
 import Eitri from 'eitri-bifrost'
-import VtexCatalogService from '../catalog/vtexCatalogService'
 import Vtex from '../../Vtex'
 import VtexCustomerService from '../customer/vtexCustomerService'
 import decodeJwt from '../_helpers/decodeJWT'
@@ -62,6 +61,14 @@ export default class VtexWishlistService {
 		}
 
 		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+
+		Eitri.eventBus.publish({
+			channel: "removeFromWishlist",
+			data: {
+				id
+			}
+		});
+
 		return response.data
 	}
 
@@ -94,6 +101,15 @@ export default class VtexWishlistService {
 		}
 
 		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+
+		Eitri.eventBus.publish({
+			channel: "addToWishlist",
+			data: {
+				productId,
+				sku
+			}
+		});
+
 		return response.data
 	}
 
