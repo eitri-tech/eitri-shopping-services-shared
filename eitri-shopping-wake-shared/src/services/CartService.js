@@ -34,6 +34,7 @@ export default class CartService {
 	 * @returns {CheckoutObject} Objeto de carrinho completo
 	 */
 	static async getCheckout() {
+
 		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
 		if (cartId) {

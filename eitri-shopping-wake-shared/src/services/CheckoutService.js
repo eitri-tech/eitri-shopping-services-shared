@@ -30,12 +30,12 @@ export default class CheckoutService {
 	static PAYMENT_METHODS = null
 
 	static async checkoutCustomerAssociate() {
-		const [cartId, token] = await Promise.all([
-			StorageService.getStorageItem(CartService.CART_KEY),
-			CustomerService.getCustomerToken()
-		])
-
 		try {
+			const [cartId, token] = await Promise.all([
+				StorageService.getStorageItem(CartService.CART_KEY),
+				CustomerService.getCustomerToken()
+			])
+
 			if (!cartId || !token) {
 				return null
 			}
@@ -48,20 +48,19 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutCustomerAssociate] Erro ao associar usuário no carrinho', e)
-			sendLogError(e, 'checkoutCustomerAssociate', {
-				cartId
-			})
+			sendLogError(e, 'checkoutCustomerAssociate')
 			throw e
 		}
 	}
 
 	static async checkoutAddressAssociate(addressId) {
-		const [cartId, token] = await Promise.all([
-			StorageService.getStorageItem(CartService.CART_KEY),
-			CustomerService.getCustomerToken()
-		])
 
 		try {
+			const [cartId, token] = await Promise.all([
+				StorageService.getStorageItem(CartService.CART_KEY),
+				CustomerService.getCustomerToken()
+			])
+
 			if (!cartId || !token) {
 				return null
 			}
@@ -75,9 +74,7 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutAddressAssociate] Erro ao associar endereço no carrinho', e)
-			sendLogError(e, 'checkoutAddressAssociate', {
-				cartId
-			})
+			sendLogError(e, 'checkoutAddressAssociate')
 			throw e
 		}
 	}
@@ -138,14 +135,16 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [shippingQuotes] Erro ao buscar frete', e)
+			sendLogError(e, 'shippingQuotes')
 			throw e
 		}
 	}
 
 	static async checkoutSelectShippingQuote(shippingQuoteId, additionalInformation) {
-		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
 		try {
+			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
 			if (!cartId) {
 				return null
 			}
@@ -161,9 +160,7 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutSelectShippingQuote] Erro ao selecionar frete', e)
-			sendLogError(e, 'checkoutSelectShippingQuote', {
-				cartId
-			})
+			sendLogError(e, 'checkoutSelectShippingQuote')
 			throw e
 		}
 	}
@@ -185,14 +182,16 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [paymentMethods] Erro ao buscar formas de pagamento', e)
+			sendLogError(e, 'paymentMethods')
 			throw e
 		}
 	}
 
 	static async checkoutSelectPaymentMethod(paymentMethodId) {
-		const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
 
 		try {
+			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
 			if (!cartId) {
 				return null
 			}
@@ -207,20 +206,19 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutSelectPaymentMethod] Erro ao setar forma de pagamento', e)
-			sendLogError(e, 'checkoutSelectPaymentMethod', {
-				cartId
-			})
+			sendLogError(e, 'checkoutSelectPaymentMethod')
 			throw e
 		}
 	}
 
 	static async checkoutComplete(paymentData, comments) {
-		const [cartId, token] = await Promise.all([
-			StorageService.getStorageItem(CartService.CART_KEY),
-			CustomerService.getCustomerToken()
-		])
 
 		try {
+			const [cartId, token] = await Promise.all([
+				StorageService.getStorageItem(CartService.CART_KEY),
+				CustomerService.getCustomerToken()
+			])
+
 			if (!cartId || !token) {
 				return null
 			}
@@ -241,9 +239,7 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
-			sendLogError(e, 'checkoutComplete', {
-				cartId
-			})
+			sendLogError(e, 'checkoutComplete')
 			throw e
 		}
 	}
@@ -265,6 +261,7 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutSelectInstallment] Erro ao definir parcelas pagamento', e)
+			sendLogError(e, 'checkoutSelectInstallment')
 			throw e
 		}
 	}

@@ -23,7 +23,8 @@ import {
 	queryCustomerSimple
 } from '../queries/Customer'
 import { Wake } from '../export'
-import StoreService from '@/services/StoreService'
+import StoreService from './StoreService'
+import { sendLogError } from './Datadog'
 
 export default class CustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_key'
@@ -64,6 +65,7 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [createCustomer] Erro ao criar customer', e)
+			sendLogError(e, "createCustomer")
 			throw e
 		}
 	}
@@ -121,6 +123,7 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [updateCustomer] Erro ao atualizar customer', e)
+			sendLogError(e, "customerUpdate")
 			throw e
 		}
 	}
@@ -175,6 +178,7 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [getCustomer] Erro ao busca customer', e)
+			sendLogError(e, "getSimpleCustomer")
 			throw e
 		}
 	}
@@ -198,6 +202,7 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [getCustomer] Erro ao busca customer', e)
+			sendLogError(e, "getCustomer")
 			throw e
 		}
 	}
@@ -214,7 +219,9 @@ export default class CustomerService {
 		const now = new Date()
 		const expDate = new Date(loginData.validUntil)
 
-		if (now.getTime() > expDate.getTime()) {
+		// O token expira em 90 dias, se for menor, renovar
+		const diff60Days = 60 * 24 * 60 * 60 * 1000
+		if (expDate.getTime() - now.getTime() < diff60Days) {
 			try {
 				const response = await GraphqlService.query(queryCustomerAccessTokenRenew, {
 					customerAccessToken: loginData.token
@@ -226,6 +233,7 @@ export default class CustomerService {
 
 				return response.data.token
 			} catch (e) {
+				sendLogError(e, "refreshCustomerToken")
 				return null
 			}
 		} else {
@@ -253,6 +261,7 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [createAddress] Erro ao criar endereço', e)
+			sendLogError(e, "createAddress")
 			throw e
 		}
 	}
@@ -273,6 +282,7 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [createAddress] Erro ao criar endereço', e)
+			sendLogError(e, "updateAddress")
 			throw e
 		}
 	}

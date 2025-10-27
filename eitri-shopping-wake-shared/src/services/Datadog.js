@@ -1,4 +1,5 @@
 import Eitri from 'eitri-bifrost'
+import CartService from '@/services/CartService'
 
 export const sendDatadogWarningLog = async (data = {}, method) => {
 	try {
@@ -11,7 +12,7 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				applicationId: window.__eitriAppConf?.applicationId,
 				method: method || '',
 				...data
@@ -38,7 +39,7 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				applicationId: window.__eitriAppConf?.applicationId,
 				method: method || '',
 				...data
@@ -63,7 +64,7 @@ export const sendLogOrderAccepted = async cart => {
 			origin: 'APP-SHOPPING-ORDER-ACCEPTED',
 			eventName: window.__eitriAppConf?.slug,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				slug: window.__eitriAppConf?.slug,
 				applicationId: window.__eitriAppConf?.applicationId,
 				version: window.__eitriAppConf?.version,
@@ -91,7 +92,7 @@ export const sendLogOrderAccepted = async cart => {
 
 		const environment = await Eitri.environment.getName()
 		if (environment === 'dev') {
-			console.log('Error', payload)
+			console.log('Log payload', payload)
 			return
 		}
 
@@ -110,16 +111,20 @@ export const sendLogError = async (error, method, data = {}) => {
 
 		const device = await Eitri.device.getInfos()
 
+		const checkout = CartService.CACHED_CART
+
 		const payload = {
 			origin: 'APP-SHOPPING-ERROR',
 			eventName: `${window.__eitriAppConf?.slug}`,
 			slug: `${window.__eitriAppConf?.slug}`,
 			version: window.__eitriAppConf?.version,
 			data: {
-				app: window.__eitriAppConf?.app || '',
+				application: window.__eitriAppConf?.application || '',
 				applicationId: window.__eitriAppConf?.applicationId,
 				device,
 				method: method || '',
+				email: checkout?.customer?.email || '',
+				cartId: checkout?.checkoutId || '',
 				error: {
 					message: error?.message,
 					stack: error?.stack,
