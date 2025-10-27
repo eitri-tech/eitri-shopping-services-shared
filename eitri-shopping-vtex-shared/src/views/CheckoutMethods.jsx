@@ -133,24 +133,24 @@ export default function CheckoutMethods() {
 				optinNewsLetter: false
 			}
 
-			// const result = await Vtex.checkout.payV2(cart, payload)
-			const result = await Vtex.checkout.executePayment(cart, {
-				holderName: 'Joao Teste',
-				cardNumber: '4929 0917 7269 4617',
-				validationCode: '123',
-				dueDate: '12/26',
-				address: {
-					street: 'Rua Guame',
-					complement: '',
-					number: '12',
-					city: 'Rio de Janeiro',
-					reference: '',
-					neighborhood: 'Grajau',
-					state: 'Rio de Janeiro',
-					country: 'Brasil',
-					postalCode: '20541290'
-				}
-			})
+			const result = await Vtex.checkout.payV2(cart, payload)
+			// const result = await Vtex.checkout.executePayment(cart, {
+			// 	holderName: 'Joao Teste',
+			// 	cardNumber: '4929 0917 7269 4617',
+			// 	validationCode: '123',
+			// 	dueDate: '12/26',
+			// 	address: {
+			// 		street: 'Rua Guame',
+			// 		complement: '',
+			// 		number: '12',
+			// 		city: 'Rio de Janeiro',
+			// 		reference: '',
+			// 		neighborhood: 'Grajau',
+			// 		state: 'Rio de Janeiro',
+			// 		country: 'Brasil',
+			// 		postalCode: '20541290'
+			// 	}
+			// })
 			console.log(result)
 		} catch (e) {
 			console.log(e)
