@@ -1,5 +1,6 @@
 import Eitri from 'eitri-bifrost'
 import VtexCartService from '@/services/vtex/cart/VtexCartService'
+import Logger from '@/services/Logger'
 
 export const sendDatadogWarningLog = async (data = {}, method) => {
 	try {
@@ -19,7 +20,7 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
 
 		const environment = await Eitri.environment.getName()
 		if (environment === 'dev') {
-			console.warn('===Warning===', payload)
+			Logger.log('===Warning===', payload)
 			return
 		}
 
@@ -50,7 +51,7 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 
 		const environment = await Eitri.environment.getName()
 		if (environment === 'dev') {
-			console.warn('===Info===', payload)
+			Logger.log('===Info===', payload)
 			return
 		}
 
@@ -103,7 +104,7 @@ export const sendLogOrderAccepted = async cart => {
 
 		const environment = await Eitri.environment.getName()
 		if (environment === 'dev') {
-			console.warn('===OrderAccepted===', payload)
+			Logger.log('===OrderAccepted===', payload)
 			return
 		}
 
@@ -147,7 +148,7 @@ export const sendLogError = async (error, method, data = {}) => {
 
 		const environment = await Eitri.environment.getName()
 		if (environment === 'dev') {
-			console.warn('===sendLogError===', payload)
+			Logger.warn('===sendLogError===', payload)
 			return
 		}
 

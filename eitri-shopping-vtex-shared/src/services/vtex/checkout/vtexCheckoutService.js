@@ -318,8 +318,9 @@ export default class VtexCheckoutService {
 
 			// Boleto bancário
 			if (paymentSystem?.groupName === 'bankInvoicePaymentGroup') {
+				const res = await VtexCheckoutService.payBankInvoice(cart)
 				sendLogOrderAccepted(cart)
-				return await VtexCheckoutService.payBankInvoice(cart)
+				return res
 			}
 
 			// Pix
@@ -329,21 +330,24 @@ export default class VtexCheckoutService {
 
 			//Cartão de Crédito
 			if (paymentSystem?.groupName === 'creditCardPaymentGroup') {
+				const res = await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
 				sendLogOrderAccepted(cart)
-				return await VtexCheckoutService.payWithCard(cart, cardInfo, captchaToken, captchaSiteKey)
+				return res
 			}
 
 			//Promissoria
 			if (paymentSystem?.groupName === 'promissoryPaymentGroup') {
+				const res = await VtexCheckoutService.payPromissory(cart)
 				sendLogOrderAccepted(cart)
-				return await VtexCheckoutService.payPromissory(cart)
+				return res
 			}
 
 			//Cartao de loja
 			const storeCardGroupName = App?.configs?.appConfigs.storeCardGroupName ?? ''
 			if (paymentSystem?.groupName === storeCardGroupName) {
+				const res = await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
 				sendLogOrderAccepted(cart)
-				return await VtexCheckoutService.payStoreCart(cart, cardInfo, paymentSystem.groupName, options)
+				return res
 			}
 
 			const externalPaymentsImplementation = App?.configs?.appConfigs.externalPayments ?? []
