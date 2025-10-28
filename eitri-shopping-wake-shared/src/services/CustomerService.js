@@ -345,6 +345,7 @@ export default class CustomerService {
 
 		Eitri.eventBus.publish({
 			channel: "addToWishlist",
+			broadcast: true,
 			data: {
 				productId
 			}
@@ -366,6 +367,7 @@ export default class CustomerService {
 
 		Eitri.eventBus.publish({
 			channel: "removeFromWishlist",
+			broadcast: true,
 			data: {
 				productId
 			}
