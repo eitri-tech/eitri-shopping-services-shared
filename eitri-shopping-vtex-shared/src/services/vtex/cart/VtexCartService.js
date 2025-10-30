@@ -376,9 +376,16 @@ export default class VtexCartService {
 		return updateCart.data
 	}
 
-	static async addAttachmentToItem(orderFormId, itemIndex, attachmentId, payload) {
+	static async addAttachmentToItem(itemIndex, attachmentName, payload) {
+
+		let orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		if (!orderFormId) {
+			throw new Error('OrderFormId não encontrado')
+		}
+
 		const updateCart = await VtexCaller.post(
-			`api/checkout/pub/orderForm/${orderFormId}/items/${itemIndex}/attachments/${attachmentId}`,
+			`api/checkout/pub/orderForm/${orderFormId}/items/${itemIndex}/attachments/${attachmentName}`,
 			payload
 		)
 
