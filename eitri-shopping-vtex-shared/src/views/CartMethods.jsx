@@ -68,6 +68,45 @@ export default function CartMethods() {
 		}
 	}
 
+	const addMarketingData = async () => {
+		try {
+			const cart = await Vtex.cart.addMarketingData({
+				"utmMedium": "LT00002"
+			}, true)
+			console.log("marketingData result", cart?.marketingData )
+		} catch (e) {
+			console.error('addMarketingData: Error', e)
+		}
+	}
+
+
+	const METHODS = [
+		{
+			label: 'Limpar carrinho',
+			onPress: clearCart
+		},
+		{
+			label: 'Obter ou criar carrinho',
+			onPress: getCart
+		},
+		{
+			label: 'Adicionar ao carrinho',
+			onPress: addToCart
+		},
+		{
+			label: 'Remover do carrinho',
+			onPress: removeFromCart
+		},
+		{
+			label: 'Simulate cart',
+			onPress: simulateCart
+		},
+		{
+			label: 'Add Marketing Data',
+			onPress: addMarketingData
+		}
+	]
+
 	return (
 		<Window
 			topInset
@@ -79,36 +118,19 @@ export default function CartMethods() {
 				justifyContent='center'
 				alignItems='center'
 				width='100%'>
-				<Button
-					wide
-					color='background-color'
-					onPress={clearCart}
-					label='Limpar carrinho'
-				/>
-				<Button
-					wide
-					color='background-color'
-					onPress={getCart}
-					label='Obter ou criar carrinho'
-				/>
-				<Button
-					wide
-					color='background-color'
-					onPress={addToCart}
-					label='Adicionar ao carrinho'
-				/>
-				<Button
-					wide
-					color='background-color'
-					onPress={removeFromCart}
-					label='Remover do carrinho'
-				/>
-				<Button
-					wide
-					color='background-color'
-					onPress={simulateCart}
-					label='Simulate cart'
-				/>
+
+				{
+					METHODS.map((method, index) => (
+						<Button
+							key={index}
+							wide
+							color='background-color'
+							onPress={method.onPress}
+							label={method.label}
+						/>
+					))
+				}
+
 			</View>
 		</Window>
 	)
