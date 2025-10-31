@@ -8,6 +8,7 @@ import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
 import { sendLogError } from '@/services/Datadog'
 import Eitri from 'eitri-bifrost'
 import EventBusChannels from "./../../EventBusChannels";
+import objectsAreEqual from '@/services/vtex/_helpers/objectsAreEqual'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -19,26 +20,33 @@ export default class VtexCartService {
 			const currentMarketingTags = cart?.marketingData?.marketingTags || []
 			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 
-			const mergedSegments = {
-				...segments,
-				...utmParams
-			}
+			const camelCaseKeys = (data) => Object.fromEntries(
+				Object.entries(data).map(([key, value]) => [
+					key.replace(/_([a-z])/g, (_, c) => c.toUpperCase()),
+					value
+				])
+			)
 
 			currentMarketingTags.some(tag => tag === marketingTag) || currentMarketingTags.push(marketingTag)
+			let preparedSegments = camelCaseKeys(segments)
+			let preparedUtmParams = camelCaseKeys(utmParams)
 
 			const marketingData = {
-				utmSource: mergedSegments?.utm_source,
-				utmMedium: mergedSegments?.utm_medium,
-				utmCampaign: mergedSegments?.utm_campaign,
-				utmipage: mergedSegments?.utmi_page,
-				utmiPart: mergedSegments?.utmi_part,
-				utmiCampaign: mergedSegments?.utmi_campaign,
+				...cart?.marketingData,
+				...preparedSegments,
+				...preparedUtmParams,
 				marketingTags: currentMarketingTags
+			}
+
+			const objectsEqual = objectsAreEqual(marketingData, cart?.marketingData)
+
+			if (objectsEqual) {
+				return cart
 			}
 
 			Logger.info('===> Atualizando marketing data no carrinho', marketingData)
 
-			await VtexCaller.post(
+			return await VtexCaller.post(
 				`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`,
 				marketingData
 			)
@@ -54,11 +62,11 @@ export default class VtexCartService {
 			const response = await VtexCaller.get(path)
 			const cart = response.data
 
-			VtexCartService.assertMarketingData(cart)
+			const updatedCart = await VtexCartService.assertMarketingData(cart)
 
-			VtexCartService._CACHED_CART = cart
+			VtexCartService._CACHED_CART = updatedCart
 
-			return cart
+			return updatedCart
 		} catch (e) {
 			console.error('Erro ao obter carrinho', orderFormId, e)
 			throw e
@@ -73,15 +81,15 @@ export default class VtexCartService {
 
 			const cart = response.data
 
-			VtexCartService.assertMarketingData(cart)
-
 			console.log('Novo carrinho gerado', cart.orderFormId)
 
 			await VtexCartService.saveCartIdOnStorage(cart.orderFormId)
 
-			VtexCartService._CACHED_CART = cart
+			const updatedCart = await VtexCartService.assertMarketingData(cart)
 
-			return cart
+			VtexCartService._CACHED_CART = updatedCart
+
+			return updatedCart
 		} catch (e) {
 			console.error('Erro ao gerar novo carrinho', e)
 			throw e
@@ -109,9 +117,8 @@ export default class VtexCartService {
 			return null
 		}
 
-		const path = `api/checkout/pub/orderForm/${cartId}`
-		const response = await VtexCaller.get(path)
-		return response.data
+		return VtexCartService.getCartById(cartId)
+
 	}
 
 	static async getStoredOrderFormId() {

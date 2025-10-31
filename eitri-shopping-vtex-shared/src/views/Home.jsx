@@ -18,14 +18,18 @@ export default function Home() {
 			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			// },
 			verbose: true,
-			gaVerbose: false
+			gaVerbose: false,
+			storePreferences: {
+				marketingTag: 'eitri_android'
+			}
 		})
 
 		// await Vtex.customer.saveUtmParams({
 		// 	utm_campaign: 'app2'
 		// })
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
-		// await Vtex.cart.setOrderFormId('c9bcc5e093f9457382c5079efd04f3c7')
+		// await Vtex.cart.setOrderFormId('edaa77b98b2046c0a3058216b5a64bfd')
+		await Vtex.cart.getCurrentOrCreateCart()
 	}
 
 	const navigateTo = async path => {
