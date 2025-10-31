@@ -28,17 +28,18 @@ export default class VtexCartService {
 			)
 
 			currentMarketingTags.some(tag => tag === marketingTag) || currentMarketingTags.push(marketingTag)
-			let preparedSegments = camelCaseKeys(segments)
-			let preparedUtmParams = camelCaseKeys(utmParams)
+			const preparedSegments = segments ? camelCaseKeys(segments) : {}
+			const preparedUtmParams = utmParams ? camelCaseKeys(utmParams) : {}
+			const currentCartMarketingData = cart?.marketingData || {}
 
 			const marketingData = {
-				...cart?.marketingData,
+				...currentCartMarketingData,
 				...preparedSegments,
 				...preparedUtmParams,
 				marketingTags: currentMarketingTags
 			}
 
-			const objectsEqual = objectsAreEqual(marketingData, cart?.marketingData)
+			const objectsEqual = objectsAreEqual(marketingData, currentCartMarketingData)
 
 			if (objectsEqual) {
 				return cart
@@ -52,6 +53,8 @@ export default class VtexCartService {
 			)
 		} catch (e) {
 			console.error('Erro ao adicionar marketing data', e)
+			sendLogError(e, "assertMarketingData", {}, cart)
+			return cart
 		}
 	}
 

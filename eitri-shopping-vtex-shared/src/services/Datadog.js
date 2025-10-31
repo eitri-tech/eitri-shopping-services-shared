@@ -117,12 +117,12 @@ export const sendLogOrderAccepted = async cart => {
 	}
 }
 
-export const sendLogError = async (error, method, data = {}) => {
+export const sendLogError = async (error, method, data = {}, _cart) => {
 	try {
 
 		const device = await Eitri.device.getInfos()
 
-		const cart = VtexCartService._CACHED_CART
+		const cart = _cart || VtexCartService._CACHED_CART
 
 		const payload = {
 			origin: 'APP-SHOPPING-ERROR',
