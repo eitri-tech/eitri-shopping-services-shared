@@ -19,26 +19,27 @@ export default class VtexCartService {
 			const currentMarketingTags = cart?.marketingData?.marketingTags || []
 			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 
-			const mergedSegments = {
-				...segments,
-				...utmParams
-			}
+			const camelCaseKeys = (data) => Object.fromEntries(
+				Object.entries(data).map(([key, value]) => [
+					key.replace(/_([a-z])/g, (_, c) => c.toUpperCase()),
+					value
+				])
+			)
 
 			currentMarketingTags.some(tag => tag === marketingTag) || currentMarketingTags.push(marketingTag)
+			let preparedSegments = camelCaseKeys(segments)
+			let preparedUtmParams = camelCaseKeys(utmParams)
 
 			const marketingData = {
-				utmSource: mergedSegments?.utm_source,
-				utmMedium: mergedSegments?.utm_medium,
-				utmCampaign: mergedSegments?.utm_campaign,
-				utmipage: mergedSegments?.utmi_page,
-				utmiPart: mergedSegments?.utmi_part,
-				utmiCampaign: mergedSegments?.utmi_campaign,
+				...cart?.marketingData,
+				...preparedSegments,
+				...preparedUtmParams,
 				marketingTags: currentMarketingTags
 			}
 
 			Logger.info('===> Atualizando marketing data no carrinho', marketingData)
 
-			await VtexCaller.post(
+			return await VtexCaller.post(
 				`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`,
 				marketingData
 			)
@@ -109,9 +110,8 @@ export default class VtexCartService {
 			return null
 		}
 
-		const path = `api/checkout/pub/orderForm/${cartId}`
-		const response = await VtexCaller.get(path)
-		return response.data
+		return VtexCartService.getCartById(cartId)
+
 	}
 
 	static async getStoredOrderFormId() {
