@@ -8,6 +8,7 @@ import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
 import { sendLogError } from '@/services/Datadog'
 import Eitri from 'eitri-bifrost'
 import EventBusChannels from "./../../EventBusChannels";
+import objectsAreEqual from '@/services/vtex/_helpers/objectsAreEqual'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -37,6 +38,12 @@ export default class VtexCartService {
 				marketingTags: currentMarketingTags
 			}
 
+			const objectsEqual = objectsAreEqual(marketingData, cart?.marketingData)
+
+			if (objectsEqual) {
+				return cart
+			}
+
 			Logger.info('===> Atualizando marketing data no carrinho', marketingData)
 
 			return await VtexCaller.post(
@@ -55,11 +62,11 @@ export default class VtexCartService {
 			const response = await VtexCaller.get(path)
 			const cart = response.data
 
-			VtexCartService.assertMarketingData(cart)
+			const updatedCart = await VtexCartService.assertMarketingData(cart)
 
-			VtexCartService._CACHED_CART = cart
+			VtexCartService._CACHED_CART = updatedCart
 
-			return cart
+			return updatedCart
 		} catch (e) {
 			console.error('Erro ao obter carrinho', orderFormId, e)
 			throw e
@@ -74,15 +81,15 @@ export default class VtexCartService {
 
 			const cart = response.data
 
-			VtexCartService.assertMarketingData(cart)
-
 			console.log('Novo carrinho gerado', cart.orderFormId)
 
 			await VtexCartService.saveCartIdOnStorage(cart.orderFormId)
 
-			VtexCartService._CACHED_CART = cart
+			const updatedCart = await VtexCartService.assertMarketingData(cart)
 
-			return cart
+			VtexCartService._CACHED_CART = updatedCart
+
+			return updatedCart
 		} catch (e) {
 			console.error('Erro ao gerar novo carrinho', e)
 			throw e

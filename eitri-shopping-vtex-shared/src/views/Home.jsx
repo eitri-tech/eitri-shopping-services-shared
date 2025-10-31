@@ -29,7 +29,7 @@ export default function Home() {
 		// })
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
 		// await Vtex.cart.setOrderFormId('edaa77b98b2046c0a3058216b5a64bfd')
-		// await Vtex.cart.getCurrentOrCreateCart()
+		await Vtex.cart.getCurrentOrCreateCart()
 	}
 
 	const navigateTo = async path => {
