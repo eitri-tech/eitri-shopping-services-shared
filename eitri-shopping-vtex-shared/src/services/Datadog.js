@@ -8,11 +8,11 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
 		const payload = {
 			origin: 'APP-SHOPPING-WARNING',
 			eventName: `${window.__eitriAppConf?.slug}`,
-			slug: `${window.__eitriAppConf?.slug}`,
-			version: window.__eitriAppConf?.version,
 			data: {
-				application: window.__eitriAppConf?.application || '',
-				applicationId: window.__eitriAppConf?.applicationId,
+                application: window.__eitriAppConf?.application || '',
+                slug: window.__eitriAppConf?.slug,
+                applicationId: window.__eitriAppConf?.applicationId,
+                version: window.__eitriAppConf?.version,
 				method: method || '',
 				...data
 			}
@@ -39,11 +39,11 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 		const payload = {
 			origin: 'APP-SHOPPING-INFO',
 			eventName: `${window.__eitriAppConf?.slug}`,
-			slug: `${window.__eitriAppConf?.slug}`,
-			version: window.__eitriAppConf?.version,
 			data: {
-				application: window.__eitriAppConf?.application || '',
-				applicationId: window.__eitriAppConf?.applicationId,
+                application: window.__eitriAppConf?.application || '',
+                slug: window.__eitriAppConf?.slug,
+                applicationId: window.__eitriAppConf?.applicationId,
+                version: window.__eitriAppConf?.version,
 				method: method || '',
 				...data
 			}
@@ -127,12 +127,12 @@ export const sendLogError = async (error, method, data = {}) => {
 		const payload = {
 			origin: 'APP-SHOPPING-ERROR',
 			eventName: `${window.__eitriAppConf?.slug}`,
-			slug: `${window.__eitriAppConf?.slug}`,
-			version: window.__eitriAppConf?.version,
 			data: {
-				application: window.__eitriAppConf?.application || '',
-				applicationId: window.__eitriAppConf?.applicationId,
-				device,
+                application: window.__eitriAppConf?.application || '',
+                slug: window.__eitriAppConf?.slug,
+                applicationId: window.__eitriAppConf?.applicationId,
+                version: window.__eitriAppConf?.version,
+                device,
 				method: method || '',
 				email: cart?.clientProfileData?.email,
 				cartId: cart?.orderFormId,

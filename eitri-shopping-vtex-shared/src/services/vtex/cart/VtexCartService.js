@@ -6,6 +6,8 @@ import Vtex from '../../Vtex'
 import getSalesChannel from '../_helpers/getSalesChannel'
 import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
 import { sendLogError } from '@/services/Datadog'
+import Eitri from 'eitri-bifrost'
+import EventBusChannels from "./../../EventBusChannels";
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -167,6 +169,14 @@ export default class VtexCartService {
 			GAVtexInternalService.addItemToCart(itemToSend, addToCartRes.data)
 
 			VtexCartService._CACHED_CART = addToCartRes.data
+
+            Eitri.eventBus.publish({
+                channel: EventBusChannels.ADD_TO_CART,
+                broadcast: true,
+                data: {
+                    payload
+                }
+            });
 			return addToCartRes.data
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
@@ -193,6 +203,14 @@ export default class VtexCartService {
 			}
 
 			VtexCartService._CACHED_CART = updateCart.data
+
+            Eitri.eventBus.publish({
+                channel: EventBusChannels.UPDATE_CART_ITEM,
+                broadcast: true,
+                data: {
+                    payload
+                }
+            });
 
 			return updateCart.data
 		} catch (e) {
@@ -267,12 +285,24 @@ export default class VtexCartService {
 		return response.data
 	}
 
-	static async addMarketingData(payload) {
+	static async addMarketingData(payload, append) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
+
+		if (!orderFormId) {
+			return null
+		}
+
+		let finalPayload = payload
+
+		if (append) {
+			const cart = await VtexCartService.getCartById(orderFormId)
+			const marketingData = cart?.marketingData || {}
+			finalPayload = { ...marketingData, ...payload }
+		}
 
 		const response = await VtexCaller.post(
 			`api/checkout/pub/orderForm/${orderFormId}/attachments/marketingData`,
-			payload
+			finalPayload
 		)
 
 		return response.data

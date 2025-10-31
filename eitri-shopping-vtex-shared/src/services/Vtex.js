@@ -57,7 +57,10 @@ export default class Vtex {
 			Vtex.configs.session = session
 		})
 
-		Vtex.customer.executeRefreshToken()
+		if (!remoteConfig.skipRefreshToken) {
+			Vtex.customer.executeRefreshToken()
+		}
+
 	}
 
 	static buildSession = async (segments, update) => {
