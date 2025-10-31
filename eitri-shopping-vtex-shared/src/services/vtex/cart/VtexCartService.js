@@ -47,10 +47,12 @@ export default class VtexCartService {
 
 			Logger.info('===> Atualizando marketing data no carrinho', marketingData)
 
-			return await VtexCaller.post(
+			const res = await VtexCaller.post(
 				`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`,
 				marketingData
 			)
+
+			return res.data
 		} catch (e) {
 			console.error('Erro ao adicionar marketing data', e)
 			sendLogError(e, "assertMarketingData", {}, cart)
