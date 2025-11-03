@@ -4,6 +4,7 @@ import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
 import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
+import EventBus from '@/services/EventBus'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -463,7 +464,7 @@ export default class VtexCustomerService {
 			if (Object.keys(utmParams).length > 0) {
 				try {
 					console.log('Publicando eventBus', VtexCustomerService.CHANNEL_UTM_PARAMS_KEY)
-					Eitri.eventBus.publish({
+					EventBus.publish({
 						channel: VtexCustomerService.CHANNEL_UTM_PARAMS_KEY,
 						broadcast: true,
 						data: utmParams

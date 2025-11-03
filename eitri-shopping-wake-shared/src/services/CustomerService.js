@@ -343,7 +343,7 @@ export default class CustomerService {
 			productId: parseInt(productId)
 		})
 
-		Eitri.eventBus.publish({
+		EventBus.publish({
 			channel: "addToWishlist",
 			broadcast: true,
 			data: {

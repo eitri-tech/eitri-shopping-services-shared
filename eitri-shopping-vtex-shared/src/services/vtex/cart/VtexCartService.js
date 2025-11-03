@@ -9,6 +9,7 @@ import { sendLogError } from '@/services/Datadog'
 import Eitri from 'eitri-bifrost'
 import EventBusChannels from "./../../EventBusChannels";
 import objectsAreEqual from '@/services/vtex/_helpers/objectsAreEqual'
+import EventBus from '@/services/EventBus'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
@@ -182,13 +183,14 @@ export default class VtexCartService {
 
 			VtexCartService._CACHED_CART = addToCartRes.data
 
-            Eitri.eventBus.publish({
-                channel: EventBusChannels.ADD_TO_CART,
-                broadcast: true,
-                data: {
-                    payload
-                }
-            });
+			EventBus.publish({
+				channel: EventBusChannels.ADD_TO_CART,
+				broadcast: true,
+				data: {
+					payload
+				}
+			})
+
 			return addToCartRes.data
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
@@ -216,7 +218,7 @@ export default class VtexCartService {
 
 			VtexCartService._CACHED_CART = updateCart.data
 
-            Eitri.eventBus.publish({
+			EventBus.publish({
                 channel: EventBusChannels.UPDATE_CART_ITEM,
                 broadcast: true,
                 data: {
