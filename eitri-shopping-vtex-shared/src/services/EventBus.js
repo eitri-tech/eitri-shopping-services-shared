@@ -7,7 +7,6 @@ export default class EventBus {
 
 	static async isBroadcastAllowed() {
 		if (EventBus.BROADCAST_ALLOWED !== null) {
-			console.log("EventBus.BROADCAST_ALLOWED", EventBus.BROADCAST_ALLOWED)
 			return EventBus.BROADCAST_ALLOWED
 		}
 
