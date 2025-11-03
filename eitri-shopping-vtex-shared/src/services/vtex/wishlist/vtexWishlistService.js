@@ -4,6 +4,7 @@ import Vtex from '../../Vtex'
 import VtexCustomerService from '../customer/vtexCustomerService'
 import decodeJwt from '../_helpers/decodeJWT'
 import EventBusChannels from "./../../EventBusChannels";
+import EventBus from '@/services/EventBus'
 
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
@@ -63,14 +64,14 @@ export default class VtexWishlistService {
 
 		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
 
-		Eitri.eventBus.publish({
+		EventBus.publish({
 			channel: EventBusChannels.REMOVE_FROM_WISHLIST,
 			broadcast: true,
 			data: {
 				id,
 				response: response.data
 			}
-		});
+		})
 
 		return response.data
 	}
@@ -105,7 +106,7 @@ export default class VtexWishlistService {
 
 		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
 
-		Eitri.eventBus.publish({
+		EventBus.publish({
 			channel: EventBusChannels.ADD_TO_WISHLIST,
 			broadcast: true,
 			data: {

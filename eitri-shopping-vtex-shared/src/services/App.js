@@ -1,6 +1,7 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from './Vtex'
 import ClarityService from './tracking/ClarityService'
+import EventBus from '@/services/EventBus'
 
 export default class App {
 	static configs = {
@@ -11,7 +12,7 @@ export default class App {
 	static tryAutoConfigure = async overwrites => {
 		try {
 			console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
-			Eitri.eventBus.subscribe({
+			EventBus.subscribe({
 				channel: Vtex.customer.CHANNEL_UTM_PARAMS_KEY,
 				broadcast: true,
 				callback: segments => {
