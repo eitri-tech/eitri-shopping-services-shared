@@ -73,15 +73,6 @@ export default class VtexWishlistService {
 			}
 		})
 
-		EventBus.publish({
-			channel: EventBusChannels.REMOVE_FROM_WISHLIST,
-			broadcast: true,
-			data: {
-				id,
-				response: response.data
-			}
-		});
-
 		return response.data
 	}
 
