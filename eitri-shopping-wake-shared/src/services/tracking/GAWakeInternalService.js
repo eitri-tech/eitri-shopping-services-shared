@@ -162,7 +162,7 @@ export default class GAWakeInternalService {
       const params = {
         currency: "BRL",
         value: cart?.total,
-        transaction_id: cart?.orders?.[0]?.orderId,
+        transaction_id: cart?.orders?.[0]?.orderId || cart?.checkoutId,
         items: items,
       };
 
