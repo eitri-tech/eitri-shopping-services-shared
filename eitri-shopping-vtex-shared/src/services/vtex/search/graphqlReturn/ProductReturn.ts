@@ -56,6 +56,25 @@ export const productReturn = `{
 				RewardValue
 				PriceValidUntil
 				AvailableQuantity
+				discountHighlights {
+               		name
+               	}
+				teasers {
+					name
+					conditions {
+						minimumQuantity
+						parameters {
+							name
+							value
+						}
+					}
+					effects {
+						parameters {
+							name
+							value
+						}
+					}
+				}
 			}
 		}
 		variations {
