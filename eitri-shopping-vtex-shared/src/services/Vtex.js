@@ -9,6 +9,7 @@ import VtexStoreService from './vtex/store/vtexStoreService'
 import App from './App'
 import GAService from './tracking/GAService'
 import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
+import { VtexGooglePayServices } from '@/services/vtex/googlePay/vtexGooglePayServices'
 
 export default class Vtex {
 	static configs = {
@@ -60,7 +61,6 @@ export default class Vtex {
 		if (!remoteConfig.skipRefreshToken) {
 			Vtex.customer.executeRefreshToken()
 		}
-
 	}
 
 	static buildSession = async (segments, update) => {
@@ -128,4 +128,5 @@ export default class Vtex {
 	static store = VtexStoreService
 	static searchGraphql = VtexSearchGraphql
 	static http = VtexCaller
+	static googlePay = VtexGooglePayServices
 }

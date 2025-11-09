@@ -18,17 +18,14 @@ export default function Home() {
 			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			// },
 			verbose: true,
-			gaVerbose: false,
-			storePreferences: {
-				marketingTag: 'eitri_android'
-			}
+			gaVerbose: false
 		})
 
 		// await Vtex.customer.saveUtmParams({
 		// 	utm_campaign: 'app2'
 		// })
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
-		// await Vtex.cart.setOrderFormId('edaa77b98b2046c0a3058216b5a64bfd')
+		// await Vtex.cart.setOrderFormId('03d3898939334c8c91d9386af0c22d38')
 		await Vtex.cart.getCurrentOrCreateCart()
 	}
 
@@ -94,6 +91,12 @@ export default function Home() {
 					color='background-color'
 					onPress={() => navigateTo('GraphqlSearchMethods')}
 					label='Métodos de Busca'
+				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('GooglePayMethods')}
+					label='Métodos de Google pay'
 				/>
 			</View>
 		</Window>
