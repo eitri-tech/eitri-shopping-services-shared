@@ -3,8 +3,13 @@ import Vtex from '../services/Vtex'
 
 export default function GooglePayMethods() {
 	const loadPaymentData = async () => {
-		const paymentData = await Vtex.googlePay.loadPaymentData()
-		console.log(paymentData)
+		try {
+			const paymentData = await Vtex.googlePay.loadPaymentData()
+			console.log(paymentData)
+		} catch (e) {
+			console.error("pd", e)
+		}
+
 	}
 
 	return (

@@ -35,6 +35,8 @@ export class VtexGooglePayServices {
 		const cart = await VtexCartService.getCartIfExists()
 		const paymentSystems = cart?.paymentData?.paymentSystems
 		const allowedCards = paymentSystems.filter(ps => ps.groupName === 'creditCardPaymentGroup')
+
+		const allowedGooglePayCards = ['MASTERCARD', 'AMEX', 'ELO', 'VISA']
 		const allowedCardNetworks = allowedCards.map(c => c.name.toUpperCase())
 
 		const paymentDataRequest = {
@@ -45,7 +47,7 @@ export class VtexGooglePayServices {
 					type: 'CARD',
 					parameters: {
 						allowedAuthMethods: walletHub.allowedAuthMethods,
-						allowedCardNetworks: allowedCardNetworks,
+						allowedCardNetworks: allowedCardNetworks.filter(card => allowedGooglePayCards.includes(card)),
 						assuranceDetailsRequired: true,
 						billingAddressRequired: true,
 						billingAddressParameters: {
@@ -77,6 +79,8 @@ export class VtexGooglePayServices {
 			}
 		}
 
+		console.log("paymentDataRequest", paymentDataRequest)
+
 		const paymentsClient = await Eitri.googlePay.init(env)
 		const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest)
 
@@ -95,5 +99,12 @@ export class VtexGooglePayServices {
 			}
 		}
 
+	}
+
+	static async isAvailable (): Promise<Boolean> {
+		if (!Eitri.canIUse(31)) {
+			return false;
+		}
+		return await Eitri.googlePay.isAvailable()
 	}
 }

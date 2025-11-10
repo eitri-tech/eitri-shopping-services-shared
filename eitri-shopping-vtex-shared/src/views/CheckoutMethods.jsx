@@ -252,7 +252,7 @@ export default function CheckoutMethods() {
 
 			console.log("Payment Data:", payload);
 
-			const result = await Vtex.checkout.payV2(cart, payload)
+			// const result = await Vtex.checkout.payV2(cart, payload)
 
 
 			console.log("Payment successful:", paymentData.paymentMethodData);
