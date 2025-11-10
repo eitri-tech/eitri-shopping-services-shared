@@ -1,4 +1,5 @@
 import Vtex from '../services/Vtex'
+import Eitri from 'eitri-bifrost'
 
 export default function CheckoutMethods() {
 	const getCart = async () => {
@@ -70,7 +71,7 @@ export default function CheckoutMethods() {
 	const selectPayment = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 
-		const paymentSystem = 2
+		const paymentSystem = 169
 		const installmentsNumber = 3
 
 		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
@@ -157,6 +158,109 @@ export default function CheckoutMethods() {
 		}
 	}
 
+	const googlePay = async () => {
+		const googlePayAvailable = await Eitri.googlePay.isAvailable();
+		if (!googlePayAvailable) {
+			return;
+		}
+
+		const paymentsClient = await Eitri.googlePay.init("PRODUCTION"); // or "PRODUCTION"
+
+		const host = window.location.host;
+
+		const res = await Eitri.http.get(`https://wallet-hub.services.vtexpayments.com/wallet-hub/pub/wallets/googlePay/merchant-info?merchantOrigin=${host}&an=toymania`);
+
+		const merchantInfo = res.data
+
+		const cart = await Vtex.cart.getCurrentOrCreateCart()
+
+
+		const paymentDataRequest = {
+			"apiVersion": 2,
+			"apiVersionMinor": 0,
+			"allowedPaymentMethods": [
+				{
+					"type": "CARD",
+					"parameters": {
+						"allowedAuthMethods": [
+							"PAN_ONLY"
+						],
+						"allowedCardNetworks": [
+							"MASTERCARD",
+							"AMEX",
+							"ELO",
+							"VISA"
+						],
+						"assuranceDetailsRequired": true,
+						"billingAddressRequired": true,
+						"billingAddressParameters": {
+							"format": "FULL"
+						},
+						"cvcRequired": true
+					},
+					"tokenizationSpecification": {
+						"type": "PAYMENT_GATEWAY",
+						"parameters": {
+							"gateway": "vtex",
+							"gatewayMerchantId": "vtex"
+						}
+					}
+				}
+			],
+			"transactionInfo": {
+				"countryCode": "BR",
+				"currencyCode": "BRL",
+				"totalPriceStatus": "FINAL",
+				"totalPrice": (cart.value / 100).toFixed(2),
+				"totalPriceLabel": "Total"
+			},
+			merchantInfo: {
+				merchantId: merchantInfo.merchantId,
+				merchantOrigin: merchantInfo.merchantOrigin,
+				merchantName: merchantInfo.merchantName,
+				authJwt: merchantInfo.authJwt,
+			}
+		}
+
+		console.log("Payment Data Request:", paymentDataRequest);
+
+		try {
+			const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
+
+			const token = paymentData.paymentMethodData.tokenizationData.token
+			const billingAddress = paymentData.paymentMethodData.info.billingAddress
+
+			const payload = {
+				fields: {
+					"metadata": JSON.stringify({
+						"walletId": "googlePay",
+						"paymentData": {
+							"assuranceDetails": {
+								"cardHolderAuthenticated": false,
+								"accountVerified": true
+							},
+							"billingAddress": billingAddress,
+							"token": token
+						}
+					})
+				},
+				captchaToken: '',
+				captchaSiteKey: '',
+				savePersonalData: true,
+				optinNewsLetter: false
+			}
+
+			console.log("Payment Data:", payload);
+
+			// const result = await Vtex.checkout.payV2(cart, payload)
+
+
+			console.log("Payment successful:", paymentData.paymentMethodData);
+		} catch (error) {
+			console.error("Payment failed:", error);
+		}
+	}
+
 	return (
 		<Window
 			topInset
@@ -209,6 +313,13 @@ export default function CheckoutMethods() {
 					color='background-color'
 					onPress={pay}
 					label='Pagar'
+				/>
+
+				<Button
+					wide
+					color='background-color'
+					onPress={googlePay}
+					label='Pagar com Google Pay'
 				/>
 			</View>
 		</Window>
