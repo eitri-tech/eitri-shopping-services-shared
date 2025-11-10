@@ -80,22 +80,7 @@ export class VtexGooglePayServices {
 		}
 
 		const paymentsClient = await Eitri.googlePay.init(env)
-		const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest)
-
-		const token = paymentData?.paymentMethodData?.tokenizationData.token
-		const billingAddress = paymentData?.paymentMethodData?.info?.billingAddress
-
-		return  {
-			walletId: 'googlePay',
-			paymentData: {
-				assuranceDetails: {
-					cardHolderAuthenticated: false,
-					accountVerified: true
-				},
-				billingAddress: billingAddress,
-				token: token
-			}
-		}
+		return await paymentsClient.loadPaymentData(paymentDataRequest)
 
 	}
 
