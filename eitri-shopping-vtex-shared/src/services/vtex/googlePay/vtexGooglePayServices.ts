@@ -79,8 +79,6 @@ export class VtexGooglePayServices {
 			}
 		}
 
-		console.log("paymentDataRequest", paymentDataRequest)
-
 		const paymentsClient = await Eitri.googlePay.init(env)
 		const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest)
 
