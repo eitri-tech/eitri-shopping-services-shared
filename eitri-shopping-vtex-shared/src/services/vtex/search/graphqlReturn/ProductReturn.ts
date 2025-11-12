@@ -5,6 +5,7 @@ export const productReturn = `{
 	categoryTree {
 		id
 		name
+		href
 	}
 	description
 	clusterHighlights {
