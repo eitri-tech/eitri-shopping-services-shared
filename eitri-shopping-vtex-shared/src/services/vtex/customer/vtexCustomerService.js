@@ -269,9 +269,9 @@ export default class VtexCustomerService {
 	}
 
 	static async logout() {
-		VtexCustomerService.notifyLogoutToExposedApis()
-		StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
-		StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		await VtexCustomerService.notifyLogoutToExposedApis()
+		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
+		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
 		return
 	}
 
