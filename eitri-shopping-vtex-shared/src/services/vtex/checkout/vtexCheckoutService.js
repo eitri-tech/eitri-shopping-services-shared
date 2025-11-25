@@ -378,10 +378,11 @@ export default class VtexCheckoutService {
 		return VtexPaymentService.executePayment(cart, options)
 	}
 
-	static async getPixStatus(transactionId, paymentId) {
+	static async getPixStatus(transactionId, paymentId, hostStore) {
 		try {
+			const host = hostStore || Vtex.configs.account
 			const result = await Eitri.http.get(
-				`https://${Vtex.configs.account}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
+				`https://${host}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
 				{
 					headers: {
 						'accept': 'application/json, text/javascript, */*; q=0.01',
