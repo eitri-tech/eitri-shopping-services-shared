@@ -5,7 +5,7 @@ import Eitri from 'eitri-bifrost'
 import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
-import { sendLogError, sendLogOrderAccepted } from '../../Datadog'
+import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
 
 type PaymentOptions = {
 	fields: {
@@ -69,7 +69,15 @@ export default class VtexPaymentService {
 
 			return paymentProcessed
 		} catch (e) {
-			sendLogError(e, 'executePayment')
+			const NOT_COMPLETE_ERRORS = ['CHK0328', 'CHK003', 'CHK0087', 'ORD062', 'CHK0223']
+			const errorCode = e.response?.data?.error?.code
+
+			if (NOT_COMPLETE_ERRORS.includes(errorCode)) {
+				sendOrderNotComplete(e, 'executePayment')
+			} else {
+				sendLogError(e, 'executePayment')
+			}
+
 			throw e
 		}
 	}
