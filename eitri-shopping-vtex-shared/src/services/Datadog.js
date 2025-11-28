@@ -161,3 +161,48 @@ export const sendLogError = async (error, method, data = {}, _cart) => {
 		console.error('Erro sendLogError', e)
 	}
 }
+
+export const sendOrderNotComplete = async (error, method, data = {}, _cart) => {
+	try {
+
+		const device = await Eitri.device.getInfos()
+
+		const cart = _cart || VtexCartService._CACHED_CART
+
+		const payload = {
+			origin: 'APP-SHOPPING-ORDER-NOT-COMPLETED',
+			eventName: `${window.__eitriAppConf?.slug}`,
+			data: {
+				application: window.__eitriAppConf?.application || '',
+				slug: window.__eitriAppConf?.slug,
+				applicationId: window.__eitriAppConf?.applicationId,
+				version: window.__eitriAppConf?.version,
+				device,
+				method: method || '',
+				email: cart?.clientProfileData?.email,
+				cartId: cart?.orderFormId,
+				error: {
+					message: error?.message,
+					stack: error?.stack,
+					name: error?.name,
+					...error
+				},
+				...data
+			}
+		}
+
+		const environment = await Eitri.environment.getName()
+		if (environment === 'dev') {
+			Logger.warn('===sendLogError===', payload)
+			return
+		}
+
+
+		Eitri.http.post('https://api.eitri.tech/analytics/event', payload, {
+			'Content-Type': 'application/json',
+			'application-id': window.__eitriAppConf?.applicationId
+		})
+	} catch (e) {
+		console.error('Erro sendLogError', e)
+	}
+}
