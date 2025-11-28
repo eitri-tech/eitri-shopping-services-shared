@@ -56,7 +56,6 @@ export default class VtexCartService {
 			return res.data
 		} catch (e) {
 			console.error('Erro ao adicionar marketing data', e)
-			sendLogError(e, "assertMarketingData", {}, cart)
 			return cart
 		}
 	}
