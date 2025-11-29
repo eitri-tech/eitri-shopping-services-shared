@@ -233,6 +233,13 @@ export default class CustomerService {
 
 				return response.data.token
 			} catch (e) {
+				
+				// isolando erros que são corrigidos no fluxo
+				if (typeof e?.message === 'string' && e.message.includes('"code":"TKN100"')) {
+					console.error('[SHARED] [refreshCustomerToken]', e)
+					return null
+				}
+
 				sendLogError(e, "refreshCustomerToken")
 				return null
 			}
