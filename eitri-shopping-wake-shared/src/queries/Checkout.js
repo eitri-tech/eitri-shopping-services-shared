@@ -132,6 +132,8 @@ const checkoutModel = `
     url
     products {
       name
+      gift
+      url
       productAttributes {
         name
         value
