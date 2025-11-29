@@ -25,7 +25,7 @@ export default function Home() {
 		// 	utm_campaign: 'app2'
 		// })
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
-		// await Vtex.cart.setOrderFormId('c9bcc5e093f9457382c5079efd04f3c7')
+		await Vtex.cart.setOrderFormId('25fa3690032940d6930031caadeb3289')
 		await Vtex.cart.getCurrentOrCreateCart()
 	}
 

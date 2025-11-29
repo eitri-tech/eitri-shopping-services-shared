@@ -1,7 +1,24 @@
 import Vtex from '../services/Vtex'
 import Eitri from 'eitri-bifrost'
+import Recaptcha from '@/recaptcha/Recaptcha'
 
 export default function CheckoutMethods() {
+
+	const [recaptchaSiteKey, setRecaptchaSiteKey] = useState('')
+
+	const recaptchaRef = useRef()
+
+	// console.log('cart in CheckoutReview', cart)
+
+	useEffect(() => {
+		Eitri.environment.getRemoteConfigs().then(rc => {
+			const recaptchaSiteKey = rc?.appConfigs?.checkout?.recaptchaKey
+			if (recaptchaSiteKey) {
+				setRecaptchaSiteKey(recaptchaSiteKey)
+			}
+		})
+	}, [])
+
 	const getCart = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 		console.log('carrinho=====>', cart.orderFormId)
@@ -110,6 +127,9 @@ export default function CheckoutMethods() {
 		try {
 			const cart = await Vtex.cart.getCurrentOrCreateCart()
 
+			const captchaToken = await recaptchaRef?.current?.getRecaptchaToken()
+			console.log("captchaToken", captchaToken)
+
 			const payload = {
 				fields: {
 					holderName: 'Joao Teste',
@@ -128,8 +148,8 @@ export default function CheckoutMethods() {
 						postalCode: '20541290'
 					}
 				},
-				captchaToken: '',
-				captchaSiteKey: '',
+				captchaToken: captchaToken,
+				captchaSiteKey: recaptchaSiteKey,
 				savePersonalData: true,
 				optinNewsLetter: false
 			}
@@ -322,6 +342,12 @@ export default function CheckoutMethods() {
 					label='Pagar com Google Pay'
 				/>
 			</View>
+			{recaptchaSiteKey && (
+				<Recaptcha
+					ref={recaptchaRef}
+					siteKey={recaptchaSiteKey}
+				/>
+			)}
 		</Window>
 	)
 }
