@@ -185,12 +185,16 @@ export default class CustomerService {
 
 	static async getCustomer() {
 		try {
-			const accessTokenData = await CustomerService.getCustomerAccessTokenData()
 
+			// Esse aqui só devolve o token e executa RT se necessário
 			const savedToken = await CustomerService.getCustomerToken()
-			if (!accessTokenData) {
+
+			if (!savedToken) {
 				return null
 			}
+
+			// Esse aqui devolve o token e o tipo de acesso
+			const accessTokenData = await CustomerService.getCustomerAccessTokenData()
 
 			const response = await GraphqlService.query(
 				accessTokenData.type === 'SIMPLE' ? queryCustomerSimple : queryCustomer,
