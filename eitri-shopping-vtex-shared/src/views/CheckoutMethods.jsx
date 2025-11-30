@@ -8,8 +8,6 @@ export default function CheckoutMethods() {
 
 	const recaptchaRef = useRef()
 
-	// console.log('cart in CheckoutReview', cart)
-
 	useEffect(() => {
 		Eitri.environment.getRemoteConfigs().then(rc => {
 			const recaptchaSiteKey = rc?.appConfigs?.checkout?.recaptchaKey
@@ -88,8 +86,8 @@ export default function CheckoutMethods() {
 	const selectPayment = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 
-		const paymentSystem = 169
-		const installmentsNumber = 3
+		const paymentSystem = 2
+		const installmentsNumber = 1
 
 		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
 		const installmentOption = cart?.paymentData.installmentOptions.find(i => i.paymentSystem === pay.id.toString())

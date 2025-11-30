@@ -38,8 +38,38 @@ type StartTransactionReturn = {
 	orderGroup: string
 	Vtex_CHKO_Auth: string
 	CheckoutDataAccess: string
-	merchantTransactionId: string
-	merchantTransactionName: string
+	merchantTransactions: {
+		id: string;
+		merchantName: string
+		transactionId: string
+		payments: {
+			accountId?: string
+			bin?: string
+			giftCardId?: string
+			giftCardProvider?: string
+			giftCardRedemptionCode?: string
+			paymentSystem: string
+			value: number
+			tokenId: number
+			referenceValue: number
+		}[]
+	}[]
+	payments: {
+		accountId?: string
+		bin?: string
+		merchantSellerPayments: {
+			id: string
+			installmentValue: number
+			installments: number
+			interestRate: number
+			referenceValue: number
+			value: number
+		}[]
+		paymentSystem: number
+		referenceValue: number
+		tokenId?: string
+		value: number
+	}[]
 }
 
 type ProcessPaymentReturn = {
@@ -113,9 +143,11 @@ export default class VtexPaymentService {
 
 			const transactionData = result.data
 
-			const { id, orderGroup, merchantTransactions } = transactionData
+			if (!transactionData.id) {
+				throw Error(JSON.stringify(transactionData.messages))
+			}
 
-			const merchantTransaction = merchantTransactions?.find(mt => mt.transactionId === id)
+			const { id, orderGroup, merchantTransactions, paymentData } = transactionData
 
 			const Vtex_CHKO_Auth = extractCookies(result, 'Vtex_CHKO_Auth')
 			const CheckoutDataAccess = extractCookies(result, 'CheckoutDataAccess=VTEX_CHK_Order_Auth')
@@ -125,8 +157,8 @@ export default class VtexPaymentService {
 				orderGroup,
 				Vtex_CHKO_Auth,
 				CheckoutDataAccess,
-				merchantTransactionId: merchantTransaction?.id,
-				merchantTransactionName: merchantTransaction?.merchantName
+				merchantTransactions,
+				payments: paymentData.payments
 			}
 
 			console.log('====> Transaçao finalizada com sucesso com transactionId', id)
@@ -144,20 +176,24 @@ export default class VtexPaymentService {
 		try {
 			let paymentsMethods = []
 
-			cart?.paymentData?.payments?.forEach(payment => {
-				paymentsMethods.push({
-					paymentSystem: payment?.paymentSystem,
-					installments: payment?.installments,
-					currencyCode: App.configs?.storePreferences?.currencyCode || 'BRL',
-					installmentsInterestRate: payment?.merchantSellerPayments?.[0]?.interestRate ?? 0,
-					value: payment?.value,
-					installmentsValue: payment?.merchantSellerPayments?.[0]?.value ?? payment?.value,
-					referenceValue: payment?.referenceValue,
-					fields: options?.fields,
-					transaction: {
-						id: startTransactionReturn.id,
-						merchantName: startTransactionReturn.merchantTransactionName
-					}
+			startTransactionReturn?.payments?.forEach(payment => {
+				payment.merchantSellerPayments.map(msp => {
+					const merchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.id === msp.id)
+
+					paymentsMethods.push({
+						paymentSystem: payment?.paymentSystem,
+						installments: msp?.installments,
+						currencyCode: App.configs?.storePreferences?.currencyCode || 'BRL',
+						installmentsInterestRate: msp?.interestRate ?? 0,
+						value: msp?.value,
+						installmentsValue: msp?.installmentValue,
+						referenceValue: msp?.referenceValue,
+						fields: options?.fields,
+						transaction: {
+							id: merchant?.transactionId,
+							merchantName: merchant?.merchantName
+						}
+					})
 				})
 			})
 
@@ -194,9 +230,7 @@ export default class VtexPaymentService {
 				{
 					headers: {
 						'accept': 'application/json, text/javascript, */*; q=0.01',
-						'content-type': 'application/json',
-						'user-agent':
-							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
+						'content-type': 'application/json'
 					}
 				}
 			)
@@ -217,8 +251,6 @@ export default class VtexPaymentService {
 				headers: {
 					'accept': 'application/json, text/javascript, */*; q=0.01',
 					'content-type': 'application/json',
-					'user-agent':
-						'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
 					'Cookie': `Vtex_CHKO_Auth=${startTransactionReturn.Vtex_CHKO_Auth};CheckoutDataAccess=VTEX_CHK_Order_Auth=${startTransactionReturn.CheckoutDataAccess}`
 				}
 			})
