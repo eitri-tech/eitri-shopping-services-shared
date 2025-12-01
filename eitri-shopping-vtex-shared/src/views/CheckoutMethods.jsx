@@ -105,14 +105,14 @@ export default function CheckoutMethods() {
 			hasDefaultBillingAddress: true
 		}
 		const giftCard = {
-			redemptionCode: '',
+			redemptionCode: 'QPZG-HSCT-IDJR-SQLG',
 			inUse: true
 		}
 
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
 				payments: [payment],
-				giftCards: []
+				giftCards: [giftCard]
 			})
 			console.log(result?.paymentData?.payments)
 			console.log(result?.paymentData?.giftCards)

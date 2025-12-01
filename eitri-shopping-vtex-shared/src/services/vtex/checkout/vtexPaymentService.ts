@@ -203,6 +203,10 @@ export default class VtexPaymentService {
 
 			if (giftCardPaymentSystem) {
 				cart?.paymentData?.giftCards?.forEach(giftCard => {
+
+					const giftCardId = giftCard.id
+					const giftCardMerchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.payments?.some(p => p.giftCardId === giftCardId))
+
 					paymentsMethods.push({
 						paymentSystem: giftCardPaymentSystem.id,
 						installments: 1,
@@ -215,8 +219,8 @@ export default class VtexPaymentService {
 							giftCardId: giftCard.id
 						},
 						transaction: {
-							id: startTransactionReturn.id,
-							merchantName: startTransactionReturn.merchantTransactionName
+							id: giftCardMerchant.transactionId,
+							merchantName: giftCardMerchant.merchantName
 						}
 					})
 				})
