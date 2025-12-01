@@ -219,8 +219,8 @@ export default class VtexPaymentService {
 							giftCardId: giftCard.id
 						},
 						transaction: {
-							id: giftCardMerchant.transactionId,
-							merchantName: giftCardMerchant.merchantName
+							id: giftCardMerchant?.transactionId,
+							merchantName: giftCardMerchant?.merchantName
 						}
 					})
 				})
