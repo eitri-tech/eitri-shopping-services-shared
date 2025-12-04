@@ -32,7 +32,7 @@ export default function GraphqlSearchMethods() {
 	const getProduct = async () => {
 		try {
 			const res = await Vtex.searchGraphql.product({
-				identifier: { field: 'id', value: '2023347' }
+				identifier: { field: 'id', value: '84051' }
 			})
 			console.log(res)
 		} catch (e) {
