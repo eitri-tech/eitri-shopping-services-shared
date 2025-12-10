@@ -2,7 +2,7 @@ import GraphqlService from './GraphqlService'
 
 export default class ProductService {
 	static defaultProductView = `
-		available collection condition display freeShipping id productId productName productVariantId sku variantName
+		available collection condition display freeShipping id productId productName productVariantId spotInformation sku variantName
 		images(height: 200) { url } 
 		prices { listPrice  price discountPercentage } 
 		promotions {content title}

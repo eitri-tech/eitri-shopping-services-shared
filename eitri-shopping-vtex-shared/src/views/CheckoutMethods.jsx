@@ -1,7 +1,22 @@
 import Vtex from '../services/Vtex'
 import Eitri from 'eitri-bifrost'
+import Recaptcha from '@/recaptcha/Recaptcha'
 
 export default function CheckoutMethods() {
+
+	const [recaptchaSiteKey, setRecaptchaSiteKey] = useState('')
+
+	const recaptchaRef = useRef()
+
+	useEffect(() => {
+		Eitri.environment.getRemoteConfigs().then(rc => {
+			const recaptchaSiteKey = rc?.appConfigs?.checkout?.recaptchaKey
+			if (recaptchaSiteKey) {
+				setRecaptchaSiteKey(recaptchaSiteKey)
+			}
+		})
+	}, [])
+
 	const getCart = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 		console.log('carrinho=====>', cart.orderFormId)
@@ -71,8 +86,8 @@ export default function CheckoutMethods() {
 	const selectPayment = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 
-		const paymentSystem = 169
-		const installmentsNumber = 3
+		const paymentSystem = 2
+		const installmentsNumber = 1
 
 		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
 		const installmentOption = cart?.paymentData.installmentOptions.find(i => i.paymentSystem === pay.id.toString())
@@ -90,14 +105,14 @@ export default function CheckoutMethods() {
 			hasDefaultBillingAddress: true
 		}
 		const giftCard = {
-			redemptionCode: '',
+			redemptionCode: 'QPZG-HSCT-IDJR-SQLG',
 			inUse: true
 		}
 
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
 				payments: [payment],
-				giftCards: []
+				giftCards: [giftCard]
 			})
 			console.log(result?.paymentData?.payments)
 			console.log(result?.paymentData?.giftCards)
@@ -109,6 +124,9 @@ export default function CheckoutMethods() {
 	const pay = async () => {
 		try {
 			const cart = await Vtex.cart.getCurrentOrCreateCart()
+
+			const captchaToken = await recaptchaRef?.current?.getRecaptchaToken()
+			console.log("captchaToken", captchaToken)
 
 			const payload = {
 				fields: {
@@ -128,8 +146,8 @@ export default function CheckoutMethods() {
 						postalCode: '20541290'
 					}
 				},
-				captchaToken: '',
-				captchaSiteKey: '',
+				captchaToken: captchaToken,
+				captchaSiteKey: recaptchaSiteKey,
 				savePersonalData: true,
 				optinNewsLetter: false
 			}
@@ -322,6 +340,12 @@ export default function CheckoutMethods() {
 					label='Pagar com Google Pay'
 				/>
 			</View>
+			{recaptchaSiteKey && (
+				<Recaptcha
+					ref={recaptchaRef}
+					siteKey={recaptchaSiteKey}
+				/>
+			)}
 		</Window>
 	)
 }

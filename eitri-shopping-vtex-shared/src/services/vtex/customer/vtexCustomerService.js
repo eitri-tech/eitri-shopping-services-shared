@@ -391,7 +391,7 @@ export default class VtexCustomerService {
 		}
 
 		const body = {
-			query: 'mutation UpdateProfile($profile: ProfileInput) @context(sender: "vtex.my-account@1.29.0") @runtimeMeta(hash: "ed3962923c6d433ceef1bd1156882fca341d263600e70595af2674fbed0ea549") { updateProfile(fields: $profile) { cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate __typename } }',
+			query: 'mutation UpdateProfile($profile: ProfileInput) @context(sender: "vtex.my-account@1.29.0") { updateProfile(fields: $profile) { cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate __typename } }',
 			variables: {
 				profile: profile
 			}
@@ -614,4 +614,168 @@ export default class VtexCustomerService {
 		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
 		VtexCustomerService.notifyLoginToExposedApis(userId)
 	}
+
+	static async getAddresses() {
+
+		const tokenData = await VtexCustomerService.getCustomerToken()
+		const token = tokenData?.token
+
+		if (!token) {
+			throw new Error('User not logged in')
+		}
+
+		const body = {
+			query: 'query Addresses @context(scope: "private", provider: "vtex.store-graphql") { profile { cacheId addresses: address { addressId: id addressType addressName city complement country neighborhood number postalCode geoCoordinates receiverName reference state street } } }'
+		}
+
+		const result = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			body,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+
+		return result?.data
+
+
+	}
+
+	static async createAddress(address) {
+		const tokenData = await VtexCustomerService.getCustomerToken()
+		let token = tokenData?.token
+
+		if (!token) {
+			throw new Error('User not logged in')
+		}
+
+		const body = {
+			query: 'mutation SaveAddress($address: AddressInput!) { saveAddress(address: $address) @context(provider: "vtex.store-graphql") {id cacheId } }',
+			variables: {
+				address: address
+			}
+		}
+
+		const result = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			body,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+
+		return result?.data
+	}
+
+	static async updateAddress(addressId, addressFields) {
+		const tokenData = await VtexCustomerService.getCustomerToken()
+		let token = tokenData?.token
+
+		if (!token) {
+			throw new Error('User not logged in')
+		}
+
+		const body = {
+			query:
+				'mutation UpdateAddress($addressId: String, $addressFields: AddressInput) {\n' +
+				'  updateAddress(id: $addressId, fields: $addressFields)\n' +
+				'    @context(provider: "vtex.store-graphql") {\n' +
+				'    cacheId\n' +
+				'    addresses: address {\n' +
+				'      addressId: id\n' +
+				'      addressType\n' +
+				'      addressName\n' +
+				'      city\n' +
+				'      complement\n' +
+				'      country\n' +
+				'      neighborhood\n' +
+				'      number\n' +
+				'      postalCode\n' +
+				'      receiverName\n' +
+				'      reference\n' +
+				'      state\n' +
+				'      street\n' +
+				'    }\n' +
+				'  }\n' +
+				'}',
+			variables: {
+				addressId: addressId,
+				addressFields: addressFields
+			}
+		}
+
+		const result = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			body,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+
+		return result?.data
+	}
+
+	static async deleteAddress(addressId) {
+		const tokenData = await VtexCustomerService.getCustomerToken()
+		let token = tokenData?.token
+
+		if (!token) {
+			throw new Error('User not logged in')
+		}
+
+		const body = {
+			query:
+				'mutation DeleteAddress($addressId: String) {\n' +
+				'  deleteAddress(id: $addressId) {\n' +
+				'    cacheId\n' +
+				'    addresses: address {\n' +
+				'      addressId: id\n' +
+				'      addressType\n' +
+				'      addressName\n' +
+				'      city\n' +
+				'      complement\n' +
+				'      country\n' +
+				'      neighborhood\n' +
+				'      number\n' +
+				'      postalCode\n' +
+				'      geoCoordinates\n' +
+				'      receiverName\n' +
+				'      reference\n' +
+				'      state\n' +
+				'      street\n' +
+				'    }\n' +
+				'  }\n' +
+				'}',
+			variables: {
+				addressId: addressId
+			}
+		}
+
+		const result = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			body,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+
+		return result?.data
+	}
+
 }

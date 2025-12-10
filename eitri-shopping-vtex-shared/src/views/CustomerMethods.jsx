@@ -74,6 +74,73 @@ export default function CustomerMethods() {
 		}
 	}
 
+	const getAddresses = async () => {
+		try {
+			const result = await Vtex.customer.getAddresses()
+			console.log('getAddresses', result)
+		} catch (e) {
+			console.log('getAddresses', e)
+		}
+	}
+
+	const createAddress = async () => {
+		try {
+			const result = await Vtex.customer.createAddress(
+				{
+					"addressName": "Casa dos testes",
+					"addressType": "residential",
+					"city": "Rio de Janeiro",
+					"complement": "Casa 3",
+					"country": "BRA",
+					"neighborhood": "Andaraí",
+					"number": "792",
+					"postalCode": "20541-290",
+					"receiverName": "Seu Teste",
+					"reference": null,
+					"state": "RJ",
+					"street": "Rua dos testes"
+				}
+			)
+			console.log('createAddress', result)
+		} catch (e) {
+			console.log('createAddress', e)
+		}
+	}
+
+	const updateAddress = async () => {
+		try {
+			const result = await Vtex.customer.updateAddress(
+				"2c2sxbbz6z",
+				{
+					"addressName": "Casa dos testes",
+					"addressType": "residential",
+					"city": "Rio de Janeiro",
+					"complement": "Casa 10",
+					"country": "BRA",
+					"neighborhood": "Andaraí",
+					"number": "792",
+					"postalCode": "20541-290",
+					"receiverName": "Seu Teste",
+					"reference": null,
+					"state": "RJ",
+					"street": "Rua dos testes"
+				}
+			)
+			console.log('updateAddress', result)
+		} catch (e) {
+			console.log('updateAddress', e)
+		}
+	}
+
+	const deleteAddress = async () => {
+		try {
+			const result = await Vtex.customer.deleteAddress("wobcew7v0jf")
+			console.log('deleteAddress', result)
+		} catch (e) {
+			console.log('deleteAddress', e)
+		}
+	}
+
 	return (
 		<Window
 			topInset
@@ -217,6 +284,54 @@ export default function CustomerMethods() {
 						grow={1}
 						onPress={getLoggedCustomer}
 						label='Obter usuário logado'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={getAddresses}
+						label='Obter endereços'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={createAddress}
+						label='Criar endereço'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={updateAddress}
+						label='Atualizar endereço'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={deleteAddress}
+						label='Excluir endereço'
 					/>
 				</View>
 

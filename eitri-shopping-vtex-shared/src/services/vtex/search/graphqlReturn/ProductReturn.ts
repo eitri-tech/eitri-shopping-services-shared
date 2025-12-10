@@ -1,7 +1,7 @@
 export const productReturn = `{
-	brand, 
-	brandId,
-	categoryId,
+	brand
+	brandId
+	categoryId
 	categoryTree {
 		id
 		name
