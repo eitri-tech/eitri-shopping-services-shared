@@ -4,6 +4,7 @@ import StorageService from '@/services/StorageService'
 export default class StoreService {
 	static GLOBAL_PARTNER_ACCESS_TOKEN_KEY = 'globalPartnerAccessTokenKey'
 	static CUSTOMER_PARTNER_ACCESS_TOKEN_KEY = 'customerPartnerAccessTokenKey'
+	static GLOBAL_ZIP_CODE_KEY = 'globalZipCode'
 
 	static async shop() {
 		const query = `{
@@ -110,5 +111,18 @@ export default class StoreService {
 	static async removeCustomerPartnerAccessToken() {
 		await StorageService.removeItem(StoreService.CUSTOMER_PARTNER_ACCESS_TOKEN_KEY)
 		console.log('[SHARED] customer partner access token removed')
+	}
+
+	static async setGlobalZipCode(zipCode) {
+		if (zipCode?.trim()?.length > 0) {
+			await StorageService.setStorageItem(StoreService.GLOBAL_ZIP_CODE_KEY, zipCode)
+		} else {
+			await StorageService.removeItem(StoreService.GLOBAL_ZIP_CODE_KEY)
+		}
+	}
+
+	static async getGlobalZipCode() {
+		const zipCode = await StorageService.getStorageItem(StoreService.GLOBAL_ZIP_CODE_KEY)
+		return zipCode || ''
 	}
 }
