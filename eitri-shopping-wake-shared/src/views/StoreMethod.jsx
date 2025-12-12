@@ -19,6 +19,15 @@ export default function StoreMethod() {
 		}
 	}
 
+	const getPartnerTokenByZipCode = async () => {
+		try {
+			const res = await WakeService.store.getPartnersByZipCode('20050-100')
+			console.log(res)
+		} catch (e) {
+			console.error(e)
+		}
+	}
+
 	return (
 		<Window
 			topInset
@@ -50,6 +59,20 @@ export default function StoreMethod() {
 						color='background-color'
 						onPress={getPartnerToken}
 						label={`Get Partner Token`}
+					/>
+				</View>
+				<View
+					padding='large'
+					direction='column'
+					justifyContent='center'
+					alignItems='center'
+					width='100%'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						onPress={getPartnerTokenByZipCode}
+						label={`Get Partner By ZipCode`}
 					/>
 				</View>
 			</View>
