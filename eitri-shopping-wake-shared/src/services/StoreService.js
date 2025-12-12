@@ -125,4 +125,31 @@ export default class StoreService {
 		const zipCode = await StorageService.getStorageItem(StoreService.GLOBAL_ZIP_CODE_KEY)
 		return zipCode || ''
 	}
+
+	static async getPartnersByZipCode(zipCode) {
+		return await StoreService.getPartnersByRegion({cep: zipCode?.trim(), regionId: null}) 
+	}
+
+	static async getPartnersByRegionId(regionId) {
+		return await StoreService.getPartnersByRegion({cep: null, regionId: regionId?.trim()})
+	}
+	
+	static async getPartnersByRegion(variables) {
+		const query = `query($cep: CEP, $regionId: Long) {
+			partnerByRegion(input: {cep: $cep, regionId: $regionId}) {
+				partnerAccessToken
+				partnerId
+				alias
+				name
+				origin
+				startDate
+				endDate
+			}
+		}`
+		
+		const response = await GraphqlService.query(query, variables)
+
+		return response?.partnerByRegion || null
+	}
+
 }
