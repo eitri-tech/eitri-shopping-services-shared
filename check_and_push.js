@@ -4,6 +4,7 @@ const path = require("path");
 
 const MANAGER_URL="https://api.eitri.tech/eitri-manager-api/v2/revisions?eitriAppId="
 const BLIND_GUARDIAN_URL="https://api.eitri.tech/blind-guardian-api/v2/o/auth"
+const DEV_ENV_ID = ""
 
 const credentials = {
 	client_id: process.env.EITRI_CLI_CLIENT_ID,
