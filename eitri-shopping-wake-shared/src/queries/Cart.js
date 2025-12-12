@@ -45,6 +45,7 @@ const checkoutModel = `
       interestValue
       orderId
       orderStatus
+      orderStatusDisplay
       products {
         adjustments {
           name
