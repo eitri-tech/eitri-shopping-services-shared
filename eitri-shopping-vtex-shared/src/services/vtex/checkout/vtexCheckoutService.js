@@ -10,6 +10,7 @@ import VtexPaymentService from './vtexPaymentService'
 import StorageService from '../../StorageService'
 import extractCookies from '../_helpers/extractCookies'
 import { sendLogError, sendLogOrderAccepted } from '@/services/Datadog'
+import withRetry from '@/services/vtex/_helpers/withRetry'
 
 export default class VtexCheckoutService {
 	static VTEX_CHK_PAYMENT_AUTH = 'vtex_chk_payment_auth'
@@ -92,26 +93,32 @@ export default class VtexCheckoutService {
 
 	static async setLogisticInfo(logisticInfo) {
 		const orderFormId = await VtexCartService.getStoredOrderFormId()
-		try {
-			const response = await VtexCaller.post(
-				`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
-				logisticInfo,
-				{
-					headers: {
-						'Content-Type': 'application/json',
-						'Accept': 'application/json',
-						'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+
+		return withRetry(
+			async () => {
+				const response = await VtexCaller.post(
+					`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
+					logisticInfo,
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							'Accept': 'application/json',
+							'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
+						}
 					}
+				)
+
+				GAVtexInternalService.addShippingInfo(response.data)
+				return response.data
+			},
+			{
+				retries: 3,
+				delay: 500,
+				onFinalError: (e) => {
+					sendLogError(e, 'setLogisticInfo')
 				}
-			)
-
-			GAVtexInternalService.addShippingInfo(response.data)
-
-			return response.data
-		} catch (e) {
-			sendLogError(e, 'setLogisticInfo')
-			throw e
-		}
+			}
+		)
 	}
 
 	static async addPromoCode(couponCode) {
