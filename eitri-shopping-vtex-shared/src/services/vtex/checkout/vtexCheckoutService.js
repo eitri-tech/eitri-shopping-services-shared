@@ -113,9 +113,9 @@ export default class VtexCheckoutService {
 			},
 			{
 				retries: 3,
-				delay: 500,
+				delay: 800,
 				onFinalError: (e) => {
-					sendLogError(e, 'setLogisticInfo')
+					sendLogError(e, 'setLogisticInfo', { logisticInfo })
 				}
 			}
 		)
@@ -141,7 +141,7 @@ export default class VtexCheckoutService {
 
 			return response.data
 		} catch (e) {
-			sendLogError(e, 'setLogisticInfo')
+			sendLogError(e, 'addUserData')
 			throw e
 		}
 	}
