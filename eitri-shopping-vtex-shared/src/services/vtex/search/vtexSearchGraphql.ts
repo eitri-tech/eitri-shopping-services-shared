@@ -121,6 +121,8 @@ export default class VtexSearchGraphql {
 			.replace('"viewAndBought"', 'viewAndBought')
 			.replace('"accessories"', 'accessories')
 			.replace('"suggestions"', 'suggestions')
+			.replace('"PRODUCT"', 'PRODUCT')
+			.replace('"NONE"', 'NONE')
 
 		const body = {
 			query: `{ productRecommendations(${_query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
