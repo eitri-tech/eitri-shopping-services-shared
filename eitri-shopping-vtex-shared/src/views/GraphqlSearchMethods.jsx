@@ -58,7 +58,8 @@ export default function GraphqlSearchMethods() {
 					field: 'id',
 					value: '1779'
 				},
-				type: 'viewAndBought'
+				type: 'similars',
+				groupBy: 'PRODUCT'
 			})
 			console.log(res)
 		} catch (e) {
