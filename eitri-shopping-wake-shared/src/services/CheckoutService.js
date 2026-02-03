@@ -16,6 +16,7 @@ import {
 	queryCheckoutUseCheckingAccount,
 	queryPaymentMethods,
 	queryRemoveCheckoutMetadata,
+	queryShippingQuoteGroups,
 	queryShippingQuotes
 } from '../queries/Checkout'
 import CartService from './CartService'
@@ -140,7 +141,29 @@ export default class CheckoutService {
 		}
 	}
 
-	static async checkoutSelectShippingQuote(shippingQuoteId, additionalInformation) {
+	static async shippingQuoteGroups(options = {}) {
+		try {
+			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
+
+			if (!cartId) {
+				console.warn('[SHARED] [shippingQuotes] Nenhum cartId encontrado')
+				return null
+			}
+
+			const { checkoutId } = options
+
+			const response = await GraphqlService.query(queryShippingQuoteGroups, {
+				checkoutId: checkoutId || cartId,
+			})
+			return response?.shippingQuoteGroups || null
+		} catch (e) {
+			console.error('[SHARED] [shippingQuotes] Erro ao buscar frete', e)
+			sendLogError(e, 'shippingQuotes')
+			throw e
+		}
+	}
+
+	static async checkoutSelectShippingQuote(shippingQuoteId, additionalInformation, distributionCenterId, deliveryScheduleInput) {
 
 		try {
 			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
@@ -152,7 +175,9 @@ export default class CheckoutService {
 			const response = await GraphqlService.query(queryCheckoutSelectShippingQuote, {
 				checkoutId: cartId,
 				shippingQuoteId: shippingQuoteId,
-				additionalInformation: additionalInformation
+				additionalInformation: additionalInformation,
+				distributionCenterId: distributionCenterId,
+				deliveryScheduleInput: deliveryScheduleInput
 			})
 
 			GAWakeInternalService.addShippingInfo(response.checkoutSelectShippingQuote)
