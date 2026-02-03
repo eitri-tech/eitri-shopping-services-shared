@@ -1,7 +1,8 @@
 import Eitri from 'eitri-bifrost'
 import WakeService from '../services/WakeService'
+import StorageService from '../services/StorageService'
+import CartService from '../services/CartService'
 
-let cartId = 'c1e3c46b-1872-401d-85e6-b1c8f2c9c464'
 const userLogin = {
 	login: '',
 	pass: ''
@@ -11,6 +12,11 @@ export default function CheckoutMethod() {
 	const [loading, setLoading] = useState(true)
 	const [cart, setCart] = useState({})
 	const [fullCart, setFullCart] = useState(null)
+
+	const setCartId = async () => {
+		let cartId = '6c7be08b-c77e-4134-ad02-ed1fafa677ea' // balaroti
+		await StorageService.setStorageItem(CartService.CART_KEY, cartId)
+	}
 
 	const newCart = async () => {
 		const _cart = await WakeService.cart.generateNewCart()
@@ -55,13 +61,23 @@ export default function CheckoutMethod() {
 	let shippingQuote = ''
 	const getShippingQuotes = async () => {
 		const response = await WakeService.checkout.shippingQuotes()
-		console.log('response >>', response)
-		shippingQuote = response.shippingQuotes[0].shippingQuoteId
+		shippingQuote = response.shippingQuotes[0]
 		console.log('response >>', response)
 	}
 
+	const getShippingQuoteGroups = async () => {
+		const response = await WakeService.checkout.shippingQuoteGroups()
+		shippingQuote = {...response?.[0].shippingQuotes[0], distributionCenter: response?.[0].distributionCenter}
+		console.log('getShippingQuoteGroups >>', response)
+	}
+
 	const setShippingQuotes = async () => {
-		const response = await WakeService.checkout.checkoutSelectShippingQuote(shippingQuote)
+		const response = await WakeService.checkout.checkoutSelectShippingQuote(shippingQuote.shippingQuoteId)
+		console.log('response >>', response)
+	}
+
+	const setShippingQuotesWithDistributionCenter = async () => {
+		const response = await WakeService.checkout.checkoutSelectShippingQuote(shippingQuote.shippingQuoteId, null, `${shippingQuote?.distributionCenterId || shippingQuote?.distributionCenter?.id}`, null) 
 		console.log('response >>', response)
 	}
 
@@ -185,6 +201,10 @@ export default function CheckoutMethod() {
 			onPress: newCart
 		},
 		{
+			label: 'Set Cart',
+			onPress: setCartId
+		},
+		{
 			label: 'Login',
 			onPress: login
 		},
@@ -209,8 +229,16 @@ export default function CheckoutMethod() {
 			onPress: getShippingQuotes
 		},
 		{
+			label: 'Opções de frete em grupos',
+			onPress: getShippingQuoteGroups
+		},
+		{
 			label: 'Selecionar frete',
 			onPress: setShippingQuotes
+		},
+		{
+			label: 'Selecionar frete com distribuidor',
+			onPress: setShippingQuotesWithDistributionCenter
 		},
 		{
 			label: 'Formas de pagamento',

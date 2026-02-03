@@ -243,16 +243,52 @@ query (
   }
 }`
 
+export const queryShippingQuoteGroups = `
+query shippingQuoteGroups($checkoutId: Uuid!) {
+  shippingQuoteGroups(useSelectedAddress: true, checkoutId: $checkoutId) {
+    distributionCenter {
+      id
+      sellerName
+    }
+    shippingQuotes {
+      deadline
+      deadlineInHours
+      name
+      shippingQuoteId
+      type
+      value
+    }
+    products {
+      productVariantId
+    }
+    pickups {
+      deadline
+      deadlineInHours
+      distributionCenter {
+        id
+        sellerName
+      }
+      name
+      shippingQuoteId
+      value
+    }
+  }
+}`
+
 export const queryCheckoutSelectShippingQuote = `
 mutation(
   $checkoutId: Uuid!
   $shippingQuoteId: Uuid!
   $additionalInformation: InStorePickupAdditionalInformationInput
+  $distributionCenterId: ID
+  $deliveryScheduleInput: DeliveryScheduleInput
 ) {
 checkoutSelectShippingQuote(
     checkoutId: $checkoutId
     shippingQuoteId: $shippingQuoteId
     additionalInformation: $additionalInformation
+    distributionCenterId: $distributionCenterId
+    deliveryScheduleInput: $deliveryScheduleInput
   ) {
     ${checkoutModel}
     }
