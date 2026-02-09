@@ -1,0 +1,74 @@
+fragment ProductFields on Product {
+    category {
+        id
+        name
+    }
+    handle
+    id
+    description
+    descriptionHtml
+    images(first: 10) {
+        nodes {
+            url
+            height
+            width
+            thumbhash
+            id
+        }
+    }
+    priceRange {
+        minVariantPrice {
+            amount
+            currencyCode
+        }
+        maxVariantPrice {
+            amount
+            currencyCode
+        }
+    }
+    isGiftCard
+    title
+    options {
+        name
+        id
+        optionValues {
+            id
+            name
+        }
+    }
+    variants(first: 50) {
+        nodes {
+            availableForSale
+            barcode
+            selectedOptions {
+                name
+                value
+            }
+            compareAtPrice {
+                amount
+                currencyCode
+            }
+            id
+            image {
+                altText
+                height
+                id
+                url
+                width
+                thumbhash
+            }
+            price {
+                amount
+                currencyCode
+            }
+            sku
+            title
+        }
+    }
+    selectedOrFirstAvailableVariant {
+        selectedOptions {
+            name
+            value
+        }
+    }
+}

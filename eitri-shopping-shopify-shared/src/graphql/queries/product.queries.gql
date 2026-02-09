@@ -1,0 +1,136 @@
+#import "../fragments/product.fragment.gql"
+
+query SEARCH_QUERY(
+    $query: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+    $prefix: SearchPrefixQueryType
+    $productFilters: [ProductFilter!]
+    $reverse: Boolean
+    $sortKey: SearchSortKeys
+    $types: [SearchType!]
+    $unavailableProducts: SearchUnavailableProductsType
+) {
+    search(
+        query: $query
+        after: $after
+        before: $before
+        first: $first
+        last: $last
+        prefix: $prefix
+        productFilters: $productFilters
+        reverse: $reverse
+        sortKey: $sortKey
+        types: $types
+        unavailableProducts: $unavailableProducts
+    ) {
+        totalCount
+        pageInfo {
+            hasNextPage
+            startCursor
+            endCursor
+            hasPreviousPage
+        }
+        nodes {
+            ... on Product {
+                ...ProductFields
+            }
+        }
+        productFilters {
+            id
+            label
+            presentation
+            type
+            values {
+                count
+                id
+                input
+                label
+            }
+        }
+    }
+}
+
+query COLLECTION_QUERY(
+    $collectionId: ID
+    $handle: String
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+    $reverse: Boolean
+    $sortKey: ProductCollectionSortKeys
+    $filters: [ProductFilter!]
+) {
+    collection(
+        id: $collectionId
+        handle: $handle
+    ) {
+        id
+        title
+        description
+        descriptionHtml
+        handle
+        image {
+            url
+            height
+            width
+            id
+        }
+        trackingParameters,
+        products (first: $first, last:$last, after: $after, before: $before, reverse: $reverse, sortKey: $sortKey, filters: $filters) {
+            pageInfo {
+                hasNextPage
+                startCursor
+                endCursor
+                hasPreviousPage
+            }
+            nodes {
+                ... on Product {
+                    ...ProductFields
+                }
+            }
+            filters {
+                id
+                label
+                presentation
+                type
+                values {
+                    count
+                    id
+                    input
+                    label
+                }
+            }
+        }
+    }
+}
+
+query PRODUCT_RECOMMENDATIONS(
+    $intent:ProductRecommendationIntent
+    $productHandle: String
+    $productId: ID
+) {
+    productRecommendations(
+        intent: $intent
+        productHandle: $productHandle
+        productId: $productId
+    ) {
+        ... on Product {
+            ...ProductFields
+        }
+    }
+}
+
+query PRODUCT(
+    $handle: String
+    $id: ID
+) {
+    product( handle: $handle, id: $id ) {
+        ... on Product {
+            ...ProductFields
+        }
+    }
+}

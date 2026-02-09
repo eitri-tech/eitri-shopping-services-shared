@@ -1,0 +1,65 @@
+fragment CustomerFields on Customer {
+	id
+	firstName
+	lastName
+	email
+	phone
+	acceptsMarketing
+	createdAt
+	updatedAt
+	displayName
+	defaultAddress {
+		id
+		address1
+		address2
+		city
+		province
+		country
+		zip
+		phone
+		firstName
+		lastName
+	}
+	addresses(first: 10) {
+		edges {
+			node {
+				id
+				address1
+				address2
+				city
+				province
+				country
+				zip
+				phone
+				firstName
+				lastName
+			}
+		}
+	}
+	orders(first: 10) {
+		edges {
+			node {
+				id
+				orderNumber
+				processedAt
+				financialStatus
+				fulfillmentStatus
+				totalPrice {
+					amount
+					currencyCode
+				}
+			}
+		}
+	}
+}
+
+fragment CustomerAccessTokenFields on CustomerAccessToken {
+	accessToken
+	expiresAt
+}
+
+fragment CustomerUserErrorFields on CustomerUserError {
+	code
+	field
+	message
+}
