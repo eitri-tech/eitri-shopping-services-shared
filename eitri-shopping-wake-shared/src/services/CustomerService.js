@@ -20,7 +20,8 @@ import {
 	queryCustomerOrders,
 	queryCustomerUpdate,
 	querySimpleLoginVerifyAnwser,
-	queryCustomerSimple
+	queryCustomerSimple,
+	queryCustomerCheckingAccount
 } from '../queries/Customer'
 import { Wake } from '../export'
 import StoreService from './StoreService'
@@ -469,6 +470,25 @@ export default class CustomerService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [getCustomerOrders] Erro ao obter pedidos', e)
+			throw e
+		}
+	}
+
+	static async getCustomerCheckingAccount() {
+		try {
+			const savedToken = await CustomerService.getCustomerToken()
+			if (!savedToken) {
+				return null
+			}
+
+			const response = await GraphqlService.query(queryCustomerCheckingAccount, {
+				customerAccessToken: savedToken,
+				hasCustomerAccessToken: true
+			})
+
+			return response
+		} catch (e) {
+			console.error('[SHARED] [getCustomerCheckingAccount] Erro ao obter pedidos', e)
 			throw e
 		}
 	}
