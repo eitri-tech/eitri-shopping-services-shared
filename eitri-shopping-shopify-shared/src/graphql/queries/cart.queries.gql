@@ -1,0 +1,278 @@
+#import "../fragments/cart.fragment.gql"
+
+mutation CREATE_CART($input: CartInput!) {
+	cartCreate(input: $input) {
+		cart {
+			... on Cart{
+				...CartFields
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+		warnings {
+			message
+		}
+	}
+}
+
+query GET_CART($cartId: ID!) {
+	cart(id: $cartId) {
+		... on Cart {
+			...CartFields
+		}
+	}
+}
+
+mutation CART_ADD_ITEM($cartId: ID!, $lines: [CartLineInput!]!) {
+	cartLinesAdd(cartId: $cartId, lines: $lines) {
+		cart {
+			... on Cart {
+				...CartFields
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+	}
+}
+
+mutation CART_LINES_UPDATE($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+	cartLinesUpdate(cartId: $cartId, lines: $lines) {
+		cart {
+			... on Cart {
+				...CartFields
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+	}
+}
+
+mutation CART_LINES_REMOVE($cartId: ID!, $lineIds: [ID!]!) {
+	cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+		cart {
+			... on Cart {
+				...CartFields
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+	}
+}
+
+mutation CART_GIFT_CARD_CODES_ADD($cartId: ID!, $giftCardCodes: [String!]!) {
+	cartGiftCardCodesAdd(cartId: $cartId, giftCardCodes: $giftCardCodes) {
+		cart {
+			id
+			appliedGiftCards {
+				id
+				lastCharacters
+				amountUsedV2 {
+					amount
+					currencyCode
+				}
+				balanceV2 {
+					amount
+					currencyCode
+				}
+			}
+			cost {
+				totalAmount {
+					amount
+					currencyCode
+				}
+				subtotalAmount {
+					amount
+					currencyCode
+				}
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+	}
+}
+
+mutation CART_GIFT_CARD_CODES_REMOVE($cartId: ID!, $appliedGiftCardIds: [ID!]!) {
+	cartGiftCardCodesRemove(cartId: $cartId, appliedGiftCardIds: $appliedGiftCardIds) {
+		cart {
+			id
+
+			appliedGiftCards {
+				id
+
+				lastCharacters
+
+				amountUsedV2 {
+					amount
+
+					currencyCode
+				}
+
+				balanceV2 {
+					amount
+
+					currencyCode
+				}
+			}
+
+			cost {
+				totalAmount {
+					amount
+
+					currencyCode
+				}
+
+				subtotalAmount {
+					amount
+
+					currencyCode
+				}
+			}
+		}
+
+		userErrors {
+			field
+
+			message
+		}
+	}
+}
+
+mutation CART_DISCOUNT_CODES_UPDATE($cartId: ID!, $discountCodes: [String!]!) {
+	cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+		cart {
+			id
+			discountCodes {
+				applicable
+				code
+			}
+			discountAllocations {
+				discountedAmount {
+					amount
+					currencyCode
+				}
+			}
+			cost {
+				totalAmount {
+					amount
+					currencyCode
+				}
+
+				subtotalAmount {
+					amount
+					currencyCode
+				}
+			}
+		}
+
+		userErrors {
+			field
+			message
+		}
+	}
+}
+
+mutation CART_BUYER_IDENTITY_UPDATE($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!) {
+	cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+		cart {
+			id
+			buyerIdentity {
+				email
+				phone
+				countryCode
+				deliveryAddressPreferences {
+					... on MailingAddress {
+						address1
+						address2
+						city
+						province
+						country
+						zip
+					}
+				}
+			}
+			deliveryGroups(first: 10) {
+				edges {
+					node {
+						deliveryOptions {
+							handle
+							title
+							estimatedCost {
+								amount
+								currencyCode
+							}
+							deliveryMethodType
+						}
+						selectedDeliveryOption {
+							handle
+							title
+							estimatedCost {
+								amount
+								currencyCode
+							}
+							deliveryMethodType
+						}
+					}
+				}
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+	}
+}
+
+query GET_CART_DELIVERY_OPTIONS($cartId: ID!) {
+	cart(id: $cartId) {
+		id
+		cost {
+			subtotalAmount {
+				amount
+				currencyCode
+			}
+			totalAmount {
+				amount
+				currencyCode
+			}
+		}
+		...DeliveryGroupsWithCarrierRates @defer
+	}
+}
+
+fragment DeliveryGroupsWithCarrierRates on Cart {
+	deliveryGroups(first: 10, withCarrierRates: true) {
+		edges {
+			node {
+				id
+				deliveryOptions {
+					handle
+					title
+					estimatedCost {
+						amount
+						currencyCode
+					}
+					deliveryMethodType
+				}
+				selectedDeliveryOption {
+					handle
+					title
+					estimatedCost {
+						amount
+						currencyCode
+					}
+					deliveryMethodType
+				}
+			}
+		}
+	}
+}

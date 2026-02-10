@@ -404,6 +404,7 @@ query ($customerAccessToken:String!) {
       status {
         changeDate
         status
+        statusCustomLabel
         statusId
       }
       statusHistory {

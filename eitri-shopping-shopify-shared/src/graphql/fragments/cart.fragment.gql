@@ -1,0 +1,149 @@
+fragment CartFields on Cart {
+    id
+    createdAt
+    updatedAt
+    checkoutUrl
+    totalQuantity
+    note
+    attributes {
+        key
+        value
+    }
+    cost {
+        totalAmount {
+            amount
+            currencyCode
+        }
+        subtotalAmount {
+            amount
+            currencyCode
+        }
+        totalTaxAmount {
+            amount
+            currencyCode
+        }
+        totalDutyAmount {
+            amount
+            currencyCode
+        }
+    }
+    discountCodes {
+        applicable
+        code
+    }
+    lines(first: 50) {
+        nodes {
+            id
+            quantity
+            merchandise {
+                ... on ProductVariant {
+                    id
+                    title
+                    priceV2 {
+                        amount
+                        currencyCode
+                    }
+                    compareAtPrice {
+                        amount
+                        currencyCode
+                    }
+                    product {
+                        id
+                        title
+                        handle
+                        description
+                        featuredImage {
+                            url
+                            altText
+                        }
+                    }
+                    selectedOptions {
+                        name
+                        value
+                    }
+                    availableForSale
+                }
+            }
+            attributes {
+                key
+                value
+            }
+            cost {
+                totalAmount {
+                    amount
+                    currencyCode
+                }
+                amountPerQuantity {
+                    amount
+                    currencyCode
+                }
+            }
+            discountAllocations {
+                discountedAmount {
+                    amount
+                    currencyCode
+                }
+            }
+        }
+    }
+    discountAllocations {
+        discountedAmount {
+            amount
+            currencyCode
+        }
+    }
+    appliedGiftCards {
+        id
+        lastCharacters
+        amountUsedV2 {
+            amount
+            currencyCode
+        }
+        balanceV2 {
+            amount
+            currencyCode
+        }
+    }
+    buyerIdentity {
+        email
+        phone
+        countryCode
+        preferences {
+            wallet
+        }
+        deliveryAddressPreferences {
+            ... on MailingAddress {
+                address1
+                address2
+                city
+                province
+                country
+                zip
+            }
+        }
+    }
+    deliveryGroups(first: 10) {
+        edges {
+            node {
+                deliveryOptions {
+                    handle
+                    title
+                    estimatedCost {
+                        amount
+                        currencyCode
+                    }
+                    deliveryMethodType
+                }
+                selectedDeliveryOption {
+                    handle
+                    title
+                    estimatedCost {
+                        amount
+                        currencyCode
+                    }
+                    deliveryMethodType
+                }
+            }
+        }
+    }
+}
