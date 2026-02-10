@@ -443,10 +443,12 @@ export default class CustomerService {
             }
           }`,
 				{
+				input: {
 					key,
 					newPassword,
 					newPasswordConfirmation: newPassword
 				}
+			}
 			)
 
 			return response
