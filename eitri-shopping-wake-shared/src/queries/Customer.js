@@ -430,3 +430,19 @@ query ($customerAccessToken:String!) {
   }
   }
 }`
+
+export const queryCustomerCheckingAccount = `query Account($customerAccessToken: String!, $hasCustomerAccessToken: Boolean!) {
+  customer(customerAccessToken: $customerAccessToken) @include(if: $hasCustomerAccessToken) {
+    customerId
+    customerName
+    customerType
+    email
+    checkingAccountBalance
+    checkingAccountHistory{
+      date
+      historic
+      type
+      value
+    }
+  }
+}`

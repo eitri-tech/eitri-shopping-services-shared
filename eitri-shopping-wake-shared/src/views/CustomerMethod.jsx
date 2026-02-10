@@ -153,6 +153,8 @@ export default function CustomerMethod() {
 		console.log('result', _fullCart)
 	}
 
+
+
 	const updateAddress = async () => {
 		const address = {
 			city: 'Anamã'
@@ -194,6 +196,11 @@ export default function CustomerMethod() {
 	const setPartnerToken = async () => {
 		const customer = await WakeService.customer.getCustomer()
 		await WakeService.store.setCustomerPartnerAccessToken(customer?.customer?.partners?.[0]?.partnerAccessToken)
+	}
+
+	const getCheckingAccount = async () => {
+		const result = await WakeService.customer.getCustomerCheckingAccount()
+		console.log('result', result)
 	}
 
 	const back = () => {
@@ -481,6 +488,20 @@ export default function CustomerMethod() {
 						color='background-color'
 						onPress={customerOrders}
 						label='Meus pedidos'
+					/>
+				</View>
+
+				<View
+					marginTop='large'
+					direction='column'
+					justifyContent='center'
+					alignItems='center'
+					width='100%'>
+					<Button
+						wide
+						color='background-color'
+						onPress={getCheckingAccount}
+						label='Meus créditos'
 					/>
 				</View>
 
