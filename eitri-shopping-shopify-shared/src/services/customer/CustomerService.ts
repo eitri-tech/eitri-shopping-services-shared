@@ -2,13 +2,9 @@ import {
 	Customer,
 	CustomerAccessToken,
 	CustomerUserError,
-	CustomerAccessTokenCreateInput,
-	CustomerCreateInput,
 	CustomerUpdateInput,
 	CustomerResetInput,
 	MailingAddressInput,
-	CustomerAccessTokenCreateResponse,
-	CustomerCreateResponse,
 	CustomerResponse,
 	CustomerAccessTokenRenewResponse,
 	CustomerAccessTokenDeleteResponse,
@@ -23,8 +19,6 @@ import {
 } from '../../models/Customer'
 import ShopifyCaller from '../_helpers/ShopifyCaller'
 import {
-	CUSTOMER_ACCESS_TOKEN_CREATE,
-	CUSTOMER_CREATE,
 	GET_CUSTOMER,
 	CUSTOMER_ACCESS_TOKEN_RENEW,
 	CUSTOMER_ACCESS_TOKEN_DELETE,
@@ -38,73 +32,13 @@ import {
 } from '../../graphql/queries/customer.queries.gql'
 import StorageService from '../StorageService'
 import Logger from '../_helpers/Logger'
+import { AuthService } from './CustomerAuth'
 
 export class CustomerService {
-	static CUSTOMER_ACCESS_TOKEN_KEY = 'shopify_customer_access_token'
-	static CUSTOMER_TOKEN_EXPIRES_AT_KEY = 'shopify_customer_token_expires_at'
+	private static CUSTOMER_ACCESS_TOKEN_KEY = 'shopify_customer_access_token'
+	private static CUSTOMER_TOKEN_EXPIRES_AT_KEY = 'shopify_customer_token_expires_at'
 
-	static async signIn(
-		input: CustomerAccessTokenCreateInput
-	): Promise<{ accessToken: CustomerAccessToken | null; userErrors: CustomerUserError[] }> {
-		const body = {
-			query: CUSTOMER_ACCESS_TOKEN_CREATE,
-			variables: {
-				input
-			}
-		}
-
-		Logger.log('[CustomerService] Realizando login do cliente:', input.email)
-
-		const res = await ShopifyCaller.post(body)
-		console.log(res)
-
-		const { data } = res.data as { data: CustomerAccessTokenCreateResponse }
-
-		const result = data.customerAccessTokenCreate
-
-		if (result?.customerAccessToken) {
-			await CustomerService.saveAccessToken(result.customerAccessToken)
-			Logger.log('[CustomerService] Login realizado com sucesso')
-		} else {
-			Logger.log('[CustomerService] Falha no login:', result.customerUserErrors)
-		}
-
-		return {
-			accessToken: result.customerAccessToken,
-			userErrors: result.customerUserErrors
-		}
-	}
-
-	static async signUp(
-		input: CustomerCreateInput
-	): Promise<{ customer: Customer | null; userErrors: CustomerUserError[] }> {
-		const body = {
-			query: CUSTOMER_CREATE,
-			variables: {
-				input
-			}
-		}
-
-		Logger.log('[CustomerService] Criando nova conta de cliente:', input.email)
-
-		const res = await ShopifyCaller.post(body)
-		console.log(res)
-
-		const { data } = res.data as { data: CustomerCreateResponse }
-
-		const result = data.customerCreate
-
-		if (result?.customer) {
-			Logger.log('[CustomerService] Conta criada com sucesso')
-		} else {
-			Logger.log('[CustomerService] Falha ao criar conta:', result.customerUserErrors)
-		}
-
-		return {
-			customer: result.customer,
-			userErrors: result.customerUserErrors
-		}
-	}
+	static auth = AuthService
 
 	static async getCustomer(accessToken?: string): Promise<Customer | null> {
 		const token = accessToken || (await CustomerService.getStoredAccessToken())

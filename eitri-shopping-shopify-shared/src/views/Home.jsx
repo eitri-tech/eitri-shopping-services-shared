@@ -1,6 +1,7 @@
 import { Window } from 'eitri-luminus'
 import { App } from '@/export'
 import Eitri from 'eitri-bifrost'
+import Shopify from '../services/Shopify'
 
 export default function Home(props) {
 	useEffect(() => {
@@ -36,7 +37,15 @@ export default function Home(props) {
 					wide
 					color='background-color'
 					onPress={() => goToPage('/Cart')}
-					label='Carrrinho' />
+					label='Carrrinho'
+				/>
+
+				<Button
+					wide
+					color='background-color'
+					onPress={async () => await Shopify.customer.auth.login()}
+					label='Login'
+				/>
 			</View>
 		</Window>
 	)
