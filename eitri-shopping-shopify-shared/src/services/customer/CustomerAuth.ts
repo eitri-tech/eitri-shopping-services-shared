@@ -135,9 +135,7 @@ export class AuthService {
 	static async login(): Promise<LoginResponse> {
 		const remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		const { host } = remoteConfig.providerInfo
-
-		const clientId = '9526832b-e615-4d0c-99ce-31cb8351cc73'
+		const { host, clientId } = remoteConfig.providerInfo
 
 		if (!host) {
 			throw new Error('Missing required remote config variables')
