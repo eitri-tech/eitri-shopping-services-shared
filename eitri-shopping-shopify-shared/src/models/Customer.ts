@@ -120,12 +120,8 @@ export interface CustomerCreateInput {
 }
 
 export interface CustomerUpdateInput {
-	email?: string
-	password?: string
 	firstName?: string
 	lastName?: string
-	phone?: string
-	acceptsMarketing?: boolean
 }
 
 export interface CustomerResetInput {
@@ -133,17 +129,21 @@ export interface CustomerResetInput {
 	password: string
 }
 
-export interface MailingAddressInput {
+export interface CustomerAddressInput {
 	address1?: string
 	address2?: string
 	city?: string
-	province?: string
-	country?: string
-	zip?: string
-	phone?: string
+	company?: string
 	firstName?: string
 	lastName?: string
+	phoneNumber?: string
+	territoryCode?: string
+	zip?: string
+	zoneCode?: string
 }
+
+/** @deprecated Use CustomerAddressInput instead */
+export type MailingAddressInput = CustomerAddressInput
 
 export interface CustomerAccessTokenCreateResponse {
 	customerAccessTokenCreate: {
@@ -195,36 +195,28 @@ export interface CustomerResetResponse {
 export interface CustomerUpdateResponse {
 	customerUpdate: {
 		customer: Customer | null
-		customerAccessToken: CustomerAccessToken | null
-		customerUserErrors: CustomerUserError[]
+		userErrors: CustomerUserError[]
 	}
 }
 
 export interface CustomerAddressCreateResponse {
 	customerAddressCreate: {
 		customerAddress: CustomerAddress | null
-		customerUserErrors: CustomerUserError[]
+		userErrors: CustomerUserError[]
 	}
 }
 
 export interface CustomerAddressUpdateResponse {
 	customerAddressUpdate: {
 		customerAddress: CustomerAddress | null
-		customerUserErrors: CustomerUserError[]
+		userErrors: CustomerUserError[]
 	}
 }
 
 export interface CustomerAddressDeleteResponse {
 	customerAddressDelete: {
-		deletedCustomerAddressId: string | null
-		customerUserErrors: CustomerUserError[]
-	}
-}
-
-export interface CustomerDefaultAddressUpdateResponse {
-	customerDefaultAddressUpdate: {
-		customer: Customer | null
-		customerUserErrors: CustomerUserError[]
+		deletedAddressId: string | null
+		userErrors: CustomerUserError[]
 	}
 }
 

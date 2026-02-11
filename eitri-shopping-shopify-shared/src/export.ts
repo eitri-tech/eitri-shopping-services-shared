@@ -21,6 +21,7 @@ export type {
 	CustomerCreateInput,
 	CustomerUpdateInput,
 	CustomerResetInput,
+	CustomerAddressInput,
 	MailingAddressInput
 } from './models/Customer'
 

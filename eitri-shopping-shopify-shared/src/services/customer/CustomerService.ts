@@ -1,15 +1,13 @@
 import {
 	Customer,
-	CustomerAccessToken,
 	CustomerUserError,
 	CustomerUpdateInput,
-	MailingAddressInput,
+	CustomerAddressInput,
 	CustomerResponse,
 	CustomerUpdateResponse,
 	CustomerAddressCreateResponse,
 	CustomerAddressUpdateResponse,
 	CustomerAddressDeleteResponse,
-	CustomerDefaultAddressUpdateResponse,
 	CustomerAddress,
 	CustomerApiError,
 	CustomerGraphQLError,
@@ -24,8 +22,7 @@ import {
 	CUSTOMER_UPDATE,
 	CUSTOMER_ADDRESS_CREATE,
 	CUSTOMER_ADDRESS_UPDATE,
-	CUSTOMER_ADDRESS_DELETE,
-	CUSTOMER_DEFAULT_ADDRESS_UPDATE
+	CUSTOMER_ADDRESS_DELETE
 } from '../../graphql/queries/customer.queries.gql'
 import Eitri from 'eitri-bifrost'
 import RemoteConfig from '../RemoteConfig'
@@ -205,7 +202,6 @@ export class CustomerService {
 
 	static async updateCustomer(input: CustomerUpdateInput): Promise<{
 		customer: Customer | null
-		accessToken: CustomerAccessToken | null
 		userErrors: CustomerUserError[]
 	}> {
 		const token = await CustomerService.auth.getAccessToken()
@@ -217,34 +213,42 @@ export class CustomerService {
 		const body = {
 			query: CUSTOMER_UPDATE,
 			variables: {
-				customerAccessToken: token,
-				customer: input
+				input
 			}
 		}
 
 		Logger.log('[CustomerService] Atualizando dados do cliente')
 
-		const res = await ShopifyCaller.post(body)
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
+
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
 		const parsed = CustomerService.handleResponse(res)
-		const { data } = parsed as { data: CustomerUpdateResponse }
+		const result = ((parsed.data ?? parsed) as CustomerUpdateResponse).customerUpdate
 
-		const result = data.customerUpdate
-
-		if (result.customerUserErrors.length > 0) {
-			Logger.log('[CustomerService] Falha ao atualizar dados:', result.customerUserErrors)
+		if (result.userErrors.length > 0) {
+			Logger.log('[CustomerService] Falha ao atualizar dados:', result.userErrors)
 		} else {
 			Logger.log('[CustomerService] Dados atualizados com sucesso')
 		}
 
 		return {
 			customer: result.customer,
-			accessToken: result.customerAccessToken,
-			userErrors: result.customerUserErrors
+			userErrors: result.userErrors
 		}
 	}
 
 	static async createAddress(
-		address: MailingAddressInput
+		address: CustomerAddressInput,
+		defaultAddress?: boolean
 	): Promise<{ address: CustomerAddress | null; userErrors: CustomerUserError[] }> {
 		const token = await CustomerService.auth.getAccessToken()
 
@@ -255,34 +259,44 @@ export class CustomerService {
 		const body = {
 			query: CUSTOMER_ADDRESS_CREATE,
 			variables: {
-				customerAccessToken: token,
-				address
+				address,
+				defaultAddress: defaultAddress ?? false
 			}
 		}
 
 		Logger.log('[CustomerService] Criando novo endereço')
 
-		const res = await ShopifyCaller.post(body)
-		const parsed = CustomerService.handleResponse(res)
-		const { data } = parsed as { data: CustomerAddressCreateResponse }
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const result = data.customerAddressCreate
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
+		const parsed = CustomerService.handleResponse(res)
+		const result = ((parsed.data ?? parsed) as CustomerAddressCreateResponse).customerAddressCreate
 
 		if (result.customerAddress) {
 			Logger.log('[CustomerService] Endereço criado com sucesso')
 		} else {
-			Logger.log('[CustomerService] Falha ao criar endereço:', result.customerUserErrors)
+			Logger.log('[CustomerService] Falha ao criar endereço:', result.userErrors)
 		}
 
 		return {
 			address: result.customerAddress,
-			userErrors: result.customerUserErrors
+			userErrors: result.userErrors
 		}
 	}
 
 	static async updateAddress(
 		addressId: string,
-		address: MailingAddressInput
+		address: CustomerAddressInput,
+		defaultAddress?: boolean
 	): Promise<{ address: CustomerAddress | null; userErrors: CustomerUserError[] }> {
 		const token = await CustomerService.auth.getAccessToken()
 
@@ -293,29 +307,38 @@ export class CustomerService {
 		const body = {
 			query: CUSTOMER_ADDRESS_UPDATE,
 			variables: {
-				customerAccessToken: token,
-				id: addressId,
-				address
+				addressId,
+				address,
+				defaultAddress: defaultAddress ?? null
 			}
 		}
 
 		Logger.log('[CustomerService] Atualizando endereço:', addressId)
 
-		const res = await ShopifyCaller.post(body)
-		const parsed = CustomerService.handleResponse(res)
-		const { data } = parsed as { data: CustomerAddressUpdateResponse }
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const result = data.customerAddressUpdate
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
+		const parsed = CustomerService.handleResponse(res)
+		const result = ((parsed.data ?? parsed) as CustomerAddressUpdateResponse).customerAddressUpdate
 
 		if (result.customerAddress) {
 			Logger.log('[CustomerService] Endereço atualizado com sucesso')
 		} else {
-			Logger.log('[CustomerService] Falha ao atualizar endereço:', result.customerUserErrors)
+			Logger.log('[CustomerService] Falha ao atualizar endereço:', result.userErrors)
 		}
 
 		return {
 			address: result.customerAddress,
-			userErrors: result.customerUserErrors
+			userErrors: result.userErrors
 		}
 	}
 
@@ -329,31 +352,39 @@ export class CustomerService {
 		const body = {
 			query: CUSTOMER_ADDRESS_DELETE,
 			variables: {
-				customerAccessToken: token,
-				id: addressId
+				addressId
 			}
 		}
 
 		Logger.log('[CustomerService] Removendo endereço:', addressId)
 
-		const res = await ShopifyCaller.post(body)
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
+
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
 		const parsed = CustomerService.handleResponse(res)
-		const { data } = parsed as { data: CustomerAddressDeleteResponse }
+		const result = ((parsed.data ?? parsed) as CustomerAddressDeleteResponse).customerAddressDelete
 
-		const result = data.customerAddressDelete
-
-		if (result.deletedCustomerAddressId) {
+		if (result.deletedAddressId) {
 			Logger.log('[CustomerService] Endereço removido com sucesso')
 			return { success: true, userErrors: [] }
 		}
 
-		Logger.log('[CustomerService] Falha ao remover endereço:', result.customerUserErrors)
-		return { success: false, userErrors: result.customerUserErrors }
+		Logger.log('[CustomerService] Falha ao remover endereço:', result.userErrors)
+		return { success: false, userErrors: result.userErrors }
 	}
 
 	static async setDefaultAddress(
 		addressId: string
-	): Promise<{ customer: Customer | null; userErrors: CustomerUserError[] }> {
+	): Promise<{ address: CustomerAddress | null; userErrors: CustomerUserError[] }> {
 		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
@@ -361,30 +392,39 @@ export class CustomerService {
 		}
 
 		const body = {
-			query: CUSTOMER_DEFAULT_ADDRESS_UPDATE,
+			query: CUSTOMER_ADDRESS_UPDATE,
 			variables: {
-				customerAccessToken: token,
-				addressId
+				addressId,
+				defaultAddress: true
 			}
 		}
 
 		Logger.log('[CustomerService] Definindo endereço padrão:', addressId)
 
-		const res = await ShopifyCaller.post(body)
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
+
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
 		const parsed = CustomerService.handleResponse(res)
-		const { data } = parsed as { data: CustomerDefaultAddressUpdateResponse }
+		const result = ((parsed.data ?? parsed) as CustomerAddressUpdateResponse).customerAddressUpdate
 
-		const result = data.customerDefaultAddressUpdate
-
-		if (result.customer) {
+		if (result.customerAddress) {
 			Logger.log('[CustomerService] Endereço padrão definido com sucesso')
 		} else {
-			Logger.log('[CustomerService] Falha ao definir endereço padrão:', result.customerUserErrors)
+			Logger.log('[CustomerService] Falha ao definir endereço padrão:', result.userErrors)
 		}
 
 		return {
-			customer: result.customer,
-			userErrors: result.customerUserErrors
+			address: result.customerAddress,
+			userErrors: result.userErrors
 		}
 	}
 

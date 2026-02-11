@@ -37,55 +37,52 @@ query GET_CUSTOMER_ORDERS($first: Int!, $after: String, $sortKey: OrderSortKeys,
 	}
 }
 
-mutation CUSTOMER_UPDATE($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
-	customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+mutation CUSTOMER_UPDATE($input: CustomerUpdateInput!) {
+	customerUpdate(input: $input) {
 		customer {
 			...CustomerFields
 		}
-		customerUserErrors {
-			...CustomerUserErrorFields
+		userErrors {
+			code
+			field
+			message
 		}
 	}
 }
 
-mutation CUSTOMER_ADDRESS_CREATE($customerAccessToken: String!, $address: MailingAddressInput!) {
-	customerAddressCreate(customerAccessToken: $customerAccessToken, address: $address) {
+mutation CUSTOMER_ADDRESS_CREATE($address: CustomerAddressInput!, $defaultAddress: Boolean) {
+	customerAddressCreate(address: $address, defaultAddress: $defaultAddress) {
 		customerAddress {
 			...CustomerAddressFields
 		}
-		customerUserErrors {
-			...CustomerUserErrorFields
+		userErrors {
+			code
+			field
+			message
 		}
 	}
 }
 
-mutation CUSTOMER_ADDRESS_UPDATE($customerAccessToken: String!, $id: ID!, $address: MailingAddressInput!) {
-	customerAddressUpdate(customerAccessToken: $customerAccessToken, id: $id, address: $address) {
+mutation CUSTOMER_ADDRESS_UPDATE($addressId: ID!, $address: CustomerAddressInput, $defaultAddress: Boolean) {
+	customerAddressUpdate(addressId: $addressId, address: $address, defaultAddress: $defaultAddress) {
 		customerAddress {
 			...CustomerAddressFields
 		}
-		customerUserErrors {
-			...CustomerUserErrorFields
+		userErrors {
+			code
+			field
+			message
 		}
 	}
 }
 
-mutation CUSTOMER_ADDRESS_DELETE($customerAccessToken: String!, $id: ID!) {
-	customerAddressDelete(customerAccessToken: $customerAccessToken, id: $id) {
-		deletedCustomerAddressId
-		customerUserErrors {
-			...CustomerUserErrorFields
-		}
-	}
-}
-
-mutation CUSTOMER_DEFAULT_ADDRESS_UPDATE($customerAccessToken: String!, $addressId: ID!) {
-	customerDefaultAddressUpdate(customerAccessToken: $customerAccessToken, addressId: $addressId) {
-		customer {
-			...CustomerFields
-		}
-		customerUserErrors {
-			...CustomerUserErrorFields
+mutation CUSTOMER_ADDRESS_DELETE($addressId: ID!) {
+	customerAddressDelete(addressId: $addressId) {
+		deletedAddressId
+		userErrors {
+			code
+			field
+			message
 		}
 	}
 }
