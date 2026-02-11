@@ -2,11 +2,9 @@ export interface Customer {
 	id: string
 	firstName: string | null
 	lastName: string | null
-	email: string
-	phone: string | null
-	acceptsMarketing: boolean
-	createdAt: string
-	updatedAt: string
+	emailAddress: CustomerEmailAddress | null
+	phoneNumber: CustomerPhoneNumber | null
+	creationDate: string
 	displayName: string
 	defaultAddress: CustomerAddress | null
 	addresses: {
@@ -17,6 +15,14 @@ export interface Customer {
 	}
 }
 
+export interface CustomerEmailAddress {
+	emailAddress: string
+}
+
+export interface CustomerPhoneNumber {
+	phoneNumber: string
+}
+
 export interface CustomerAddress {
 	id: string
 	address1: string | null
@@ -25,7 +31,7 @@ export interface CustomerAddress {
 	province: string | null
 	country: string | null
 	zip: string | null
-	phone: string | null
+	phoneNumber: string | null
 	firstName: string | null
 	lastName: string | null
 }
@@ -34,20 +40,58 @@ export interface CustomerAddressEdge {
 	node: CustomerAddress
 }
 
+export interface MoneyV2 {
+	amount: string
+	currencyCode: string
+}
+
+export interface OrderLineItemImage {
+	url: string
+	altText: string | null
+}
+
+export interface OrderLineItem {
+	id: string
+	title: string
+	quantity: number
+	image: OrderLineItemImage | null
+	price: MoneyV2
+}
+
 export interface CustomerOrder {
 	id: string
-	orderNumber: number
+	name: string
+	number: number
 	processedAt: string
+	createdAt: string
 	financialStatus: string
 	fulfillmentStatus: string
-	totalPrice: {
-		amount: string
-		currencyCode: string
+	totalPrice: MoneyV2
+	subtotal: MoneyV2 | null
+	totalShipping: MoneyV2 | null
+	totalTax: MoneyV2 | null
+	lineItems: {
+		edges: { node: OrderLineItem }[]
 	}
 }
 
 export interface CustomerOrderEdge {
 	node: CustomerOrder
+	cursor: string
+}
+
+export interface CustomerOrdersPageInfo {
+	hasNextPage: boolean
+	hasPreviousPage: boolean
+}
+
+export interface CustomerOrdersResponse {
+	customer: {
+		orders: {
+			edges: CustomerOrderEdge[]
+			pageInfo: CustomerOrdersPageInfo
+		}
+	} | null
 }
 
 export interface CustomerAccessToken {
@@ -181,5 +225,29 @@ export interface CustomerDefaultAddressUpdateResponse {
 	customerDefaultAddressUpdate: {
 		customer: Customer | null
 		customerUserErrors: CustomerUserError[]
+	}
+}
+
+export interface CustomerGraphQLError {
+	message: string
+	path?: string[]
+	extensions?: {
+		code: string
+		documentation?: string
+		requiredAccess?: string
+	}
+}
+
+export class CustomerApiError extends Error {
+	status: number
+	code: string
+	graphqlErrors?: CustomerGraphQLError[]
+
+	constructor(status: number, code: string, message: string, graphqlErrors?: CustomerGraphQLError[]) {
+		super(message)
+		this.name = 'CustomerApiError'
+		this.status = status
+		this.code = code
+		this.graphqlErrors = graphqlErrors
 	}
 }

@@ -1,11 +1,15 @@
 // @ts-ignore
 import { Window, View, Button } from 'eitri-luminus'
-import {  Shopify } from '@/export'
+import { Shopify } from '@/export'
 
 export default function Cart(props) {
 	const getCart = async () => {
-		const cart = await Shopify.cart.generateNewCart()
-		console.log('cart==>', cart)
+		try {
+			const cart = await Shopify.cart.generateNewCart()
+			console.log('cart==>', cart)
+		} catch (error) {
+			console.error(error)
+		}
 	}
 
 	const methods = [

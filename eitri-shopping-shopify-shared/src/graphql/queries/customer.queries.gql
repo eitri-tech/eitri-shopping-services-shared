@@ -1,74 +1,38 @@
 #import "../fragments/customer.fragment.gql"
 
-mutation CUSTOMER_ACCESS_TOKEN_CREATE($input: CustomerAccessTokenCreateInput!) {
-	customerAccessTokenCreate(input: $input) {
-		customerAccessToken {
-			...CustomerAccessTokenFields
-		}
-		customerUserErrors {
-			...CustomerUserErrorFields
-		}
-	}
-}
-
-mutation CUSTOMER_CREATE($input: CustomerCreateInput!) {
-	customerCreate(input: $input) {
-		customer {
-			...CustomerFields
-		}
-		customerUserErrors {
-			...CustomerUserErrorFields
-		}
-	}
-}
-
-query GET_CUSTOMER($customerAccessToken: String!) {
-	customer(customerAccessToken: $customerAccessToken) {
+query GET_CUSTOMER {
+	customer {
 		...CustomerFields
-	}
-}
-
-mutation CUSTOMER_ACCESS_TOKEN_RENEW($customerAccessToken: String!) {
-	customerAccessTokenRenew(customerAccessToken: $customerAccessToken) {
-		customerAccessToken {
-			...CustomerAccessTokenFields
-		}
-		userErrors {
-			field
-			message
+		orders(first: 10) {
+			edges {
+				node {
+					id
+				}
+			}
 		}
 	}
 }
 
-mutation CUSTOMER_ACCESS_TOKEN_DELETE($customerAccessToken: String!) {
-	customerAccessTokenDelete(customerAccessToken: $customerAccessToken) {
-		deletedAccessToken
-		deletedCustomerAccessTokenId
-		userErrors {
-			field
-			message
-		}
-	}
-}
-
-mutation CUSTOMER_RECOVER($email: String!) {
-	customerRecover(email: $email) {
-		customerUserErrors {
-			...CustomerUserErrorFields
-		}
-	}
-}
-
-mutation CUSTOMER_RESET($id: ID!, $input: CustomerResetInput!) {
-	customerReset(id: $id, input: $input) {
-		customer {
-			...CustomerFields
-		}
-		customerAccessToken {
-			...CustomerAccessTokenFields
-		}
-		customerUserErrors {
-			...CustomerUserErrorFields
+query GET_CUSTOMER_ORDERS($first: Int!, $after: String, $sortKey: OrderSortKeys, $reverse: Boolean) {
+	customer {
+		orders(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse) {
+			edges {
+				node {
+					...OrderFields
+					lineItems(first: 50) {
+						edges {
+							node {
+								...LineItemFields
+							}
+						}
+					}
+				}
+				cursor
+			}
+			pageInfo {
+				hasNextPage
+				hasPreviousPage
+			}
 		}
 	}
 }
@@ -77,9 +41,6 @@ mutation CUSTOMER_UPDATE($customerAccessToken: String!, $customer: CustomerUpdat
 	customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
 		customer {
 			...CustomerFields
-		}
-		customerAccessToken {
-			...CustomerAccessTokenFields
 		}
 		customerUserErrors {
 			...CustomerUserErrorFields
@@ -90,16 +51,7 @@ mutation CUSTOMER_UPDATE($customerAccessToken: String!, $customer: CustomerUpdat
 mutation CUSTOMER_ADDRESS_CREATE($customerAccessToken: String!, $address: MailingAddressInput!) {
 	customerAddressCreate(customerAccessToken: $customerAccessToken, address: $address) {
 		customerAddress {
-			id
-			address1
-			address2
-			city
-			province
-			country
-			zip
-			phone
-			firstName
-			lastName
+			...CustomerAddressFields
 		}
 		customerUserErrors {
 			...CustomerUserErrorFields
@@ -110,16 +62,7 @@ mutation CUSTOMER_ADDRESS_CREATE($customerAccessToken: String!, $address: Mailin
 mutation CUSTOMER_ADDRESS_UPDATE($customerAccessToken: String!, $id: ID!, $address: MailingAddressInput!) {
 	customerAddressUpdate(customerAccessToken: $customerAccessToken, id: $id, address: $address) {
 		customerAddress {
-			id
-			address1
-			address2
-			city
-			province
-			country
-			zip
-			phone
-			firstName
-			lastName
+			...CustomerAddressFields
 		}
 		customerUserErrors {
 			...CustomerUserErrorFields

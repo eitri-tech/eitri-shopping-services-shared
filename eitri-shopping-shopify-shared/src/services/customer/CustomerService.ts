@@ -3,45 +3,104 @@ import {
 	CustomerAccessToken,
 	CustomerUserError,
 	CustomerUpdateInput,
-	CustomerResetInput,
 	MailingAddressInput,
 	CustomerResponse,
-	CustomerAccessTokenRenewResponse,
-	CustomerAccessTokenDeleteResponse,
-	CustomerRecoverResponse,
-	CustomerResetResponse,
 	CustomerUpdateResponse,
 	CustomerAddressCreateResponse,
 	CustomerAddressUpdateResponse,
 	CustomerAddressDeleteResponse,
 	CustomerDefaultAddressUpdateResponse,
-	CustomerAddress
+	CustomerAddress,
+	CustomerApiError,
+	CustomerGraphQLError,
+	CustomerOrderEdge,
+	CustomerOrdersPageInfo,
+	CustomerOrdersResponse
 } from '../../models/Customer'
 import ShopifyCaller from '../_helpers/ShopifyCaller'
 import {
 	GET_CUSTOMER,
-	CUSTOMER_ACCESS_TOKEN_RENEW,
-	CUSTOMER_ACCESS_TOKEN_DELETE,
-	CUSTOMER_RECOVER,
-	CUSTOMER_RESET,
+	GET_CUSTOMER_ORDERS,
 	CUSTOMER_UPDATE,
 	CUSTOMER_ADDRESS_CREATE,
 	CUSTOMER_ADDRESS_UPDATE,
 	CUSTOMER_ADDRESS_DELETE,
 	CUSTOMER_DEFAULT_ADDRESS_UPDATE
 } from '../../graphql/queries/customer.queries.gql'
-import StorageService from '../StorageService'
+import Eitri from 'eitri-bifrost'
+import RemoteConfig from '../RemoteConfig'
 import Logger from '../_helpers/Logger'
 import { AuthService } from './CustomerAuth'
 
 export class CustomerService {
-	private static CUSTOMER_ACCESS_TOKEN_KEY = 'shopify_customer_access_token'
-	private static CUSTOMER_TOKEN_EXPIRES_AT_KEY = 'shopify_customer_token_expires_at'
-
 	static auth = AuthService
 
-	static async getCustomer(accessToken?: string): Promise<Customer | null> {
-		const token = accessToken || (await CustomerService.getStoredAccessToken())
+	private static readonly STATUS_MESSAGES: Record<number, { code: string; message: string }> = {
+		400: { code: 'BAD_REQUEST', message: 'Requisição inválida. Verifique os parâmetros enviados.' },
+		401: { code: 'UNAUTHORIZED', message: 'Credenciais inválidas ou ausentes.' },
+		402: { code: 'PAYMENT_REQUIRED', message: 'Loja congelada por pendência de pagamento.' },
+		403: { code: 'FORBIDDEN', message: 'Acesso negado à loja.' },
+		404: { code: 'NOT_FOUND', message: 'Recurso não encontrado.' },
+		423: { code: 'LOCKED', message: 'Loja temporariamente indisponível.' }
+	}
+
+	private static handleResponse(res: any): any {
+		const status = res?.status || res?.response?.status
+
+		if (status && status >= 400) {
+			const statusInfo = CustomerService.STATUS_MESSAGES[status]
+
+			if (statusInfo) {
+				Logger.log(`[CustomerService] Erro ${status}: ${statusInfo.message}`)
+				throw new CustomerApiError(status, statusInfo.code, statusInfo.message)
+			}
+
+			if (status >= 500) {
+				Logger.log(`[CustomerService] Erro interno do servidor (${status})`)
+				throw new CustomerApiError(status, 'INTERNAL_SERVER_ERROR', 'Erro interno do Shopify. Tente novamente mais tarde.')
+			}
+
+			throw new CustomerApiError(status, 'UNKNOWN_ERROR', `Erro inesperado: ${status}`)
+		}
+
+		const responseData = res?.data?.data ?? res?.data
+		const parsed = typeof responseData === 'string' ? JSON.parse(responseData) : responseData
+
+		const graphqlErrors: CustomerGraphQLError[] = parsed?.errors
+		if (graphqlErrors?.length) {
+			const firstError = graphqlErrors[0]
+			const code = firstError.extensions?.code || 'GRAPHQL_ERROR'
+			const message = firstError.message || 'Erro na consulta GraphQL'
+
+			Logger.log(`[CustomerService] GraphQL Error [${code}]: ${message}`)
+			throw new CustomerApiError(200, code, message, graphqlErrors)
+		}
+
+		return parsed
+	}
+
+	private static async discoverCustomerApiUrl(): Promise<string> {
+		let host = RemoteConfig.getContent('providerInfo.host') || ''
+
+		if (!host) {
+			throw new Error('Nenhum host definido para essa loja')
+		}
+
+		host = host.replace(/^https?:\/\//, '').replace(/^www\./, '')
+
+		const wellKnownUrl = `https://${host}/.well-known/customer-account-api`
+		const response = await Eitri.http.get(wellKnownUrl)
+		const { graphql_api } = response.data
+
+		if (!graphql_api) {
+			throw new Error('graphql_api não encontrado no .well-known/customer-account-api')
+		}
+
+		return graphql_api
+	}
+
+	static async getCustomer(): Promise<Customer | null> {
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			Logger.log('[CustomerService] Nenhum token de acesso encontrado')
@@ -49,173 +108,98 @@ export class CustomerService {
 		}
 
 		const body = {
-			query: GET_CUSTOMER,
-			variables: {
-				customerAccessToken: token
-			}
+			query: GET_CUSTOMER
 		}
 
 		Logger.log('[CustomerService] Buscando dados do cliente')
 
-		const res = await ShopifyCaller.post(body)
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const { data } = res.data as { data: CustomerResponse }
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
 
-		if (data?.customer) {
+		const parsed = CustomerService.handleResponse(res)
+		const { customer } = (parsed.data ?? parsed) as CustomerResponse
+
+		if (customer) {
 			Logger.log('[CustomerService] Dados do cliente carregados com sucesso')
 		} else {
 			Logger.log('[CustomerService] Cliente não encontrado ou token inválido')
 		}
 
-		return data.customer
+		return customer
 	}
 
 	static async getCurrentCustomer(): Promise<Customer | null> {
-		const token = await CustomerService.getStoredAccessToken()
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			return null
 		}
 
-		const isValid = await CustomerService.isTokenValid()
-
-		if (!isValid) {
-			const renewed = await CustomerService.renewAccessToken()
-			if (!renewed) {
-				await CustomerService.clearAccessToken()
-				return null
-			}
-		}
-
-		return CustomerService.getCustomer(token)
+		return CustomerService.getCustomer()
 	}
 
-	static async renewAccessToken(): Promise<CustomerAccessToken | null> {
-		const token = await CustomerService.getStoredAccessToken()
-
-		if (!token) {
-			Logger.log('[CustomerService] Nenhum token para renovar')
-			return null
-		}
-
-		const body = {
-			query: CUSTOMER_ACCESS_TOKEN_RENEW,
-			variables: {
-				customerAccessToken: token
-			}
-		}
-
-		Logger.log('[CustomerService] Renovando token de acesso')
-
-		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerAccessTokenRenewResponse }
-
-		const result = data.customerAccessTokenRenew
-
-		if (result.customerAccessToken) {
-			await CustomerService.saveAccessToken(result.customerAccessToken)
-			Logger.log('[CustomerService] Token renovado com sucesso')
-			return result.customerAccessToken
-		}
-
-		Logger.log('[CustomerService] Falha ao renovar token:', result.userErrors)
-		return null
-	}
-
-	static async signOut(): Promise<boolean> {
-		const token = await CustomerService.getStoredAccessToken()
-
-		if (!token) {
-			return true
-		}
-
-		const body = {
-			query: CUSTOMER_ACCESS_TOKEN_DELETE,
-			variables: {
-				customerAccessToken: token
-			}
-		}
-
-		Logger.log('[CustomerService] Realizando logout do cliente')
-
-		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerAccessTokenDeleteResponse }
-
-		await CustomerService.clearAccessToken()
-
-		if (data.customerAccessTokenDelete.deletedAccessToken) {
-			Logger.log('[CustomerService] Logout realizado com sucesso')
-			return true
-		}
-
-		Logger.log('[CustomerService] Logout realizado (token limpo localmente)')
-		return true
-	}
-
-	static async recoverPassword(email: string): Promise<{ success: boolean; userErrors: CustomerUserError[] }> {
-		const body = {
-			query: CUSTOMER_RECOVER,
-			variables: {
-				email
-			}
-		}
-
-		Logger.log('[CustomerService] Solicitando recuperação de senha para:', email)
-
-		const res = await ShopifyCaller.post(body)
-
-		console.log(res)
-
-		const { data } = res.data as { data: CustomerRecoverResponse }
-
-		const result = data.customerRecover
-
-		if (result?.customerUserErrors.length === 0) {
-			Logger.log('[CustomerService] Email de recuperação enviado com sucesso')
-			return { success: true, userErrors: [] }
-		}
-
-		Logger.log('[CustomerService] Falha ao solicitar recuperação:', result.customerUserErrors)
-		return { success: false, userErrors: result.customerUserErrors }
-	}
-
-	static async resetPassword(
-		customerId: string,
-		input: CustomerResetInput
-	): Promise<{
-		customer: Customer | null
-		accessToken: CustomerAccessToken | null
-		userErrors: CustomerUserError[]
+	static async getOrders(params?: {
+		first?: number
+		after?: string
+		sortKey?: string
+		reverse?: boolean
+	}): Promise<{
+		orders: CustomerOrderEdge[]
+		pageInfo: CustomerOrdersPageInfo
 	}> {
+		const token = await CustomerService.auth.getAccessToken()
+
+		if (!token) {
+			Logger.log('[CustomerService] Nenhum token de acesso encontrado')
+			return { orders: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
+		}
+
 		const body = {
-			query: CUSTOMER_RESET,
+			query: GET_CUSTOMER_ORDERS,
 			variables: {
-				id: customerId,
-				input
+				first: params?.first ?? 10,
+				after: params?.after ?? null,
+				sortKey: params?.sortKey ?? 'PROCESSED_AT',
+				reverse: params?.reverse ?? true
 			}
 		}
 
-		Logger.log('[CustomerService] Resetando senha do cliente')
+		Logger.log('[CustomerService] Buscando pedidos do cliente')
 
-		const res = await ShopifyCaller.post(body)
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const { data } = res.data as { data: CustomerResetResponse }
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
 
-		const result = data.customerReset
+		const parsed = CustomerService.handleResponse(res)
+		const { customer } = (parsed.data ?? parsed) as CustomerOrdersResponse
 
-		if (result.customerAccessToken) {
-			await CustomerService.saveAccessToken(result.customerAccessToken)
-			Logger.log('[CustomerService] Senha resetada com sucesso')
-		} else {
-			Logger.log('[CustomerService] Falha ao resetar senha:', result.customerUserErrors)
+		if (!customer?.orders) {
+			Logger.log('[CustomerService] Nenhum pedido encontrado')
+			return { orders: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } }
 		}
+
+		Logger.log(`[CustomerService] ${customer.orders.edges.length} pedido(s) carregado(s)`)
 
 		return {
-			customer: result.customer,
-			accessToken: result.customerAccessToken,
-			userErrors: result.customerUserErrors
+			orders: customer.orders.edges,
+			pageInfo: customer.orders.pageInfo
 		}
 	}
 
@@ -224,7 +208,7 @@ export class CustomerService {
 		accessToken: CustomerAccessToken | null
 		userErrors: CustomerUserError[]
 	}> {
-		const token = await CustomerService.getStoredAccessToken()
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			throw new Error('Nenhum token de acesso encontrado')
@@ -241,16 +225,15 @@ export class CustomerService {
 		Logger.log('[CustomerService] Atualizando dados do cliente')
 
 		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerUpdateResponse }
+		const parsed = CustomerService.handleResponse(res)
+		const { data } = parsed as { data: CustomerUpdateResponse }
 
 		const result = data.customerUpdate
 
-		if (result.customerAccessToken) {
-			await CustomerService.saveAccessToken(result.customerAccessToken)
-			Logger.log('[CustomerService] Dados atualizados com sucesso')
-		} else if (result.customerUserErrors.length > 0) {
+		if (result.customerUserErrors.length > 0) {
 			Logger.log('[CustomerService] Falha ao atualizar dados:', result.customerUserErrors)
+		} else {
+			Logger.log('[CustomerService] Dados atualizados com sucesso')
 		}
 
 		return {
@@ -263,7 +246,7 @@ export class CustomerService {
 	static async createAddress(
 		address: MailingAddressInput
 	): Promise<{ address: CustomerAddress | null; userErrors: CustomerUserError[] }> {
-		const token = await CustomerService.getStoredAccessToken()
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			throw new Error('Nenhum token de acesso encontrado')
@@ -280,8 +263,8 @@ export class CustomerService {
 		Logger.log('[CustomerService] Criando novo endereço')
 
 		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerAddressCreateResponse }
+		const parsed = CustomerService.handleResponse(res)
+		const { data } = parsed as { data: CustomerAddressCreateResponse }
 
 		const result = data.customerAddressCreate
 
@@ -301,7 +284,7 @@ export class CustomerService {
 		addressId: string,
 		address: MailingAddressInput
 	): Promise<{ address: CustomerAddress | null; userErrors: CustomerUserError[] }> {
-		const token = await CustomerService.getStoredAccessToken()
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			throw new Error('Nenhum token de acesso encontrado')
@@ -319,8 +302,8 @@ export class CustomerService {
 		Logger.log('[CustomerService] Atualizando endereço:', addressId)
 
 		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerAddressUpdateResponse }
+		const parsed = CustomerService.handleResponse(res)
+		const { data } = parsed as { data: CustomerAddressUpdateResponse }
 
 		const result = data.customerAddressUpdate
 
@@ -337,7 +320,7 @@ export class CustomerService {
 	}
 
 	static async deleteAddress(addressId: string): Promise<{ success: boolean; userErrors: CustomerUserError[] }> {
-		const token = await CustomerService.getStoredAccessToken()
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			throw new Error('Nenhum token de acesso encontrado')
@@ -354,8 +337,8 @@ export class CustomerService {
 		Logger.log('[CustomerService] Removendo endereço:', addressId)
 
 		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerAddressDeleteResponse }
+		const parsed = CustomerService.handleResponse(res)
+		const { data } = parsed as { data: CustomerAddressDeleteResponse }
 
 		const result = data.customerAddressDelete
 
@@ -371,7 +354,7 @@ export class CustomerService {
 	static async setDefaultAddress(
 		addressId: string
 	): Promise<{ customer: Customer | null; userErrors: CustomerUserError[] }> {
-		const token = await CustomerService.getStoredAccessToken()
+		const token = await CustomerService.auth.getAccessToken()
 
 		if (!token) {
 			throw new Error('Nenhum token de acesso encontrado')
@@ -388,8 +371,8 @@ export class CustomerService {
 		Logger.log('[CustomerService] Definindo endereço padrão:', addressId)
 
 		const res = await ShopifyCaller.post(body)
-
-		const { data } = res.data as { data: CustomerDefaultAddressUpdateResponse }
+		const parsed = CustomerService.handleResponse(res)
+		const { data } = parsed as { data: CustomerDefaultAddressUpdateResponse }
 
 		const result = data.customerDefaultAddressUpdate
 
@@ -406,39 +389,6 @@ export class CustomerService {
 	}
 
 	static async isAuthenticated(): Promise<boolean> {
-		const token = await CustomerService.getStoredAccessToken()
-
-		if (!token) {
-			return false
-		}
-
-		return CustomerService.isTokenValid()
-	}
-
-	static async isTokenValid(): Promise<boolean> {
-		const expiresAt = await StorageService.getStorageItem(CustomerService.CUSTOMER_TOKEN_EXPIRES_AT_KEY)
-
-		if (!expiresAt) {
-			return false
-		}
-
-		const expirationDate = new Date(expiresAt)
-		const now = new Date()
-
-		return expirationDate > now
-	}
-
-	static async saveAccessToken(accessToken: CustomerAccessToken): Promise<void> {
-		await StorageService.setStorageItem(CustomerService.CUSTOMER_ACCESS_TOKEN_KEY, accessToken.accessToken)
-		await StorageService.setStorageItem(CustomerService.CUSTOMER_TOKEN_EXPIRES_AT_KEY, accessToken.expiresAt)
-	}
-
-	static async getStoredAccessToken(): Promise<string | null> {
-		return StorageService.getStorageItem(CustomerService.CUSTOMER_ACCESS_TOKEN_KEY)
-	}
-
-	static async clearAccessToken(): Promise<void> {
-		await StorageService.removeItem(CustomerService.CUSTOMER_ACCESS_TOKEN_KEY)
-		await StorageService.removeItem(CustomerService.CUSTOMER_TOKEN_EXPIRES_AT_KEY)
+		return CustomerService.auth.isAuthenticated()
 	}
 }

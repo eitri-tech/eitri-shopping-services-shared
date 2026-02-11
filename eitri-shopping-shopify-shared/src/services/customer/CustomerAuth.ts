@@ -121,13 +121,29 @@ export class AuthService {
 	static async login(): Promise<LoginResponse> {
 		const remoteConfig = await Eitri.environment.getRemoteConfigs()
 
+		console.log('remoteConfig', remoteConfig)
+
 		const { host, clientId } = remoteConfig.providerInfo
+
+		if (!host) {
+			throw new Error('Missing required remote config variables')
+		}
+
+		if (!clientId) {
+			throw new Error('Missing required remote config variable: clientId')
+		}
 
 		const fixedHost = host.replace('https://', '').replace('www.', '')
 
-		const configUrl = `https://${fixedHost}/customer_authentication/callback`
+		const configUrl = `https://${fixedHost}/.well-known/openid-configuration`
 		const callbackUri = `https://${fixedHost}/customer_authentication/callback`
-		const allowedDomains = [`${fixedHost}`]
+		const allowedDomains = [`${fixedHost}`, 'shopify.com']
+
+		console.log({
+			configUrl,
+			callbackUri,
+			allowedDomains
+		})
 
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
@@ -223,8 +239,51 @@ export class AuthService {
 		}
 	}
 
+	private static isAccessTokenExpired(token: string): boolean {
+		try {
+			const jwt = token.startsWith('shcat_') ? token.slice(6) : token
+			const payload = JSON.parse(atob(jwt.split('.')[1]))
+			const now = Math.floor(Date.now() / 1000)
+			return payload.exp <= now + 60
+		} catch {
+			return true
+		}
+	}
+
+	private static async getRemoteConfigParams(): Promise<{ clientId: string; configUrl: string } | null> {
+		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+		const { host, clientId } = remoteConfig?.providerInfo || {}
+
+		if (!host || !clientId) {
+			return null
+		}
+
+		const fixedHost = host.replace('https://', '').replace('www.', '')
+		return { clientId, configUrl: `https://${fixedHost}/.well-known/openid-configuration` }
+	}
+
 	static async getAccessToken(): Promise<string | null> {
-		return Eitri.storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+		const token = await Eitri.storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+
+		if (!token) {
+			return null
+		}
+
+		if (!this.isAccessTokenExpired(token)) {
+			return token
+		}
+
+		const params = await this.getRemoteConfigParams()
+		if (!params) {
+			return null
+		}
+
+		const result = await this.refresh(params)
+		if (result.success) {
+			return result.data.access_token
+		}
+
+		return null
 	}
 
 	static async getIdToken(): Promise<string | null> {
@@ -232,7 +291,7 @@ export class AuthService {
 	}
 
 	static async isAuthenticated(): Promise<boolean> {
-		const token = await Eitri.storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+		const token = await this.getAccessToken()
 		return !!token
 	}
 
