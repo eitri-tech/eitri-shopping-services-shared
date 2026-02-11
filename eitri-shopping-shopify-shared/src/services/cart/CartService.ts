@@ -102,7 +102,7 @@ export class CartService {
 
 		const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Novo carrinho criado', res)
+		Logger.log('[CartService] Novo carrinho criado')
 
 		const { data } = res.data as { data: { cartCreate: CartResponse } }
 
