@@ -6,6 +6,7 @@ import {
 	RefreshResponse,
 	RefreshTokenResponse
 } from '../../models/Auth'
+import Logger from '../_helpers/Logger'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -93,14 +94,22 @@ export class AuthService {
 		tokenEndpoint: string,
 		clientId: string
 	): Promise<RefreshTokenResponse> {
-		const body = new URLSearchParams()
-		body.append('grant_type', 'refresh_token')
-		body.append('client_id', clientId)
-		body.append('refresh_token', refreshToken)
+		const params = new URLSearchParams()
+		params.append('grant_type', 'refresh_token')
+		params.append('client_id', clientId)
+		params.append('refresh_token', refreshToken)
 
-		const response = await Eitri.http.post(tokenEndpoint, body.toString(), {
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-		})
+		const url = `${tokenEndpoint}?${params.toString()}`
+
+		Logger.log('[AuthService] Atualizando token de acesso:', url)
+
+		const response = await Eitri.http.post(
+			url,
+			{},
+			{
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+			}
+		)
 
 		return response.data
 	}
@@ -121,9 +130,9 @@ export class AuthService {
 	static async login(): Promise<LoginResponse> {
 		const remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		console.log('remoteConfig', remoteConfig)
-
 		const { host, clientId } = remoteConfig.providerInfo
+
+		// const clientId = '9526832b-e615-4d0c-99ce-31cb8351cc73'
 
 		if (!host) {
 			throw new Error('Missing required remote config variables')
@@ -138,12 +147,6 @@ export class AuthService {
 		const configUrl = `https://${fixedHost}/.well-known/openid-configuration`
 		const callbackUri = `https://${fixedHost}/customer_authentication/callback`
 		const allowedDomains = [`${fixedHost}`, 'shopify.com']
-
-		console.log({
-			configUrl,
-			callbackUri,
-			allowedDomains
-		})
 
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
@@ -219,6 +222,7 @@ export class AuthService {
 		const { clientId, configUrl } = params
 
 		try {
+			Logger.log('[AuthService] Atualizando token de acesso')
 			const storedRefreshToken = await Eitri.storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
 			if (!storedRefreshToken) {
 				return { success: false, error: 'No refresh token found' }
@@ -231,6 +235,8 @@ export class AuthService {
 
 			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
 			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+
+			Logger.log('[AuthService] Token de acesso atualizado com sucesso')
 
 			return { success: true, data: tokenResponse }
 		} catch (e) {
