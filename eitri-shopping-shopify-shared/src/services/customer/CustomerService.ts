@@ -54,7 +54,11 @@ export class CustomerService {
 
 			if (status >= 500) {
 				Logger.log(`[CustomerService] Erro interno do servidor (${status})`)
-				throw new CustomerApiError(status, 'INTERNAL_SERVER_ERROR', 'Erro interno do Shopify. Tente novamente mais tarde.')
+				throw new CustomerApiError(
+					status,
+					'INTERNAL_SERVER_ERROR',
+					'Erro interno do Shopify. Tente novamente mais tarde.'
+				)
 			}
 
 			throw new CustomerApiError(status, 'UNKNOWN_ERROR', `Erro inesperado: ${status}`)
@@ -79,7 +83,7 @@ export class CustomerService {
 	private static readonly CUSTOMER_API_URL_KEY = 'SHOPIFY_CUSTOMER_API_URL'
 
 	private static async discoverCustomerApiUrl(): Promise<string> {
-		const cached = await Eitri.storage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
+		const cached = await Eitri.sharedStorage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
 		if (cached) {
 			return cached
 		}
@@ -100,7 +104,7 @@ export class CustomerService {
 			throw new Error('graphql_api não encontrado no .well-known/customer-account-api')
 		}
 
-		await Eitri.storage.setItem(CustomerService.CUSTOMER_API_URL_KEY, graphql_api)
+		await Eitri.sharedStorage.setItem(CustomerService.CUSTOMER_API_URL_KEY, graphql_api)
 		return graphql_api
 	}
 
@@ -175,12 +179,7 @@ export class CustomerService {
 	 * @returns An object containing the `orders` edges and `pageInfo` for pagination.
 	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
 	 */
-	static async getOrders(params?: {
-		first?: number
-		after?: string
-		sortKey?: string
-		reverse?: boolean
-	}): Promise<{
+	static async getOrders(params?: { first?: number; after?: string; sortKey?: string; reverse?: boolean }): Promise<{
 		orders: CustomerOrderEdge[]
 		pageInfo: CustomerOrdersPageInfo
 	}> {
