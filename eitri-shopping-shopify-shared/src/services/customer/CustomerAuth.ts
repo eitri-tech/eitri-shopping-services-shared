@@ -12,7 +12,8 @@ const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
 	ACCESS_TOKEN: 'SHOPIFY_ACCESS_TOKEN',
 	REFRESH_TOKEN: 'SHOPIFY_REFRESH_TOKEN',
-	ID_TOKEN: 'SHOPIFY_ID_TOKEN'
+	ID_TOKEN: 'SHOPIFY_ID_TOKEN',
+	OPENID_CONFIG: 'SHOPIFY_OPENID_CONFIG'
 }
 
 export class AuthService {
@@ -56,7 +57,13 @@ export class AuthService {
 	}
 
 	private static async discoverEndpoints(configUrl: string) {
+		const cached = await Eitri.storage.getItem(STORAGE_KEYS.OPENID_CONFIG)
+		if (cached) {
+			return JSON.parse(cached)
+		}
+
 		const response = await Eitri.http.get(configUrl)
+		await Eitri.storage.setItem(STORAGE_KEYS.OPENID_CONFIG, JSON.stringify(response.data))
 		return response.data
 	}
 
@@ -306,5 +313,7 @@ export class AuthService {
 		await Eitri.storage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
 		await Eitri.storage.removeItem(STORAGE_KEYS.ID_TOKEN)
 		await Eitri.storage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
+		await Eitri.storage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
+		await Eitri.storage.removeItem('SHOPIFY_CUSTOMER_API_URL')
 	}
 }

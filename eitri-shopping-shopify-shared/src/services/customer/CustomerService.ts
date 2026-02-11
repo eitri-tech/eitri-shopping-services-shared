@@ -76,7 +76,14 @@ export class CustomerService {
 		return parsed
 	}
 
+	private static readonly CUSTOMER_API_URL_KEY = 'SHOPIFY_CUSTOMER_API_URL'
+
 	private static async discoverCustomerApiUrl(): Promise<string> {
+		const cached = await Eitri.storage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
+		if (cached) {
+			return cached
+		}
+
 		let host = RemoteConfig.getContent('providerInfo.host') || ''
 
 		if (!host) {
@@ -93,6 +100,7 @@ export class CustomerService {
 			throw new Error('graphql_api não encontrado no .well-known/customer-account-api')
 		}
 
+		await Eitri.storage.setItem(CustomerService.CUSTOMER_API_URL_KEY, graphql_api)
 		return graphql_api
 	}
 
