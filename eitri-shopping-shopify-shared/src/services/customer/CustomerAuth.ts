@@ -119,24 +119,6 @@ export class AuthService {
 		return response.data
 	}
 
-	static buildDomainRegex(domain: string) {
-		if (typeof domain !== 'string' || !domain.trim()) {
-			throw new Error('Invalid domain')
-		}
-
-		// Remove protocolo se vier junto
-		domain = domain.replace(/^https?:\/\//, '').trim()
-
-		// Remove path se vier junto
-		domain = domain.split('/')[0]
-
-		// Escapa caracteres especiais para regex
-		const escaped = domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-		// Permite subdomínios + domínio raiz
-		return `^(?:[a-zA-Z0-9-]+\\.)*${escaped}$`
-	}
-
 	/**
 	 * Authenticates the customer via OAuth 2.0 with PKCE through the Shopify Customer Account API.
 	 *
