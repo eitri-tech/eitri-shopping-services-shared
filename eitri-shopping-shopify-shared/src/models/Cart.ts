@@ -160,6 +160,7 @@ export interface CartBuyerIdentityInput {
 	email?: string
 	phone?: string
 	countryCode?: string
+	customerAccessToken?: string
 	deliveryAddressPreferences?: DeliveryAddressInput[]
 }
 
