@@ -1,65 +1,77 @@
+fragment CustomerAddressFields on CustomerAddress {
+	id
+	address1
+	address2
+	city
+	province
+	country
+	zip
+	phoneNumber
+	firstName
+	lastName
+}
+
 fragment CustomerFields on Customer {
 	id
 	firstName
 	lastName
-	email
-	phone
-	acceptsMarketing
-	createdAt
-	updatedAt
 	displayName
+	creationDate
+	emailAddress {
+		emailAddress
+	}
+	phoneNumber {
+		phoneNumber
+	}
 	defaultAddress {
-		id
-		address1
-		address2
-		city
-		province
-		country
-		zip
-		phone
-		firstName
-		lastName
+		...CustomerAddressFields
 	}
 	addresses(first: 10) {
 		edges {
 			node {
-				id
-				address1
-				address2
-				city
-				province
-				country
-				zip
-				phone
-				firstName
-				lastName
-			}
-		}
-	}
-	orders(first: 10) {
-		edges {
-			node {
-				id
-				orderNumber
-				processedAt
-				financialStatus
-				fulfillmentStatus
-				totalPrice {
-					amount
-					currencyCode
-				}
+				...CustomerAddressFields
 			}
 		}
 	}
 }
 
-fragment CustomerAccessTokenFields on CustomerAccessToken {
-	accessToken
-	expiresAt
+fragment MoneyV2Fields on MoneyV2 {
+	amount
+	currencyCode
 }
 
-fragment CustomerUserErrorFields on CustomerUserError {
-	code
-	field
-	message
+fragment OrderFields on Order {
+	id
+	name
+	number
+	processedAt
+	createdAt
+	financialStatus
+	fulfillmentStatus
+	totalPrice {
+		...MoneyV2Fields
+	}
+	subtotal {
+		...MoneyV2Fields
+	}
+	totalShipping {
+		...MoneyV2Fields
+	}
+	totalTax {
+		...MoneyV2Fields
+	}
 }
+
+fragment LineItemFields on LineItem {
+	id
+	title
+	quantity
+	image {
+		url
+		altText
+	}
+	price {
+		...MoneyV2Fields
+	}
+}
+

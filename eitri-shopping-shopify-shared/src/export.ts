@@ -21,8 +21,10 @@ export type {
 	CustomerCreateInput,
 	CustomerUpdateInput,
 	CustomerResetInput,
+	CustomerAddressInput,
 	MailingAddressInput
 } from './models/Customer'
 
+export { CustomerApiError } from './errors/CustomerApiError'
 export { default as App } from './services/App'
 export { default as Shopify } from './services/Shopify'
