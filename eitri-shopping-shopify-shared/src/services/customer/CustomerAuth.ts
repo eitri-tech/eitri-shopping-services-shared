@@ -119,15 +119,36 @@ export class AuthService {
 		return response.data
 	}
 
+	static buildDomainRegex(domain: string) {
+		if (typeof domain !== 'string' || !domain.trim()) {
+			throw new Error('Invalid domain')
+		}
+
+		// Remove protocolo se vier junto
+		domain = domain.replace(/^https?:\/\//, '').trim()
+
+		// Remove path se vier junto
+		domain = domain.split('/')[0]
+
+		// Escapa caracteres especiais para regex
+		const escaped = domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+		// Permite subdomínios + domínio raiz
+		return `^(?:[a-zA-Z0-9-]+\\.)*${escaped}$`
+	}
+
 	/**
 	 * Authenticates the customer via OAuth 2.0 with PKCE through the Shopify Customer Account API.
 	 *
 	 * Opens a web flow for the user to authenticate on Shopify and, upon return,
 	 * exchanges the authorization code for access, refresh, and ID tokens.
 	 *
+	 * By default, we save the tokens in the device's storage.
+	 *
 	 * Required Remote Config variables (`providerInfo`):
 	 * - `host` — Shopify store URL (e.g. `https://my-store.myshopify.com`)
 	 * - `clientId` — Shopify Customer Account API Client ID
+	 * - `callbackUrl` — URL to redirect the user back to after authentication
 	 *
 	 * @returns A `LoginResponse` object with `success: true` and tokens in `data`,
 	 *          or `success: false` with the error description in `error`.
@@ -135,7 +156,7 @@ export class AuthService {
 	static async login(): Promise<LoginResponse> {
 		const remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		const { host, clientId } = remoteConfig.providerInfo
+		const { host, clientId, callbackUrl } = remoteConfig.providerInfo
 
 		if (!host) {
 			throw new Error('Missing required remote config variables')
@@ -145,20 +166,36 @@ export class AuthService {
 			throw new Error('Missing required remote config variable: clientId')
 		}
 
+		if (!callbackUrl) {
+			throw new Error('Missing required remote config variable: callbackUrl')
+		}
+
 		const fixedHost = host.replace('https://', '').replace('www.', '')
 
 		const configUrl = `https://${fixedHost}/.well-known/openid-configuration`
-		const callbackUri = `https://${fixedHost}/customer_authentication/callback`
-		const allowedDomains = [`${fixedHost}`, 'shopify.com']
 
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
 			const { authorization_endpoint, token_endpoint } = discoveryData
 
 			const authorizeUrl = new URL(authorization_endpoint)
+
+			const allowedDomains = [
+				host,
+				'shopify.com',
+				authorizeUrl.hostname,
+				'facebook.com',
+				'm.facebook.com',
+				'lm.facebook.com',
+				'accounts.google.com',
+				'accounts.google.com.br',
+				'accounts.youtube.com',
+				'accounts.youtube.com.br'
+			]
+
 			authorizeUrl.searchParams.append('client_id', clientId)
 			authorizeUrl.searchParams.append('response_type', 'code')
-			authorizeUrl.searchParams.append('redirect_uri', callbackUri)
+			authorizeUrl.searchParams.append('redirect_uri', callbackUrl)
 			authorizeUrl.searchParams.append('scope', 'openid email customer-account-api:full')
 			authorizeUrl.searchParams.append('state', this.generateState())
 			authorizeUrl.searchParams.append('nonce', this.generateNonce(32))
@@ -172,18 +209,20 @@ export class AuthService {
 
 			const webFlowRes = await Eitri.webFlow.start({
 				startUrl: authorizeUrl.toString(),
-				stopPattern: callbackUri,
-				allowedDomains,
+				stopPattern: callbackUrl,
 				maxNavigationLimit: 50,
-				keepLoadingScreenUntilDomainChange: false
+				keepLoadingScreenUntilDomainChange: false,
+				allowedDomains
 			})
 
-			const callbackUrl = webFlowRes?.recordedNavigation?.[0]?.url
-			if (!callbackUrl) {
+			Logger.log('webFlowRes', webFlowRes)
+
+			const webFlowResCallbackUrl = webFlowRes?.recordedNavigation?.[0]?.url
+			if (!webFlowResCallbackUrl) {
 				return { success: false, error: 'No callback URL received from webFlow' }
 			}
 
-			const code = new URL(callbackUrl).searchParams.get('code')
+			const code = new URL(webFlowResCallbackUrl).searchParams.get('code')
 			if (!code) {
 				return { success: false, error: 'No authorization code found in callback URL' }
 			}
@@ -193,7 +232,15 @@ export class AuthService {
 				return { success: false, error: 'No code verifier found' }
 			}
 
-			const tokenResponse = await this.exchangeToken(code, codeVerifier, token_endpoint, clientId, callbackUri)
+			const tokenResponse = await this.exchangeToken(
+				code,
+				codeVerifier,
+				token_endpoint,
+				clientId,
+				webFlowResCallbackUrl
+			)
+
+			Logger.log('Token generated with success')
 
 			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
 			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
@@ -205,6 +252,7 @@ export class AuthService {
 			}
 		} catch (e) {
 			Logger.error('Login error:', e)
+			console.error(e)
 			throw e
 		}
 	}
@@ -332,5 +380,9 @@ export class AuthService {
 		await Eitri.storage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
 		await Eitri.storage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
 		await Eitri.storage.removeItem('SHOPIFY_CUSTOMER_API_URL')
+	}
+
+	static  getStorageKeys() {
+		return STORAGE_KEYS
 	}
 }
