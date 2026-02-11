@@ -9,6 +9,7 @@ import {
 	DeferredCartResponse,
 	DeliveryGroups
 } from '../../models/Cart'
+import { Customer } from '../../models/Customer'
 import ShopifyCaller from '../_helpers/ShopifyCaller'
 // @ts-ignore
 import {
@@ -26,6 +27,7 @@ import {
 import StorageService from '../StorageService'
 import Logger from '../_helpers/Logger'
 import Eitri from 'eitri-bifrost'
+import Shopify from '../Shopify'
 
 export class CartService {
 	static SHOPIFY_CART_KEY = 'shopify_cart_key'
@@ -68,9 +70,19 @@ export class CartService {
 		return data.cart
 	}
 
+	static async getCustomerToAssignCart() {
+		try {
+			return await Shopify.customer.getCurrentCustomer()
+		} catch (error) {
+			return null
+		}
+	}
+
 	static async generateNewCart(params: CreateCartInput = {}) {
 		const config = await Eitri.getConfigs()
 		const platform = config.applicationData.platform
+
+		const buyerIdentity = await CartService.buildBuyerIdentity()
 
 		const body = {
 			query: CREATE_CART,
@@ -82,14 +94,15 @@ export class CartService {
 							key: 'origin',
 							value: platform === 'android' ? 'eitri_android' : 'eitri_ios'
 						}
-					]
+					],
+					buyerIdentity: buyerIdentity || undefined
 				}
 			}
 		}
 
 		const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Novo carrinho criado')
+		Logger.log('[CartService] Novo carrinho criado', res)
 
 		const { data } = res.data as { data: { cartCreate: CartResponse } }
 
@@ -98,6 +111,40 @@ export class CartService {
 		await CartService.saveCartIdOnStorage(cart.id)
 
 		return cart
+	}
+
+	private static async buildBuyerIdentity(): Promise<CartBuyerIdentityInput | null> {
+		const customer = await CartService.getCustomerToAssignCart()
+		if (!customer) return null
+
+		const accessToken = await Shopify.customer.auth.getAccessToken()
+
+		const buyerIdentity: CartBuyerIdentityInput = {
+			email: customer.emailAddress?.emailAddress,
+			phone: customer.phoneNumber?.phoneNumber,
+			customerAccessToken: accessToken
+		}
+
+		const deliveryAddress = CartService.buildDeliveryAddressFromCustomer(customer)
+		if (deliveryAddress) {
+			buyerIdentity.deliveryAddressPreferences = [{ deliveryAddress }]
+		}
+
+		return buyerIdentity
+	}
+
+	private static buildDeliveryAddressFromCustomer(customer: Customer): DeliveryAddress | null {
+		const address = customer.defaultAddress
+		if (!address?.country || !address?.zip) return null
+
+		return {
+			address1: address.address1 || undefined,
+			address2: address.address2 || undefined,
+			city: address.city || undefined,
+			province: address.province || undefined,
+			country: address.country,
+			zip: address.zip
+		}
 	}
 
 	static async addItemToCart(item: UpdateCartInput): Promise<{ cart: Cart; userErrors: any[] }> {
@@ -227,6 +274,25 @@ export class CartService {
 
 	static async saveCartIdOnStorage(cartId: string) {
 		await StorageService.setStorageItem(CartService.SHOPIFY_CART_KEY, cartId)
+	}
+
+	static async associateCustomerToCart(): Promise<Cart | null> {
+		const cartId = await StorageService.getStorageItem(CartService.SHOPIFY_CART_KEY)
+		if (!cartId) return null
+
+		const cart = await CartService.getCartById(cartId)
+		if (cart.buyerIdentity?.email) {
+			Logger.log('[CartService] Comprador já associado ao carrinho')
+			return cart
+		}
+
+		const buyerIdentity = await CartService.buildBuyerIdentity()
+		if (!buyerIdentity) return cart
+
+		Logger.log('[CartService] Associando comprador logado ao carrinho:', cartId)
+
+		const result = await CartService.updateBuyerIdentity(cartId, buyerIdentity)
+		return (result as any)?.cartBuyerIdentityUpdate?.cart ?? cart
 	}
 
 	static async updateBuyerIdentity(cartId: string, buyerIdentity: CartBuyerIdentityInput) {
