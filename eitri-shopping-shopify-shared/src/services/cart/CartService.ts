@@ -313,4 +313,8 @@ export class CartService {
 
 		Logger.log('[CartService] Stream de opções de entrega finalizado')
 	}
+
+	static async removeCartFromStorage () {
+		await StorageService.removeItem(CartService.SHOPIFY_CART_KEY)
+	}
 }
