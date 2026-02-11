@@ -104,6 +104,12 @@ export class CustomerService {
 		return graphql_api
 	}
 
+	/**
+	 * Fetches the authenticated customer's profile from the Shopify Customer Account API.
+	 *
+	 * @returns The `Customer` object, or `null` if no valid token is available.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async getCustomer(): Promise<Customer | null> {
 		const token = await CustomerService.auth.getAccessToken()
 
@@ -142,6 +148,12 @@ export class CustomerService {
 		return customer
 	}
 
+	/**
+	 * Returns the current customer's profile if authenticated, or `null` otherwise.
+	 *
+	 * Convenience wrapper around {@link getCustomer} that silently returns `null`
+	 * when no access token is available instead of making an API call.
+	 */
 	static async getCurrentCustomer(): Promise<Customer | null> {
 		const token = await CustomerService.auth.getAccessToken()
 
@@ -152,6 +164,17 @@ export class CustomerService {
 		return CustomerService.getCustomer()
 	}
 
+	/**
+	 * Fetches the authenticated customer's orders with pagination support.
+	 *
+	 * @param params - Optional pagination and sorting parameters.
+	 * @param params.first - Number of orders to fetch (default: 10).
+	 * @param params.after - Cursor for forward pagination.
+	 * @param params.sortKey - Field to sort by (default: `"PROCESSED_AT"`).
+	 * @param params.reverse - Whether to reverse the sort order (default: `true`).
+	 * @returns An object containing the `orders` edges and `pageInfo` for pagination.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async getOrders(params?: {
 		first?: number
 		after?: string
@@ -208,6 +231,13 @@ export class CustomerService {
 		}
 	}
 
+	/**
+	 * Updates the authenticated customer's personal information.
+	 *
+	 * @param input - Fields to update (`firstName`, `lastName`).
+	 * @returns The updated `Customer` object and any `userErrors` from the mutation.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async updateCustomer(input: CustomerUpdateInput): Promise<{
 		customer: Customer | null
 		userErrors: CustomerUserError[]
@@ -254,6 +284,14 @@ export class CustomerService {
 		}
 	}
 
+	/**
+	 * Creates a new address for the authenticated customer.
+	 *
+	 * @param address - The address fields to create.
+	 * @param defaultAddress - If `true`, sets the new address as the customer's default.
+	 * @returns The created `CustomerAddress` and any `userErrors` from the mutation.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async createAddress(
 		address: CustomerAddressInput,
 		defaultAddress?: boolean
@@ -301,6 +339,15 @@ export class CustomerService {
 		}
 	}
 
+	/**
+	 * Updates an existing address for the authenticated customer.
+	 *
+	 * @param addressId - The ID of the address to update.
+	 * @param address - The address fields to update.
+	 * @param defaultAddress - If `true`, sets this address as the customer's default.
+	 * @returns The updated `CustomerAddress` and any `userErrors` from the mutation.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async updateAddress(
 		addressId: string,
 		address: CustomerAddressInput,
@@ -350,6 +397,13 @@ export class CustomerService {
 		}
 	}
 
+	/**
+	 * Deletes an address from the authenticated customer's account.
+	 *
+	 * @param addressId - The ID of the address to delete.
+	 * @returns An object with `success: true` if deleted, or `success: false` with `userErrors`.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async deleteAddress(addressId: string): Promise<{ success: boolean; userErrors: CustomerUserError[] }> {
 		const token = await CustomerService.auth.getAccessToken()
 
@@ -390,6 +444,15 @@ export class CustomerService {
 		return { success: false, userErrors: result.userErrors }
 	}
 
+	/**
+	 * Sets an existing address as the customer's default address.
+	 *
+	 * Uses the `customerAddressUpdate` mutation with `defaultAddress: true`.
+	 *
+	 * @param addressId - The ID of the address to set as default.
+	 * @returns The updated `CustomerAddress` and any `userErrors` from the mutation.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
 	static async setDefaultAddress(
 		addressId: string
 	): Promise<{ address: CustomerAddress | null; userErrors: CustomerUserError[] }> {
@@ -436,6 +499,13 @@ export class CustomerService {
 		}
 	}
 
+	/**
+	 * Checks whether the customer is currently authenticated.
+	 *
+	 * Delegates to {@link AuthService.isAuthenticated}.
+	 *
+	 * @returns `true` if a valid access token is available, `false` otherwise.
+	 */
 	static async isAuthenticated(): Promise<boolean> {
 		return CustomerService.auth.isAuthenticated()
 	}

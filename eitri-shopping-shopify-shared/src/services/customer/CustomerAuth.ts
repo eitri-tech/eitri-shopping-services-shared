@@ -211,6 +211,16 @@ export class AuthService {
 		}
 	}
 
+	/**
+	 * Refreshes the customer's access token using the stored refresh token.
+	 *
+	 * Fetches the token endpoint from the OpenID configuration and exchanges
+	 * the refresh token for a new access/refresh token pair.
+	 *
+	 * @param params - Object containing `clientId` and `configUrl` from remote config.
+	 * @returns A `RefreshResponse` with `success: true` and new tokens in `data`,
+	 *          or `success: false` with the error description in `error`.
+	 */
 	static async refresh(params: Pick<LoginParams, 'clientId' | 'configUrl'>): Promise<RefreshResponse> {
 		const { clientId, configUrl } = params
 
@@ -261,6 +271,14 @@ export class AuthService {
 		return { clientId, configUrl: `https://${fixedHost}/.well-known/openid-configuration` }
 	}
 
+	/**
+	 * Retrieves a valid Shopify Customer Account API access token.
+	 *
+	 * Returns the stored token if it is still valid. If the token is expired,
+	 * it automatically attempts to refresh it using the stored refresh token.
+	 *
+	 * @returns The access token string, or `null` if no token is stored or the refresh fails.
+	 */
 	static async getAccessToken(): Promise<string | null> {
 		const token = await Eitri.storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
 
@@ -285,15 +303,30 @@ export class AuthService {
 		return null
 	}
 
+	/**
+	 * Retrieves the stored OpenID Connect ID token.
+	 *
+	 * @returns The ID token string, or `null` if not stored.
+	 */
 	static async getIdToken(): Promise<string | null> {
 		return Eitri.storage.getItem(STORAGE_KEYS.ID_TOKEN)
 	}
 
+	/**
+	 * Checks whether the customer is currently authenticated.
+	 *
+	 * Verifies that a valid (non-expired) access token exists, refreshing it if needed.
+	 *
+	 * @returns `true` if a valid access token is available, `false` otherwise.
+	 */
 	static async isAuthenticated(): Promise<boolean> {
 		const token = await this.getAccessToken()
 		return !!token
 	}
 
+	/**
+	 * Logs the customer out by clearing all stored tokens and cached configuration.
+	 */
 	static async logout(): Promise<void> {
 		await Eitri.storage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 		await Eitri.storage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
