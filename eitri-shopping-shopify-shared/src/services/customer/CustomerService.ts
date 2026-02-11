@@ -9,7 +9,6 @@ import {
 	CustomerAddressUpdateResponse,
 	CustomerAddressDeleteResponse,
 	CustomerAddress,
-	CustomerApiError,
 	CustomerGraphQLError,
 	CustomerOrderEdge,
 	CustomerOrdersPageInfo,
@@ -28,6 +27,7 @@ import Eitri from 'eitri-bifrost'
 import RemoteConfig from '../RemoteConfig'
 import Logger from '../_helpers/Logger'
 import { AuthService } from './CustomerAuth'
+import { CustomerApiError } from '../../errors/CustomerApiError'
 
 export class CustomerService {
 	static auth = AuthService
