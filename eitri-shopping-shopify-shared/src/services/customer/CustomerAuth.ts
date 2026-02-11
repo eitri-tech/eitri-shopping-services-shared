@@ -57,13 +57,13 @@ export class AuthService {
 	}
 
 	private static async discoverEndpoints(configUrl: string) {
-		const cached = await Eitri.storage.getItem(STORAGE_KEYS.OPENID_CONFIG)
+		const cached = await Eitri.sharedStorage.getItem(STORAGE_KEYS.OPENID_CONFIG)
 		if (cached) {
 			return JSON.parse(cached)
 		}
 
 		const response = await Eitri.http.get(configUrl)
-		await Eitri.storage.setItem(STORAGE_KEYS.OPENID_CONFIG, JSON.stringify(response.data))
+		await Eitri.sharedStorage.setItem(STORAGE_KEYS.OPENID_CONFIG, JSON.stringify(response.data))
 		return response.data
 	}
 
@@ -184,7 +184,7 @@ export class AuthService {
 
 			const verifier = await this.generateCodeVerifier()
 			const challenge = await this.generateCodeChallenge(verifier)
-			await Eitri.storage.setItem(STORAGE_KEYS.CODE_VERIFIER, verifier)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.CODE_VERIFIER, verifier)
 
 			authorizeUrl.searchParams.append('code_challenge', challenge)
 			authorizeUrl.searchParams.append('code_challenge_method', 'S256')
@@ -209,7 +209,7 @@ export class AuthService {
 				return { success: false, error: 'No authorization code found in callback URL' }
 			}
 
-			const codeVerifier = await Eitri.storage.getItem(STORAGE_KEYS.CODE_VERIFIER)
+			const codeVerifier = await Eitri.sharedStorage.getItem(STORAGE_KEYS.CODE_VERIFIER)
 			if (!codeVerifier) {
 				return { success: false, error: 'No code verifier found' }
 			}
@@ -224,9 +224,9 @@ export class AuthService {
 
 			Logger.log('Token generated with success')
 
-			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
-			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
-			await Eitri.storage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
 
 			return {
 				success: true,
@@ -254,7 +254,7 @@ export class AuthService {
 
 		try {
 			Logger.log('[AuthService] Atualizando token de acesso')
-			const storedRefreshToken = await Eitri.storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+			const storedRefreshToken = await Eitri.sharedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
 			if (!storedRefreshToken) {
 				return { success: false, error: 'No refresh token found' }
 			}
@@ -264,8 +264,8 @@ export class AuthService {
 
 			const tokenResponse = await this.exchangeRefreshToken(storedRefreshToken, token_endpoint, clientId)
 
-			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
-			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 
 			Logger.log('[AuthService] Token de acesso atualizado com sucesso')
 
@@ -308,7 +308,7 @@ export class AuthService {
 	 * @returns The access token string, or `null` if no token is stored or the refresh fails.
 	 */
 	static async getAccessToken(): Promise<string | null> {
-		const token = await Eitri.storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+		const token = await Eitri.sharedStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
 
 		if (!token) {
 			return null
@@ -337,7 +337,7 @@ export class AuthService {
 	 * @returns The ID token string, or `null` if not stored.
 	 */
 	static async getIdToken(): Promise<string | null> {
-		return Eitri.storage.getItem(STORAGE_KEYS.ID_TOKEN)
+		return Eitri.sharedStorage.getItem(STORAGE_KEYS.ID_TOKEN)
 	}
 
 	/**
@@ -356,15 +356,15 @@ export class AuthService {
 	 * Logs the customer out by clearing all stored tokens and cached configuration.
 	 */
 	static async logout(): Promise<void> {
-		await Eitri.storage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-		await Eitri.storage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-		await Eitri.storage.removeItem(STORAGE_KEYS.ID_TOKEN)
-		await Eitri.storage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
-		await Eitri.storage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
-		await Eitri.storage.removeItem('SHOPIFY_CUSTOMER_API_URL')
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
+		await Eitri.sharedStorage.removeItem('SHOPIFY_CUSTOMER_API_URL')
 	}
 
-	static  getStorageKeys() {
+	static getStorageKeys() {
 		return STORAGE_KEYS
 	}
 }
