@@ -83,8 +83,6 @@ export class AuthService {
 
 		const url = `${tokenEndpoint}?${params.toString()}`
 
-		console.log('url', url)
-
 		const response = await Eitri.http.post(
 			url,
 			{},
@@ -174,14 +172,6 @@ export class AuthService {
 			authorizeUrl.searchParams.append('code_challenge', challenge)
 			authorizeUrl.searchParams.append('code_challenge_method', 'S256')
 
-			console.log({
-				startUrl: authorizeUrl.toString(),
-				stopPattern: callbackUri,
-				allowedDomains,
-				maxNavigationLimit: 50,
-				keepLoadingScreenUntilDomainChange: false
-			})
-
 			const webFlowRes = await Eitri.webFlow.start({
 				startUrl: authorizeUrl.toString(),
 				stopPattern: callbackUri,
@@ -189,8 +179,6 @@ export class AuthService {
 				maxNavigationLimit: 50,
 				keepLoadingScreenUntilDomainChange: false
 			})
-
-			console.log('webFlowRes', webFlowRes)
 
 			const callbackUrl = webFlowRes?.recordedNavigation?.[0]?.url
 			if (!callbackUrl) {
@@ -209,8 +197,6 @@ export class AuthService {
 
 			const tokenResponse = await this.exchangeToken(code, codeVerifier, token_endpoint, clientId, callbackUri)
 
-			console.log('tokenResponse', tokenResponse)
-
 			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
 			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 			await Eitri.storage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
@@ -220,7 +206,7 @@ export class AuthService {
 				data: tokenResponse
 			}
 		} catch (e) {
-			console.log('Login error:', e)
+			Logger.error('Login error:', e)
 			throw e
 		}
 	}
@@ -247,7 +233,7 @@ export class AuthService {
 
 			return { success: true, data: tokenResponse }
 		} catch (e) {
-			console.log('Refresh error:', e)
+			Logger.error('Refresh error:', e)
 			return { success: false, error: String(e) }
 		}
 	}
