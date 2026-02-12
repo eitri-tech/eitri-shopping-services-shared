@@ -1,0 +1,31 @@
+#import "../fragments/order.fragment.gql"
+
+query GET_CUSTOMER_ORDERS($first: Int!, $after: String, $sortKey: OrderSortKeys, $reverse: Boolean) {
+	customer {
+		orders(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse) {
+			edges {
+				node {
+					...OrderFields
+					lineItems(first: 50) {
+						edges {
+							node {
+								...LineItemFields
+							}
+						}
+					}
+				}
+				cursor
+			}
+			pageInfo {
+				hasNextPage
+				hasPreviousPage
+			}
+		}
+	}
+}
+
+query GET_ORDER($orderId: ID!) {
+	order(id: $orderId) {
+		...OrderDetailFields
+	}
+}

@@ -40,38 +40,4 @@ fragment MoneyV2Fields on MoneyV2 {
 	currencyCode
 }
 
-fragment OrderFields on Order {
-	id
-	name
-	number
-	processedAt
-	createdAt
-	financialStatus
-	fulfillmentStatus
-	totalPrice {
-		...MoneyV2Fields
-	}
-	subtotal {
-		...MoneyV2Fields
-	}
-	totalShipping {
-		...MoneyV2Fields
-	}
-	totalTax {
-		...MoneyV2Fields
-	}
-}
-
-fragment LineItemFields on LineItem {
-	id
-	title
-	quantity
-	image {
-		url
-		altText
-	}
-	price {
-		...MoneyV2Fields
-	}
-}
 

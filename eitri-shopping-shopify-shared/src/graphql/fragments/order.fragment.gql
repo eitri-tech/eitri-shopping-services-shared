@@ -1,0 +1,273 @@
+#import "./customer.fragment.gql"
+
+fragment OrderFields on Order {
+	id
+	name
+	number
+	processedAt
+	createdAt
+	financialStatus
+	fulfillmentStatus
+	totalPrice {
+		...MoneyV2Fields
+	}
+	subtotal {
+		...MoneyV2Fields
+	}
+	totalShipping {
+		...MoneyV2Fields
+	}
+	totalTax {
+		...MoneyV2Fields
+	}
+}
+
+fragment LineItemFields on LineItem {
+	id
+	title
+	quantity
+	image {
+		url
+		altText
+	}
+	price {
+		...MoneyV2Fields
+	}
+}
+
+fragment OrderDetailLineItemFields on LineItem {
+	id
+	name
+	title
+	quantity
+	refundableQuantity
+	requiresShipping
+	sku
+	productId
+	productType
+	vendor
+	variantId
+	variantTitle
+	variantOptions {
+		name
+		value
+	}
+	image {
+		url
+		altText
+	}
+	price {
+		...MoneyV2Fields
+	}
+	currentTotalPrice {
+		...MoneyV2Fields
+	}
+	totalPrice {
+		...MoneyV2Fields
+	}
+	totalDiscount {
+		...MoneyV2Fields
+	}
+	discountAllocations {
+		allocatedAmount {
+			...MoneyV2Fields
+		}
+	}
+	giftCard
+}
+
+fragment OrderDetailFields on Order {
+	id
+	name
+	number
+	confirmationNumber
+	createdAt
+	processedAt
+	updatedAt
+	cancelledAt
+	cancelReason
+	financialStatus
+	fulfillmentStatus
+	requiresShipping
+	edited
+	note
+	email
+	phone
+	statusPageUrl
+	currencyCode
+	subtotal {
+		...MoneyV2Fields
+	}
+	totalPrice {
+		...MoneyV2Fields
+	}
+	totalTax {
+		...MoneyV2Fields
+	}
+	totalShipping {
+		...MoneyV2Fields
+	}
+	totalDuties {
+		...MoneyV2Fields
+	}
+	totalRefunded {
+		...MoneyV2Fields
+	}
+	totalTip {
+		...MoneyV2Fields
+	}
+	shippingAddress {
+		...CustomerAddressFields
+	}
+	billingAddress {
+		...CustomerAddressFields
+	}
+	shippingLine {
+		handle
+		title
+		originalPrice {
+			...MoneyV2Fields
+		}
+	}
+	shippingDiscountAllocations {
+		allocatedAmount {
+			...MoneyV2Fields
+		}
+	}
+	paymentInformation {
+		paymentCollectionUrl
+		paymentStatus
+		totalOutstandingAmount {
+			...MoneyV2Fields
+		}
+		totalPaidAmount {
+			...MoneyV2Fields
+		}
+		paymentTerms {
+			id
+			paymentTermsName
+			overdue
+			nextDueAt
+			paymentSchedules(first: 10) {
+				edges {
+					node {
+						amount {
+							...MoneyV2Fields
+						}
+						dueAt
+						completedAt
+					}
+				}
+			}
+		}
+	}
+	transactions {
+		id
+		createdAt
+		processedAt
+		type
+		kind
+		status
+		transactionAmount {
+			presentmentMoney {
+				...MoneyV2Fields
+			}
+			shopMoney {
+				...MoneyV2Fields
+			}
+		}
+		paymentIcon {
+			url
+			altText
+		}
+		paymentDetails
+		typeDetails {
+			name
+			message
+		}
+		giftCardDetails {
+			last4
+			balance {
+				...MoneyV2Fields
+			}
+		}
+	}
+	refunds {
+		id
+		createdAt
+		updatedAt
+		totalRefunded {
+			...MoneyV2Fields
+		}
+		returnName
+	}
+	lineItems(first: 50) {
+		edges {
+			node {
+				...OrderDetailLineItemFields
+			}
+		}
+	}
+	fulfillments(first: 20) {
+		edges {
+			node {
+				id
+				createdAt
+				updatedAt
+				status
+				latestShipmentStatus
+				estimatedDeliveryAt
+				requiresShipping
+				isPickedUp
+				trackingInformation {
+					company
+					number
+					url
+				}
+				fulfillmentLineItems(first: 50) {
+					edges {
+						node {
+							id
+							quantity
+							lineItem {
+								id
+								title
+								image {
+									url
+									altText
+								}
+							}
+						}
+					}
+				}
+				events(first: 20) {
+					edges {
+						node {
+							id
+							happenedAt
+							status
+						}
+					}
+				}
+			}
+		}
+	}
+	discountApplications(first: 10) {
+		edges {
+			node {
+				allocationMethod
+				targetSelection
+				targetType
+				value {
+					... on MoneyV2 {
+						amount
+						currencyCode
+					}
+					... on PricingPercentageValue {
+						percentage
+					}
+				}
+			}
+		}
+	}
+}
