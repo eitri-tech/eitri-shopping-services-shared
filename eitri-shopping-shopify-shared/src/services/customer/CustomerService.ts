@@ -17,17 +17,18 @@ import {
 import ShopifyCaller from '../_helpers/ShopifyCaller'
 import {
 	GET_CUSTOMER,
-	GET_CUSTOMER_ORDERS,
 	CUSTOMER_UPDATE,
 	CUSTOMER_ADDRESS_CREATE,
 	CUSTOMER_ADDRESS_UPDATE,
 	CUSTOMER_ADDRESS_DELETE
 } from '../../graphql/queries/customer.queries.gql'
+import { GET_CUSTOMER_ORDERS, GET_ORDER } from '../../graphql/queries/order.queries.gql'
 import Eitri from 'eitri-bifrost'
 import RemoteConfig from '../RemoteConfig'
 import Logger from '../_helpers/Logger'
 import { AuthService } from './CustomerAuth'
 import { CustomerApiError } from '../../errors/CustomerApiError'
+import { OrderDetail, OrderDetailResponse } from '../../models/Order'
 
 export class CustomerService {
 	static auth = AuthService
@@ -228,6 +229,55 @@ export class CustomerService {
 			orders: customer.orders.edges,
 			pageInfo: customer.orders.pageInfo
 		}
+	}
+
+	/**
+	 * Fetches a single order by its ID with full detail including line items,
+	 * fulfillments, transactions, payment information, refunds, and discounts.
+	 *
+	 * @param orderId - The global ID of the order (e.g. `"gid://shopify/Order/123"`).
+	 * @returns The `OrderDetail` object, or `null` if not found or no token is available.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
+	static async getOrder(orderId: string): Promise<OrderDetail | null> {
+		const token = await CustomerService.auth.getAccessToken()
+
+		if (!token) {
+			Logger.log('[CustomerService] Nenhum token de acesso encontrado')
+			return null
+		}
+
+		const body = {
+			query: GET_ORDER,
+			variables: {
+				orderId
+			}
+		}
+
+		Logger.log('[CustomerService] Buscando detalhes do pedido:', orderId)
+
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
+
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
+		const parsed = CustomerService.handleResponse(res)
+		const { order } = (parsed.data ?? parsed) as OrderDetailResponse
+
+		if (order) {
+			Logger.log('[CustomerService] Detalhes do pedido carregados com sucesso')
+		} else {
+			Logger.log('[CustomerService] Pedido não encontrado')
+		}
+
+		return order
 	}
 
 	/**

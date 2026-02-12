@@ -45,54 +45,14 @@ export interface MoneyV2 {
 	currencyCode: string
 }
 
-export interface OrderLineItemImage {
-	url: string
-	altText: string | null
-}
-
-export interface OrderLineItem {
-	id: string
-	title: string
-	quantity: number
-	image: OrderLineItemImage | null
-	price: MoneyV2
-}
-
-export interface CustomerOrder {
-	id: string
-	name: string
-	number: number
-	processedAt: string
-	createdAt: string
-	financialStatus: string
-	fulfillmentStatus: string
-	totalPrice: MoneyV2
-	subtotal: MoneyV2 | null
-	totalShipping: MoneyV2 | null
-	totalTax: MoneyV2 | null
-	lineItems: {
-		edges: { node: OrderLineItem }[]
-	}
-}
-
-export interface CustomerOrderEdge {
-	node: CustomerOrder
-	cursor: string
-}
-
-export interface CustomerOrdersPageInfo {
-	hasNextPage: boolean
-	hasPreviousPage: boolean
-}
-
-export interface CustomerOrdersResponse {
-	customer: {
-		orders: {
-			edges: CustomerOrderEdge[]
-			pageInfo: CustomerOrdersPageInfo
-		}
-	} | null
-}
+export {
+	OrderLineItemImage,
+	OrderLineItem,
+	CustomerOrder,
+	CustomerOrderEdge,
+	CustomerOrdersPageInfo,
+	CustomerOrdersResponse
+} from './Order'
 
 export interface CustomerAccessToken {
 	accessToken: string
