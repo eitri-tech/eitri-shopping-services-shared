@@ -173,21 +173,28 @@ const checkoutModel = `
     subtotal
     total
     totalDiscount
-    selectedShipping {
-      deadline
-      deadlineInHours
-      deliverySchedule {
-        date
-        endDateTime
-        endTime
-        startDateTime
-        startTime
-      }
-      name
-      shippingQuoteId
-      type
-      value
+    ${selectedShippingModel}
+    selectedShippingGroups {
+      ${selectedShippingModel}
     }
+`
+
+const selectedShippingModel = `
+  selectedShipping {
+    deadline
+    deadlineInHours
+    deliverySchedule {
+      date
+      endDateTime
+      endTime
+      startDateTime
+      startTime
+    }
+    name
+    shippingQuoteId
+    type
+    value
+  }
 `
 
 export const queryCheckoutCustomerAssociate = `
