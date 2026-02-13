@@ -188,6 +188,23 @@ const checkoutModel = `
       type
       value
     }
+    selectedShippingGroups {
+      selectedShipping {
+        deadline
+        deadlineInHours
+        deliverySchedule {
+          date
+          endDateTime
+          endTime
+          startDateTime
+          startTime
+        }
+        name
+        shippingQuoteId
+        type
+        value
+      }
+    }
 `
 
 export const queryCheckoutCustomerAssociate = `
