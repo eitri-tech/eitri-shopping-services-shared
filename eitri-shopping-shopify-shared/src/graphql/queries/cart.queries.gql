@@ -249,6 +249,24 @@ query GET_CART_DELIVERY_OPTIONS($cartId: ID!) {
 	}
 }
 
+mutation CART_ATTRIBUTES_UPDATE($cartId: ID!, $attributes: [AttributeInput!]!) {
+	cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+		cart {
+			... on Cart{
+				...CartFields
+			}
+		}
+		userErrors {
+			field
+			message
+		}
+		warnings {
+			message
+		}
+	}
+}
+
+
 fragment DeliveryGroupsWithCarrierRates on Cart {
 	deliveryGroups(first: 10, withCarrierRates: true) {
 		edges {
