@@ -106,9 +106,9 @@ export class CartService {
 			variables: {
 				input: {
 					...params,
-					attributes: [eitriAttribute]
-				},
-				buyerIdentity: buyerIdentity || undefined
+					attributes: [eitriAttribute],
+					buyerIdentity: buyerIdentity || undefined
+				}
 			}
 		}
 
