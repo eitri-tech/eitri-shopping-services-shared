@@ -38,7 +38,7 @@ export default function Home(props) {
 					wide
 					color='background-color'
 					onPress={() => goToPage('/Cart')}
-					label='Carrrinho'
+					label='Carrinho'
 				/>
 
 				<Button
