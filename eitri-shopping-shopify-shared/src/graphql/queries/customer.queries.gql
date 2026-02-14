@@ -13,30 +13,6 @@ query GET_CUSTOMER {
 	}
 }
 
-query GET_CUSTOMER_ORDERS($first: Int!, $after: String, $sortKey: OrderSortKeys, $reverse: Boolean) {
-	customer {
-		orders(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse) {
-			edges {
-				node {
-					...OrderFields
-					lineItems(first: 50) {
-						edges {
-							node {
-								...LineItemFields
-							}
-						}
-					}
-				}
-				cursor
-			}
-			pageInfo {
-				hasNextPage
-				hasPreviousPage
-			}
-		}
-	}
-}
-
 mutation CUSTOMER_UPDATE($input: CustomerUpdateInput!) {
 	customerUpdate(input: $input) {
 		customer {

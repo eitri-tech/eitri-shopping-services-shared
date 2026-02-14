@@ -17,17 +17,18 @@ import {
 import ShopifyCaller from '../_helpers/ShopifyCaller'
 import {
 	GET_CUSTOMER,
-	GET_CUSTOMER_ORDERS,
 	CUSTOMER_UPDATE,
 	CUSTOMER_ADDRESS_CREATE,
 	CUSTOMER_ADDRESS_UPDATE,
 	CUSTOMER_ADDRESS_DELETE
 } from '../../graphql/queries/customer.queries.gql'
+import { GET_CUSTOMER_ORDERS, GET_ORDER } from '../../graphql/queries/order.queries.gql'
 import Eitri from 'eitri-bifrost'
 import RemoteConfig from '../RemoteConfig'
 import Logger from '../_helpers/Logger'
 import { AuthService } from './CustomerAuth'
 import { CustomerApiError } from '../../errors/CustomerApiError'
+import { OrderDetail, OrderDetailResponse } from '../../models/Order'
 
 export class CustomerService {
 	static auth = AuthService
@@ -54,7 +55,11 @@ export class CustomerService {
 
 			if (status >= 500) {
 				Logger.log(`[CustomerService] Erro interno do servidor (${status})`)
-				throw new CustomerApiError(status, 'INTERNAL_SERVER_ERROR', 'Erro interno do Shopify. Tente novamente mais tarde.')
+				throw new CustomerApiError(
+					status,
+					'INTERNAL_SERVER_ERROR',
+					'Erro interno do Shopify. Tente novamente mais tarde.'
+				)
 			}
 
 			throw new CustomerApiError(status, 'UNKNOWN_ERROR', `Erro inesperado: ${status}`)
@@ -79,7 +84,7 @@ export class CustomerService {
 	private static readonly CUSTOMER_API_URL_KEY = 'SHOPIFY_CUSTOMER_API_URL'
 
 	private static async discoverCustomerApiUrl(): Promise<string> {
-		const cached = await Eitri.storage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
+		const cached = await Eitri.sharedStorage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
 		if (cached) {
 			return cached
 		}
@@ -100,7 +105,7 @@ export class CustomerService {
 			throw new Error('graphql_api não encontrado no .well-known/customer-account-api')
 		}
 
-		await Eitri.storage.setItem(CustomerService.CUSTOMER_API_URL_KEY, graphql_api)
+		await Eitri.sharedStorage.setItem(CustomerService.CUSTOMER_API_URL_KEY, graphql_api)
 		return graphql_api
 	}
 
@@ -175,12 +180,7 @@ export class CustomerService {
 	 * @returns An object containing the `orders` edges and `pageInfo` for pagination.
 	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
 	 */
-	static async getOrders(params?: {
-		first?: number
-		after?: string
-		sortKey?: string
-		reverse?: boolean
-	}): Promise<{
+	static async getOrders(params?: { first?: number; after?: string; sortKey?: string; reverse?: boolean }): Promise<{
 		orders: CustomerOrderEdge[]
 		pageInfo: CustomerOrdersPageInfo
 	}> {
@@ -229,6 +229,55 @@ export class CustomerService {
 			orders: customer.orders.edges,
 			pageInfo: customer.orders.pageInfo
 		}
+	}
+
+	/**
+	 * Fetches a single order by its ID with full detail including line items,
+	 * fulfillments, transactions, payment information, refunds, and discounts.
+	 *
+	 * @param orderId - The global ID of the order (e.g. `"gid://shopify/Order/123"`).
+	 * @returns The `OrderDetail` object, or `null` if not found or no token is available.
+	 * @throws {CustomerApiError} If the API returns an HTTP or GraphQL error.
+	 */
+	static async getOrder(orderId: string): Promise<OrderDetail | null> {
+		const token = await CustomerService.auth.getAccessToken()
+
+		if (!token) {
+			Logger.log('[CustomerService] Nenhum token de acesso encontrado')
+			return null
+		}
+
+		const body = {
+			query: GET_ORDER,
+			variables: {
+				orderId
+			}
+		}
+
+		Logger.log('[CustomerService] Buscando detalhes do pedido:', orderId)
+
+		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
+
+		const res = await ShopifyCaller.post(
+			body,
+			{
+				headers: {
+					Authorization: token
+				}
+			},
+			customerApiUrl
+		)
+
+		const parsed = CustomerService.handleResponse(res)
+		const { order } = (parsed.data ?? parsed) as OrderDetailResponse
+
+		if (order) {
+			Logger.log('[CustomerService] Detalhes do pedido carregados com sucesso')
+		} else {
+			Logger.log('[CustomerService] Pedido não encontrado')
+		}
+
+		return order
 	}
 
 	/**

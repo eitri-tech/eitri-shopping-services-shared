@@ -57,13 +57,13 @@ export class AuthService {
 	}
 
 	private static async discoverEndpoints(configUrl: string) {
-		const cached = await Eitri.storage.getItem(STORAGE_KEYS.OPENID_CONFIG)
+		const cached = await Eitri.sharedStorage.getItem(STORAGE_KEYS.OPENID_CONFIG)
 		if (cached) {
 			return JSON.parse(cached)
 		}
 
 		const response = await Eitri.http.get(configUrl)
-		await Eitri.storage.setItem(STORAGE_KEYS.OPENID_CONFIG, JSON.stringify(response.data))
+		await Eitri.sharedStorage.setItem(STORAGE_KEYS.OPENID_CONFIG, JSON.stringify(response.data))
 		return response.data
 	}
 
@@ -125,9 +125,12 @@ export class AuthService {
 	 * Opens a web flow for the user to authenticate on Shopify and, upon return,
 	 * exchanges the authorization code for access, refresh, and ID tokens.
 	 *
+	 * By default, we save the tokens in the device's storage.
+	 *
 	 * Required Remote Config variables (`providerInfo`):
 	 * - `host` — Shopify store URL (e.g. `https://my-store.myshopify.com`)
 	 * - `clientId` — Shopify Customer Account API Client ID
+	 * - `callbackUrl` — URL to redirect the user back to after authentication
 	 *
 	 * @returns A `LoginResponse` object with `success: true` and tokens in `data`,
 	 *          or `success: false` with the error description in `error`.
@@ -135,9 +138,7 @@ export class AuthService {
 	static async login(): Promise<LoginResponse> {
 		const remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		const { host } = remoteConfig.providerInfo
-
-		const clientId = '9526832b-e615-4d0c-99ce-31cb8351cc73'
+		const { host, clientId, callbackUrl } = remoteConfig.providerInfo
 
 		if (!host) {
 			throw new Error('Missing required remote config variables')
@@ -147,59 +148,85 @@ export class AuthService {
 			throw new Error('Missing required remote config variable: clientId')
 		}
 
+		if (!callbackUrl) {
+			throw new Error('Missing required remote config variable: callbackUrl')
+		}
+
 		const fixedHost = host.replace('https://', '').replace('www.', '')
 
 		const configUrl = `https://${fixedHost}/.well-known/openid-configuration`
-		const callbackUri = `https://${fixedHost}/customer_authentication/callback`
-		const allowedDomains = [`${fixedHost}`, 'shopify.com']
 
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
 			const { authorization_endpoint, token_endpoint } = discoveryData
 
 			const authorizeUrl = new URL(authorization_endpoint)
+
+			const allowedDomains = [
+				host,
+				'shopify.com',
+				authorizeUrl.hostname,
+				'facebook.com',
+				'm.facebook.com',
+				'lm.facebook.com',
+				'accounts.google.com',
+				'accounts.google.com.br',
+				'accounts.youtube.com',
+				'accounts.youtube.com.br'
+			]
+
 			authorizeUrl.searchParams.append('client_id', clientId)
 			authorizeUrl.searchParams.append('response_type', 'code')
-			authorizeUrl.searchParams.append('redirect_uri', callbackUri)
+			authorizeUrl.searchParams.append('redirect_uri', callbackUrl)
 			authorizeUrl.searchParams.append('scope', 'openid email customer-account-api:full')
 			authorizeUrl.searchParams.append('state', this.generateState())
 			authorizeUrl.searchParams.append('nonce', this.generateNonce(32))
 
 			const verifier = await this.generateCodeVerifier()
 			const challenge = await this.generateCodeChallenge(verifier)
-			await Eitri.storage.setItem(STORAGE_KEYS.CODE_VERIFIER, verifier)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.CODE_VERIFIER, verifier)
 
 			authorizeUrl.searchParams.append('code_challenge', challenge)
 			authorizeUrl.searchParams.append('code_challenge_method', 'S256')
 
 			const webFlowRes = await Eitri.webFlow.start({
 				startUrl: authorizeUrl.toString(),
-				stopPattern: callbackUri,
-				allowedDomains,
+				stopPattern: callbackUrl,
 				maxNavigationLimit: 50,
-				keepLoadingScreenUntilDomainChange: false
+				keepLoadingScreenUntilDomainChange: false,
+				allowedDomains
 			})
 
-			const callbackUrl = webFlowRes?.recordedNavigation?.[0]?.url
-			if (!callbackUrl) {
+			Logger.log('webFlowRes', webFlowRes)
+
+			const webFlowResCallbackUrl = webFlowRes?.recordedNavigation?.[0]?.url
+			if (!webFlowResCallbackUrl) {
 				return { success: false, error: 'No callback URL received from webFlow' }
 			}
 
-			const code = new URL(callbackUrl).searchParams.get('code')
+			const code = new URL(webFlowResCallbackUrl).searchParams.get('code')
 			if (!code) {
 				return { success: false, error: 'No authorization code found in callback URL' }
 			}
 
-			const codeVerifier = await Eitri.storage.getItem(STORAGE_KEYS.CODE_VERIFIER)
+			const codeVerifier = await Eitri.sharedStorage.getItem(STORAGE_KEYS.CODE_VERIFIER)
 			if (!codeVerifier) {
 				return { success: false, error: 'No code verifier found' }
 			}
 
-			const tokenResponse = await this.exchangeToken(code, codeVerifier, token_endpoint, clientId, callbackUri)
+			const tokenResponse = await this.exchangeToken(
+				code,
+				codeVerifier,
+				token_endpoint,
+				clientId,
+				webFlowResCallbackUrl
+			)
 
-			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
-			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
-			await Eitri.storage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
+			Logger.log('Token generated with success')
+
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
 
 			return {
 				success: true,
@@ -207,6 +234,7 @@ export class AuthService {
 			}
 		} catch (e) {
 			Logger.error('Login error:', e)
+			console.error(e)
 			throw e
 		}
 	}
@@ -226,7 +254,7 @@ export class AuthService {
 
 		try {
 			Logger.log('[AuthService] Atualizando token de acesso')
-			const storedRefreshToken = await Eitri.storage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+			const storedRefreshToken = await Eitri.sharedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
 			if (!storedRefreshToken) {
 				return { success: false, error: 'No refresh token found' }
 			}
@@ -236,8 +264,8 @@ export class AuthService {
 
 			const tokenResponse = await this.exchangeRefreshToken(storedRefreshToken, token_endpoint, clientId)
 
-			await Eitri.storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
-			await Eitri.storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 
 			Logger.log('[AuthService] Token de acesso atualizado com sucesso')
 
@@ -280,7 +308,7 @@ export class AuthService {
 	 * @returns The access token string, or `null` if no token is stored or the refresh fails.
 	 */
 	static async getAccessToken(): Promise<string | null> {
-		const token = await Eitri.storage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+		const token = await Eitri.sharedStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
 
 		if (!token) {
 			return null
@@ -309,7 +337,7 @@ export class AuthService {
 	 * @returns The ID token string, or `null` if not stored.
 	 */
 	static async getIdToken(): Promise<string | null> {
-		return Eitri.storage.getItem(STORAGE_KEYS.ID_TOKEN)
+		return Eitri.sharedStorage.getItem(STORAGE_KEYS.ID_TOKEN)
 	}
 
 	/**
@@ -328,11 +356,15 @@ export class AuthService {
 	 * Logs the customer out by clearing all stored tokens and cached configuration.
 	 */
 	static async logout(): Promise<void> {
-		await Eitri.storage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-		await Eitri.storage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-		await Eitri.storage.removeItem(STORAGE_KEYS.ID_TOKEN)
-		await Eitri.storage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
-		await Eitri.storage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
-		await Eitri.storage.removeItem('SHOPIFY_CUSTOMER_API_URL')
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
+		await Eitri.sharedStorage.removeItem('SHOPIFY_CUSTOMER_API_URL')
+	}
+
+	static getStorageKeys() {
+		return STORAGE_KEYS
 	}
 }
