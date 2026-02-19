@@ -1,3 +1,21 @@
+const selectedShippingModel = `
+  selectedShipping {
+    deadline
+    deadlineInHours
+    deliverySchedule {
+      date
+      endDateTime
+      endTime
+      startDateTime
+      startTime
+    }
+    name
+    shippingQuoteId
+    type
+    value
+  }
+`
+
 const checkoutModel = `
     cep
     checkingAccountActive
@@ -177,24 +195,6 @@ const checkoutModel = `
     selectedShippingGroups {
       ${selectedShippingModel}
     }
-`
-
-const selectedShippingModel = `
-  selectedShipping {
-    deadline
-    deadlineInHours
-    deliverySchedule {
-      date
-      endDateTime
-      endTime
-      startDateTime
-      startTime
-    }
-    name
-    shippingQuoteId
-    type
-    value
-  }
 `
 
 export const queryCheckoutCustomerAssociate = `
