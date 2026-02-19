@@ -1,3 +1,21 @@
+const selectedShippingModel = `
+  selectedShipping {
+    deadline
+    deadlineInHours
+    deliverySchedule {
+      date
+      endDateTime
+      endTime
+      startDateTime
+      startTime
+    }
+    name
+    shippingQuoteId
+    type
+    value
+  }
+`
+
 const checkoutModel = `
     cep
     checkingAccountActive
@@ -174,20 +192,9 @@ const checkoutModel = `
     subtotal
     total
     totalDiscount
-    selectedShipping {
-      deadline
-      deadlineInHours
-      deliverySchedule {
-        date
-        endDateTime
-        endTime
-        startDateTime
-        startTime
-      }
-      name
-      shippingQuoteId
-      type
-      value
+    ${selectedShippingModel}
+    selectedShippingGroups {
+      ${selectedShippingModel}
     }
 `
 
