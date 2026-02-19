@@ -3,7 +3,7 @@ import { Window, View, Button } from 'eitri-luminus'
 import { Shopify } from '@/export'
 
 export default function Cart(props) {
-	const getCart = async () => {
+	const generateNewCart = async () => {
 		try {
 			const cart = await Shopify.cart.generateNewCart()
 			console.log('cart==>', cart)
@@ -12,10 +12,36 @@ export default function Cart(props) {
 		}
 	}
 
+	const getCurrentOrCreateCart = async () => {
+		try {
+			const cart = await Shopify.cart.getCurrentOrCreateCart()
+			console.log('cart==>', cart)
+		} catch (error) {
+			console.error(error)
+		}
+	}
+
+	const cartAttributesUpdate = async () => {
+		try {
+			const cart = await Shopify.cart.cartAttributesUpdate([{ key: 'tested', value: 'b' }])
+			console.log('cart==>', cart)
+		} catch (error) {
+			console.error(error)
+		}
+	}
+
 	const methods = [
 		{
-			name: 'Cart',
-			executor: getCart
+			name: 'Generate Cart',
+			executor: generateNewCart
+		},
+		{
+			name: 'Get Cart',
+			executor: getCurrentOrCreateCart
+		},
+		{
+			name: 'cartAttributesUpdate',
+			executor: cartAttributesUpdate
 		}
 	]
 

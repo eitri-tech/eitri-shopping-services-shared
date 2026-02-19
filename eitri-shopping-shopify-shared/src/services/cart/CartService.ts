@@ -21,8 +21,9 @@ import {
 	CART_GIFT_CARD_CODES_ADD,
 	CART_GIFT_CARD_CODES_REMOVE,
 	CART_DISCOUNT_CODES_UPDATE,
-	CART_BUYER_IDENTITY_UPDATE,
-	GET_CART_DELIVERY_OPTIONS
+	CART_ATTRIBUTES_UPDATE,
+	GET_CART_DELIVERY_OPTIONS,
+	CART_BUYER_IDENTITY_UPDATE
 } from '../../graphql/queries/cart.queries.gql'
 import StorageService from '../StorageService'
 import Logger from '../_helpers/Logger'
@@ -32,7 +33,14 @@ import Shopify from '../Shopify'
 export class CartService {
 	static SHOPIFY_CART_KEY = 'shopify_cart_key'
 
-	static async assertCartEitriTag(cart: Cart) {}
+	static async getEitriAttribute() {
+		const config = await Eitri.getConfigs()
+		const platform = config.applicationData.platform
+		return {
+			key: 'origin',
+			value: platform === 'android' ? 'eitri_android' : 'eitri_ios'
+		}
+	}
 
 	static async getCurrentOrCreateCart() {
 		const cartId = await StorageService.getStorageItem(CartService.SHOPIFY_CART_KEY)
@@ -67,6 +75,15 @@ export class CartService {
 
 		const { data } = res.data as { data: CartResponse }
 
+		const cart = data.cart
+
+		if (!cart?.attributes?.some(att => att.key === 'origin' && att.value.includes('eitri'))) {
+			const eitriAttribute = await CartService.getEitriAttribute()
+			const currentAttributes = cart.attributes || []
+			const attRes = await CartService.cartAttributesUpdate([...currentAttributes, eitriAttribute])
+			return attRes.cart
+		}
+
 		return data.cart
 	}
 
@@ -79,8 +96,8 @@ export class CartService {
 	}
 
 	static async generateNewCart(params: CreateCartInput = {}) {
-		const config = await Eitri.getConfigs()
-		const platform = config.applicationData.platform
+
+		const eitriAttribute = await CartService.getEitriAttribute()
 
 		const buyerIdentity = await CartService.buildBuyerIdentity()
 
@@ -89,12 +106,7 @@ export class CartService {
 			variables: {
 				input: {
 					...params,
-					attributes: [
-						{
-							key: 'origin',
-							value: platform === 'android' ? 'eitri_android' : 'eitri_ios'
-						}
-					],
+					attributes: [eitriAttribute],
 					buyerIdentity: buyerIdentity || undefined
 				}
 			}
@@ -307,6 +319,7 @@ export class CartService {
 		Logger.log('[CartService] Atualizando identidade do comprador')
 
 		const res = await ShopifyCaller.post(body)
+
 		Logger.log('[CartService] Identidade do comprador atualizada com sucesso')
 
 		const { data } = res.data as { data: unknown }
@@ -380,7 +393,30 @@ export class CartService {
 		Logger.log('[CartService] Stream de opções de entrega finalizado')
 	}
 
-	static async removeCartFromStorage () {
+	static async cartAttributesUpdate(attributes: { key: string; value: string }[], keepExistent?: boolean): Promise<{ cart: Cart; userErrors: any[]; warnings: any[] }> {
+		const cartId = await StorageService.getStorageItem(CartService.SHOPIFY_CART_KEY)
+
+		// TRATAR ISSO, O getCartById pode chamar esse cara e entrar em loop, remover o acoplamento antes
+		// if (keepExistent) {
+		// 	const cart = await CartService.getCartById(cartId)
+		// 	const currentAttributes = cart.attributes || []
+		// 	attributes = [...currentAttributes, ...attributes]
+		// }
+
+		const body = {
+			query: CART_ATTRIBUTES_UPDATE,
+			variables: {
+				cartId,
+				attributes
+			}
+		}
+
+		const res = await ShopifyCaller.post(body)
+
+		return res?.data?.data?.cartAttributesUpdate
+	}
+
+	static async removeCartFromStorage() {
 		await StorageService.removeItem(CartService.SHOPIFY_CART_KEY)
 	}
 }
