@@ -35,6 +35,16 @@ export default class VtexCatalogService {
 		return Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null
 	}
 
+	static async getSkuById(skuId) {
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `&sc=${salesChannel}`
+		}
+		const result = await VtexCaller.get(`api/catalog_system/pub/products/search?fq=skuId:${skuId}${sc}`)
+		return Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null
+	}
+
 	static async searchProduct(text, options = {}) {
 		const defaultOptions = await VtexCatalogService.getSearchOptions()
 		const queryString = objectToQueryString({ ...defaultOptions, ...options })
