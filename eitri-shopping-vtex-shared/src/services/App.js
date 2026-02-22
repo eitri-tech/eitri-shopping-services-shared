@@ -1,7 +1,7 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from './Vtex'
-import ClarityService from './tracking/ClarityService'
 import EventBus from '@/services/EventBus'
+import RemoteConfig from './RemoteConfig'
 
 export default class App {
 	static configs = {
@@ -24,14 +24,7 @@ export default class App {
 			console.error('Erro ao configurar eventBus', e)
 		}
 
-		let remoteConfig
-		try {
-			const _remoteConfig = await Eitri.environment.getRemoteConfigs()
-			remoteConfig = { ..._remoteConfig, ...overwrites }
-		} catch (error) {
-			console.error('[SHARED] Error getRemoteConfigs', error)
-			throw error
-		}
+		const remoteConfig = await RemoteConfig.init(overwrites)
 
 		try {
 			console.log('[SHARED] ********* Config Vtex encontrada, configurando automaticamente *******')
@@ -43,23 +36,10 @@ export default class App {
 			throw error
 		}
 
-		try {
-			if (remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId) {
-				const clarityId = remoteConfig?.appConfigs?.clarityId || remoteConfig?.clarityId
-				ClarityService.init(clarityId)
-			}
-		} catch (error) {
-			console.error('[SHARED] Error ao inicializar Clarity', error)
-		}
+		App.setStatusBarColor(RemoteConfig.getContent('appConfigs.statusBarTextColor'))
+		App.startClarity(RemoteConfig.getContent('appConfigs.clarityId'))
 
 		try {
-			if (remoteConfig?.appConfigs?.statusBarTextColor) {
-				const color =
-					remoteConfig.appConfigs.statusBarTextColor === 'white'
-						? 'setStatusBarTextWhite'
-						: 'setStatusBarTextBlack'
-				window.EITRI.connector.invokeMethod(color)
-			}
 
 			App.configs = {
 				...App.configs,
@@ -82,6 +62,23 @@ export default class App {
 		} catch (error) {
 			console.error('[SHARED] Error App configure ', error)
 			throw error
+		}
+	}
+
+	static setStatusBarColor(color) {
+		if (color) {
+			const _color = color === 'white' ? 'setStatusBarTextWhite' : 'setStatusBarTextBlack'
+			window.EITRI.connector.invokeMethod(_color)
+		}
+	}
+
+	static startClarity(clarityId) {
+		try {
+			if (clarityId) {
+				Eitri.tracking.clarity.init(clarityId)
+			}
+		} catch (error) {
+			console.error('[SHARED] Error ao inicializar Clarity', error)
 		}
 	}
 }

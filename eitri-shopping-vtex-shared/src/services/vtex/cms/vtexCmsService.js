@@ -1,13 +1,13 @@
 import objectToQueryString from '../_helpers/objectToQueryString'
 import VtexCaller from '../_helpers/_vtexCaller'
 import Eitri from 'eitri-bifrost'
+import RemoteConfig from '@/services/RemoteConfig'
 
 export default class VtexCmsService {
 	static async getAllContentTypes(projectId) {
-		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		const account = _remoteConfig?.providerInfo?.account
-		const vtexCmsUrl = _remoteConfig?.providerInfo?.vtexCmsUrl
+		const account = RemoteConfig.getContent('providerInfo.account')
+		const vtexCmsUrl = RemoteConfig.getContent('providerInfo?.vtexCmsUrl')
 
 		let BASE_URL = `https://${account}.myvtex.com`
 		if (vtexCmsUrl) {
@@ -19,10 +19,9 @@ export default class VtexCmsService {
 	}
 
 	static async getPagesByContentTypes(projectId, contentTypeId, options) {
-		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		const account = _remoteConfig?.providerInfo?.account
-		const vtexCmsUrl = _remoteConfig?.providerInfo?.vtexCmsUrl
+		const account = RemoteConfig.getContent('providerInfo.account')
+		const vtexCmsUrl = RemoteConfig.getContent('providerInfo?.vtexCmsUrl')
 
 		let BASE_URL = `https://${account}.myvtex.com`
 		if (vtexCmsUrl) {
@@ -35,10 +34,9 @@ export default class VtexCmsService {
 	}
 
 	static async getCmsPage(projectId, contentTypeId, documentId, options) {
-		const _remoteConfig = await Eitri.environment.getRemoteConfigs()
 
-		const account = _remoteConfig?.providerInfo?.account
-		const vtexCmsUrl = _remoteConfig?.providerInfo?.vtexCmsUrl
+		const account = RemoteConfig.getContent('providerInfo.account')
+		const vtexCmsUrl = RemoteConfig.getContent('providerInfo?.vtexCmsUrl')
 
 		let BASE_URL = `https://${account}.myvtex.com`
 		if (vtexCmsUrl) {

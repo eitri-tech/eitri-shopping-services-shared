@@ -33,24 +33,16 @@ export default class Vtex {
 			_host = 'https://' + remoteConfig?.providerInfo?.host
 		}
 
-		let _domain = remoteConfig?.providerInfo?.domain || _host
-		if (_domain && !_domain.startsWith('https://')) {
-			_domain = 'https://' + _domain
-		}
-
 		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 		const configSegments = remoteConfig?.storePreferences?.segments || {}
 		Vtex.configs = {
 			account: remoteConfig?.providerInfo?.account,
 			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
 			host: _host,
-			domain: _domain,
-			vtexCmsUrl: remoteConfig?.providerInfo?.vtexCmsUrl,
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
 			segments: { ...configSegments, ...utmParams },
 			marketingTag: remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
-			salesChannel: remoteConfig?.storePreferences?.salesChannel,
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 

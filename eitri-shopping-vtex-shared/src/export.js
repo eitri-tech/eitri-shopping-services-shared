@@ -1,5 +1,6 @@
 export { default as Vtex } from "./services/Vtex";
 export { default as App } from "./services/App";
+export { default as RemoteConfig } from './services/RemoteConfig'
 export { default as EventBusChannels } from "./services/EventBusChannels";
 export { default as Tracking } from "./services/Tracking";
 export { default as EventBus } from "./services/EventBus";
