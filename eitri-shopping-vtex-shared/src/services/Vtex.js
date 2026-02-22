@@ -46,9 +46,7 @@ export default class Vtex {
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		Vtex.buildSession({ ...configSegments, ...utmParams }).then(session => {
-			Vtex.configs.session = session
-		})
+		Vtex.configs.session = await Vtex.buildSession({ ...configSegments, ...utmParams })
 
 		if (!remoteConfig.skipRefreshToken) {
 			Vtex.customer.executeRefreshToken()
