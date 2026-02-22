@@ -31,9 +31,11 @@ export default class VtexCaller {
 
 		if (Vtex.configs.session) {
 			if (headers['Cookie']) {
-				headers['Cookie'] += `;vtex_segment=${Vtex.configs?.session?.segmentToken}`
+				headers['Cookie'] +=
+					`;vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
 			} else {
-				headers['Cookie'] = `vtex_segment=${Vtex.configs?.session?.segmentToken}`
+				headers['Cookie'] =
+					`vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
 			}
 		}
 

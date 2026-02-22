@@ -364,7 +364,7 @@ export default class VtexCustomerService {
 		}
 
 		const body = {
-			query: 'query Profile @context(scope: "private", sender: "vtex.my-account@1.29.0") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate } }'
+			query: 'query Profile @context(scope: "private") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate } }'
 		}
 
 		const result = await VtexCaller.post(
