@@ -7,7 +7,7 @@ import getSalesChannel from '../_helpers/getSalesChannel'
 import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
 import { sendLogError } from '@/services/Datadog'
 import Eitri from 'eitri-bifrost'
-import EventBusChannels from "./../../EventBusChannels";
+import EventBusChannels from './../../EventBusChannels'
 import objectsAreEqual from '@/services/vtex/_helpers/objectsAreEqual'
 import EventBus from '@/services/EventBus'
 
@@ -18,15 +18,18 @@ export default class VtexCartService {
 	static async assertMarketingData(cart) {
 		try {
 			const { segments, marketingTag } = Vtex.configs
-			const currentMarketingTags = cart?.marketingData?.marketingTags ? [...cart?.marketingData?.marketingTags] : []
+			const currentMarketingTags = cart?.marketingData?.marketingTags
+				? [...cart?.marketingData?.marketingTags]
+				: []
 			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 
-			const camelCaseKeys = (data) => Object.fromEntries(
-				Object.entries(data).map(([key, value]) => [
-					key.replace(/_([a-z])/g, (_, c) => c.toUpperCase()),
-					value
-				])
-			)
+			const camelCaseKeys = data =>
+				Object.fromEntries(
+					Object.entries(data).map(([key, value]) => [
+						key.replace(/_([a-z])/g, (_, c) => c.toUpperCase()),
+						value
+					])
+				)
 
 			currentMarketingTags.some(tag => tag === marketingTag) || currentMarketingTags.push(marketingTag)
 			const preparedSegments = segments ? camelCaseKeys(segments) : {}
@@ -123,7 +126,6 @@ export default class VtexCartService {
 		}
 
 		return VtexCartService.getCartById(cartId)
-
 	}
 
 	static async getStoredOrderFormId() {
@@ -198,6 +200,79 @@ export default class VtexCartService {
 		}
 	}
 
+	/**
+	 * Adiciona um ou vários itens ao carrinho.
+	 * Compatível com formato antigo e novo.
+	 *
+	 * @param {Object|Array} input - Item único, array de itens ou objeto estruturado
+	 * @param {string} salesChannel - Canal de vendas
+	 * @returns {Promise<Object>} - OrderForm atualizado
+	 */
+	static async addItems(input, salesChannel) {
+		try {
+			if (!input) {
+				throw new Error('Nenhum item informado.')
+			}
+
+			// Se vier no formato novo { items: [...] }
+			let items = input?.items ?? input
+
+			// Garante que sempre será um array
+			const normalizedItems = Array.isArray(items) ? items : [items]
+
+			// Normaliza cada item para o formato esperado pela VTEX
+			const orderItems = normalizedItems.map((item, index) => {
+				const quantity = parseInt(item?.quantity ?? 1)
+
+				return {
+					id: item?.id ?? item?.itemId,
+					quantity,
+					seller:
+						item?.seller ??
+						item?.sellers?.find(s => s.sellerDefault)?.sellerId ??
+						item?.sellers?.[0]?.sellerId ??
+						'1',
+					index: item?.index ?? index
+				}
+			})
+
+			let orderFormId = await VtexCartService.getStoredOrderFormId()
+
+			if (!orderFormId) {
+				const cart = await VtexCartService.generateNewCart()
+				orderFormId = cart.orderFormId
+			}
+
+			const payload = { orderItems }
+
+			let url = `api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`
+
+			const _salesChannel = salesChannel ?? (await getSalesChannel())
+
+			if (_salesChannel) {
+				url += `&sc=${_salesChannel}`
+			}
+
+			const addToCartRes = await VtexCaller.post(url, payload)
+
+			GAVtexInternalService.addItemToCart(orderItems, addToCartRes.data)
+
+			VtexCartService._CACHED_CART = addToCartRes.data
+
+			EventBus.publish({
+				channel: EventBusChannels.ADD_TO_CART,
+				broadcast: true,
+				data: { payload }
+			})
+
+			return addToCartRes.data
+		} catch (e) {
+			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
+			sendLogError(e, 'addItems', payload)
+			throw e
+		}
+	}
+
 	static async changeItemQuantity(index, newQuantity) {
 		try {
 			const orderFormId = await VtexCartService.getStoredOrderFormId()
@@ -218,12 +293,12 @@ export default class VtexCartService {
 			VtexCartService._CACHED_CART = updateCart.data
 
 			EventBus.publish({
-                channel: EventBusChannels.UPDATE_CART_ITEM,
-                broadcast: true,
-                data: {
-                    payload
-                }
-            });
+				channel: EventBusChannels.UPDATE_CART_ITEM,
+				broadcast: true,
+				data: {
+					payload
+				}
+			})
 
 			return updateCart.data
 		} catch (e) {
@@ -420,7 +495,6 @@ export default class VtexCartService {
 	}
 
 	static async addAttachmentToItem(itemIndex, attachmentName, payload) {
-
 		let orderFormId = await VtexCartService.getStoredOrderFormId()
 
 		if (!orderFormId) {
