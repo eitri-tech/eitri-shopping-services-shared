@@ -273,6 +273,84 @@ export default class VtexCartService {
 		}
 	}
 
+	// // FUNÇÃO COMPATÍVEL COM VERSÕES ANTIGAS E NOVAS, DEIXEI COMENTADA PARA NÃO QUEBRAR NADA
+	// /**
+	//  * Adiciona um ou vários itens ao carrinho.
+	//  * Compatível com formato antigo e novo.
+	//  *
+	//  * @param {Object|Array} input - Item único, array de itens ou objeto estruturado
+	//  * @param {string} salesChannel - Canal de vendas
+	//  * @returns {Promise<Object>} - OrderForm atualizado
+	//  */
+	// static async addItem(input, salesChannel) {
+	// 	let payload = null
+
+	// 	try {
+	// 		if (!input) {
+	// 			throw new Error('Nenhum item informado.')
+	// 		}
+
+	// 		// Se vier no formato novo { items: [...] }
+	// 		let items = input?.items ?? input
+
+	// 		// Garante que sempre será um array
+	// 		const normalizedItems = Array.isArray(items) ? items : [items]
+
+	// 		// Normaliza cada item para o formato esperado pela VTEX
+	// 		const orderItems = normalizedItems.map((item, index) => {
+	// 			const quantity = parseInt(item?.quantity ?? 1)
+
+	// 			return {
+	// 				id: item?.id ?? item?.itemId,
+	// 				quantity,
+	// 				seller:
+	// 					item?.seller ??
+	// 					item?.sellers?.find(s => s.sellerDefault)?.sellerId ??
+	// 					item?.sellers?.[0]?.sellerId ??
+	// 					'1',
+	// 				index: item?.index ?? index
+	// 				// SE QUISER DEIXAR ACEITAR O PREÇO DESCOMENTA A LINHA ABAIXO
+	// 				// price: item?.price ?? item?.sellers?.[0]?.commertialOffer?.Price * 100 // converte para centavos
+	// 			}
+	// 		})
+
+	// 		let orderFormId = await VtexCartService.getStoredOrderFormId()
+
+	// 		if (!orderFormId) {
+	// 			const cart = await VtexCartService.generateNewCart()
+	// 			orderFormId = cart.orderFormId
+	// 		}
+
+	// 		payload = { orderItems }
+
+	// 		let url = `api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`
+
+	// 		const _salesChannel = salesChannel ?? (await getSalesChannel())
+
+	// 		if (_salesChannel) {
+	// 			url += `&sc=${_salesChannel}`
+	// 		}
+
+	// 		const addToCartRes = await VtexCaller.post(url, payload)
+
+	// 		GAVtexInternalService.addItemToCart(orderItems, addToCartRes.data)
+
+	// 		VtexCartService._CACHED_CART = addToCartRes.data
+
+	// 		EventBus.publish({
+	// 			channel: EventBusChannels.ADD_TO_CART,
+	// 			broadcast: true,
+	// 			data: { payload }
+	// 		})
+
+	// 		return addToCartRes.data
+	// 	} catch (e) {
+	// 		console.error('[SHARED] [addItem] Erro ao adicionar itens', e)
+	// 		sendLogError(e, 'addItem', payload)
+	// 		throw e
+	// 	}
+	// }
+
 	static async changeItemQuantity(index, newQuantity) {
 		try {
 			const orderFormId = await VtexCartService.getStoredOrderFormId()
