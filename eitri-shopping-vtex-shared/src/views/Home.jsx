@@ -98,6 +98,12 @@ export default function Home() {
 					onPress={() => navigateTo('GooglePayMethods')}
 					label='Métodos de Google pay'
 				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('CMSMethods')}
+					label='Métodos de CMS'
+				/>
 			</View>
 		</Window>
 	)
