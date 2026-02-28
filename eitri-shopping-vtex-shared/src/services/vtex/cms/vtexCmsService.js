@@ -1,13 +1,12 @@
 import objectToQueryString from '../_helpers/objectToQueryString'
 import VtexCaller from '../_helpers/_vtexCaller'
-import Eitri from 'eitri-bifrost'
 import RemoteConfig from '@/services/RemoteConfig'
 
 export default class VtexCmsService {
 	static async getAllContentTypes(projectId) {
 
 		const account = RemoteConfig.getContent('providerInfo.account')
-		const vtexCmsUrl = RemoteConfig.getContent('providerInfo?.vtexCmsUrl')
+		const vtexCmsUrl = RemoteConfig.getContent('providerInfo.vtexCmsUrl')
 
 		let BASE_URL = `https://${account}.myvtex.com`
 		if (vtexCmsUrl) {
@@ -21,7 +20,7 @@ export default class VtexCmsService {
 	static async getPagesByContentTypes(projectId, contentTypeId, options) {
 
 		const account = RemoteConfig.getContent('providerInfo.account')
-		const vtexCmsUrl = RemoteConfig.getContent('providerInfo?.vtexCmsUrl')
+		const vtexCmsUrl = RemoteConfig.getContent('providerInfo.vtexCmsUrl')
 
 		let BASE_URL = `https://${account}.myvtex.com`
 		if (vtexCmsUrl) {
