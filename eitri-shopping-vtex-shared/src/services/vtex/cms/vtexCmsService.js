@@ -35,7 +35,7 @@ export default class VtexCmsService {
 	static async getCmsPage(projectId, contentTypeId, documentId, options) {
 
 		const account = RemoteConfig.getContent('providerInfo.account')
-		const vtexCmsUrl = RemoteConfig.getContent('providerInfo?.vtexCmsUrl')
+		const vtexCmsUrl = RemoteConfig.getContent('providerInfo.vtexCmsUrl')
 
 		let BASE_URL = `https://${account}.myvtex.com`
 		if (vtexCmsUrl) {
