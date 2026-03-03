@@ -7,6 +7,7 @@ import {
 	RefreshTokenResponse
 } from '../../models/Auth'
 import Logger from '../_helpers/Logger'
+import RemoteConfig from '../RemoteConfig'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -127,18 +128,23 @@ export class AuthService {
 	 *
 	 * By default, we save the tokens in the device's storage.
 	 *
-	 * Required Remote Config variables (`providerInfo`):
-	 * - `host` — Shopify store URL (e.g. `https://my-store.myshopify.com`)
-	 * - `clientId` — Shopify Customer Account API Client ID
-	 * - `callbackUrl` — URL to redirect the user back to after authentication
+	 * @param options - Optional overrides for Remote Config values (`providerInfo`).
+	 *   If not provided, the values are read from Remote Config.
+	 * @param options.host - Shopify store URL (e.g. `https://my-store.myshopify.com`).
+	 * @param options.clientId - Shopify Customer Account API Client ID.
+	 * @param options.callbackUrl - URL to redirect the user back to after authentication.
 	 *
 	 * @returns A `LoginResponse` object with `success: true` and tokens in `data`,
 	 *          or `success: false` with the error description in `error`.
 	 */
-	static async login(): Promise<LoginResponse> {
-		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+	static async login(options?: { host?: string; callbackUrl?: string; clientId?: string }): Promise<LoginResponse> {
+		const remoteConfig = RemoteConfig.getRemoteConfig()
 
-		const { host, clientId, callbackUrl } = remoteConfig.providerInfo
+		// const { host, callbackUrl } = options ?? remoteConfig.providerInfo
+
+		const clientId = options?.clientId || remoteConfig.providerInfo.clientId
+		const host = options?.host || remoteConfig.providerInfo.host
+		const callbackUrl = options?.callbackUrl || remoteConfig.providerInfo.callbackUrl
 
 		if (!host) {
 			throw new Error('Missing required remote config variables')
@@ -172,7 +178,8 @@ export class AuthService {
 				'accounts.google.com',
 				'accounts.google.com.br',
 				'accounts.youtube.com',
-				'accounts.youtube.com.br'
+				'accounts.youtube.com.br',
+				'*'
 			]
 
 			authorizeUrl.searchParams.append('client_id', clientId)
@@ -288,7 +295,7 @@ export class AuthService {
 	}
 
 	private static async getRemoteConfigParams(): Promise<{ clientId: string; configUrl: string } | null> {
-		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+		const remoteConfig = await RemoteConfig.getRemoteConfig()
 		const { host, clientId } = remoteConfig?.providerInfo || {}
 
 		if (!host || !clientId) {
