@@ -8,6 +8,7 @@ import {
 } from '../../models/Auth'
 import Logger from '../_helpers/Logger'
 import RemoteConfig from '../RemoteConfig'
+import { CustomerService } from './CustomerService'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -121,6 +122,29 @@ export class AuthService {
 	}
 
 	/**
+	 * Notify to Push Notification API that the customer has logged in and give it the customer info and deviceId (Native automatically adds the deviceId).
+	 */
+	private static async notifyLogin() {
+		const customer = await CustomerService.getCurrentCustomer()
+
+		if (!customer) {
+			Logger.error('No customer found to notify login')
+			return
+		}
+
+		const modules = await Eitri.modules()
+		const notifyLogin = modules?.session?.notifyLogin
+		if (!notifyLogin) return
+		await notifyLogin({
+			customerId: customer.id,
+			email: customer?.emailAddress?.emailAddress,
+			provider: 'SHOPIFY'
+		})
+
+		return customer
+	}
+
+	/**
 	 * Authenticates the customer via OAuth 2.0 with PKCE through the Shopify Customer Account API.
 	 *
 	 * Opens a web flow for the user to authenticate on Shopify and, upon return,
@@ -137,7 +161,12 @@ export class AuthService {
 	 * @returns A `LoginResponse` object with `success: true` and tokens in `data`,
 	 *          or `success: false` with the error description in `error`.
 	 */
-	static async login(options?: { host?: string; callbackUrl?: string; clientId?: string }): Promise<LoginResponse> {
+	static async login(options?: {
+		host?: string
+		callbackUrl?: string
+		clientId?: string
+		allowedDomains?: string[]
+	}): Promise<LoginResponse> {
 		const remoteConfig = RemoteConfig.getRemoteConfig()
 
 		// const { host, callbackUrl } = options ?? remoteConfig.providerInfo
@@ -179,8 +208,10 @@ export class AuthService {
 				'accounts.google.com.br',
 				'accounts.youtube.com',
 				'accounts.youtube.com.br',
-				'*'
+				...(options?.allowedDomains ?? [])
 			]
+
+			Logger.log('Allowed domains for web flow:', allowedDomains)
 
 			authorizeUrl.searchParams.append('client_id', clientId)
 			authorizeUrl.searchParams.append('response_type', 'code')
@@ -235,9 +266,12 @@ export class AuthService {
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
 
+			const customer = await this.notifyLogin()
+
 			return {
 				success: true,
-				data: tokenResponse
+				data: tokenResponse,
+				customer: customer || undefined
 			}
 		} catch (e) {
 			Logger.error('Login error:', e)

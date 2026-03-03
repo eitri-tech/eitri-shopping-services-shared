@@ -1,3 +1,5 @@
+import { Customer } from './Customer'
+
 export interface LoginParams {
 	clientId: string
 	callbackUri: string
@@ -18,6 +20,7 @@ export interface LoginResponse {
 	success: boolean
 	data?: AccessTokenResponse
 	error?: string
+	customer?: Customer
 }
 
 export interface RefreshResponse {
