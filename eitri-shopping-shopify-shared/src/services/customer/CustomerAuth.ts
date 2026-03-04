@@ -132,11 +132,21 @@ export class AuthService {
 			return
 		}
 
+		const regex = /gid:\/\/shopify\/Customer\/(\d+)/
+
+		const customerIdMatch = customer.id.match(regex)
+		if (!customerIdMatch || customerIdMatch.length < 2) {
+			Logger.error('Invalid customer ID format:', customer.id)
+			return
+		}
+
+		const customerId = customerIdMatch[1]
+
 		const modules = await Eitri.modules()
 		const notifyLogin = modules?.session?.notifyLogin
 		if (!notifyLogin) return
 		await notifyLogin({
-			customerId: customer.id,
+			customerId: customerId,
 			email: customer?.emailAddress?.emailAddress,
 			provider: 'SHOPIFY'
 		})
@@ -193,7 +203,7 @@ export class AuthService {
 
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
-			const { authorization_endpoint, token_endpoint } = discoveryData
+			const { authorization_endpoint, token_endpoint, issuer } = discoveryData
 
 			const authorizeUrl = new URL(authorization_endpoint)
 
@@ -208,6 +218,8 @@ export class AuthService {
 				'accounts.google.com.br',
 				'accounts.youtube.com',
 				'accounts.youtube.com.br',
+				// For callback URL with Headless App on Shopify
+				'callback',
 				...(options?.allowedDomains ?? [])
 			]
 
@@ -226,6 +238,8 @@ export class AuthService {
 
 			authorizeUrl.searchParams.append('code_challenge', challenge)
 			authorizeUrl.searchParams.append('code_challenge_method', 'S256')
+
+			console.log('Authorization URL:', authorizeUrl.toString())
 
 			const webFlowRes = await Eitri.webFlow.start({
 				startUrl: authorizeUrl.toString(),
