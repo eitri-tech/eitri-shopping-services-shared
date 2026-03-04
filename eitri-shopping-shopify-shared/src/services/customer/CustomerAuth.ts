@@ -203,7 +203,7 @@ export class AuthService {
 
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
-			const { authorization_endpoint, token_endpoint, issuer } = discoveryData
+			const { authorization_endpoint, token_endpoint } = discoveryData
 
 			const authorizeUrl = new URL(authorization_endpoint)
 
