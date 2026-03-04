@@ -5,6 +5,8 @@ import Logger from '../../Logger'
 import vtexCartService from '../cart/VtexCartService'
 import VtexCheckoutService from '../checkout/vtexCheckoutService'
 import StorageService from '../../StorageService'
+import RemoteConfig from '@/services/RemoteConfig'
+import vtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class VtexCaller {
 	static _mountUrl = (baseUrl, path) => {
@@ -29,15 +31,25 @@ export default class VtexCaller {
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
-		if (Vtex.configs.session) {
-			if (headers['Cookie']) {
-				headers['Cookie'] +=
-					`;vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
-			} else {
-				headers['Cookie'] =
-					`vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
+		if (RemoteConfig.getContent('experimentalSessionManager')) {
+			const session = await vtexSessionService.getSessionToken()
+			if (session) {
+				const cookie = `vtex_segment=${session.segmentToken};vtex_session=${session.sessionToken}`
+				headers.Cookie = headers.Cookie ? `${headers.Cookie};${cookie}` : cookie
+			}
+		} else {
+			if (Vtex.configs.session) {
+				if (headers['Cookie']) {
+					headers['Cookie'] +=
+						`;vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
+				} else {
+					headers['Cookie'] =
+						`vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
+				}
 			}
 		}
+
+
 
 		const paymentAuth = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
 		if (paymentAuth) {

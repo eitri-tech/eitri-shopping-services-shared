@@ -10,6 +10,7 @@ import App from './App'
 import GAService from './tracking/GAService'
 import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
 import { VtexGooglePayServices } from '@/services/vtex/googlePay/vtexGooglePayServices'
+import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class Vtex {
 	static configs = {
@@ -119,4 +120,5 @@ export default class Vtex {
 	static searchGraphql = VtexSearchGraphql
 	static http = VtexCaller
 	static googlePay = VtexGooglePayServices
+	static session = VtexSessionService
 }

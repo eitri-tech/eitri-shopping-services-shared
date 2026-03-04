@@ -2,6 +2,7 @@ import Eitri from 'eitri-bifrost'
 import Vtex from './Vtex'
 import EventBus from '@/services/EventBus'
 import RemoteConfig from './RemoteConfig'
+import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class App {
 	static configs = {
@@ -9,7 +10,7 @@ export default class App {
 		gaVerbose: false
 	}
 
-	static tryAutoConfigure = async overwrites => {
+	static tryAutoConfigure = async (overwrites) => {
 		try {
 			console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
 			EventBus.subscribe({
@@ -31,6 +32,7 @@ export default class App {
 			console.log('[SHARED] Account ======>', remoteConfig.providerInfo.account)
 			console.log('[SHARED] Host ======>', remoteConfig.providerInfo.host)
 			await Vtex.configure(remoteConfig)
+			if (overwrites?.experimentalSessionManager) await VtexSessionService.createSession({})
 		} catch (error) {
 			console.error('[SHARED] Error autoConfigure ', error)
 			throw error

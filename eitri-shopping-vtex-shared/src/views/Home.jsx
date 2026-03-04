@@ -18,7 +18,8 @@ export default function Home() {
 			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			// },
 			verbose: true,
-			gaVerbose: false
+			gaVerbose: false,
+			experimentalSessionManager: true
 		})
 
 		// await Vtex.customer.saveUtmParams({
@@ -26,7 +27,7 @@ export default function Home() {
 		// })
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
 		// await Vtex.cart.setOrderFormId('25fa3690032940d6930031caadeb3289')
-		await Vtex.cart.getCurrentOrCreateCart()
+		// await Vtex.cart.getCurrentOrCreateCart()
 	}
 
 	const navigateTo = async path => {
@@ -103,6 +104,12 @@ export default function Home() {
 					color='background-color'
 					onPress={() => navigateTo('CMSMethods')}
 					label='Métodos de CMS'
+				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('SessionMethods')}
+					label='Métodos de Sessão'
 				/>
 			</View>
 		</Window>
