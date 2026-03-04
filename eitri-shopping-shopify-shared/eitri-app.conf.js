@@ -4,7 +4,7 @@ module.exports = {
 	'slug': 'eitri-shopping-shopify-shared',
 	'eitri-luminus': '1.90.0',
 	'eitri-bifrost': '4.7.0',
-	'version': '1.0.0',
+	'version': '1.1.0',
 	'messageVersion': 'Attributes assert and clarity',
 	'public-key': 'c599744e-9c7e-4159-a189-fe256560789c',
 	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',
