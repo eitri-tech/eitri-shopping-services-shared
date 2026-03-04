@@ -7,6 +7,8 @@ import {
 	RefreshTokenResponse
 } from '../../models/Auth'
 import Logger from '../_helpers/Logger'
+import RemoteConfig from '../RemoteConfig'
+import { CustomerService } from './CustomerService'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -120,6 +122,39 @@ export class AuthService {
 	}
 
 	/**
+	 * Notify to Push Notification API that the customer has logged in and give it the customer info and deviceId (Native automatically adds the deviceId).
+	 */
+	private static async notifyLogin() {
+		const customer = await CustomerService.getCurrentCustomer()
+
+		if (!customer) {
+			Logger.error('No customer found to notify login')
+			return
+		}
+
+		const regex = /gid:\/\/shopify\/Customer\/(\d+)/
+
+		const customerIdMatch = customer.id.match(regex)
+		if (!customerIdMatch || customerIdMatch.length < 2) {
+			Logger.error('Invalid customer ID format:', customer.id)
+			return
+		}
+
+		const customerId = customerIdMatch[1]
+
+		const modules = await Eitri.modules()
+		const notifyLogin = modules?.session?.notifyLogin
+		if (!notifyLogin) return
+		await notifyLogin({
+			customerId: customerId,
+			email: customer?.emailAddress?.emailAddress,
+			provider: 'SHOPIFY'
+		})
+
+		return customer
+	}
+
+	/**
 	 * Authenticates the customer via OAuth 2.0 with PKCE through the Shopify Customer Account API.
 	 *
 	 * Opens a web flow for the user to authenticate on Shopify and, upon return,
@@ -127,18 +162,28 @@ export class AuthService {
 	 *
 	 * By default, we save the tokens in the device's storage.
 	 *
-	 * Required Remote Config variables (`providerInfo`):
-	 * - `host` — Shopify store URL (e.g. `https://my-store.myshopify.com`)
-	 * - `clientId` — Shopify Customer Account API Client ID
-	 * - `callbackUrl` — URL to redirect the user back to after authentication
+	 * @param options - Optional overrides for Remote Config values (`providerInfo`).
+	 *   If not provided, the values are read from Remote Config.
+	 * @param options.host - Shopify store URL (e.g. `https://my-store.myshopify.com`).
+	 * @param options.clientId - Shopify Customer Account API Client ID.
+	 * @param options.callbackUrl - URL to redirect the user back to after authentication.
 	 *
 	 * @returns A `LoginResponse` object with `success: true` and tokens in `data`,
 	 *          or `success: false` with the error description in `error`.
 	 */
-	static async login(): Promise<LoginResponse> {
-		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+	static async login(options?: {
+		host?: string
+		callbackUrl?: string
+		clientId?: string
+		allowedDomains?: string[]
+	}): Promise<LoginResponse> {
+		const remoteConfig = RemoteConfig.getRemoteConfig()
 
-		const { host, clientId, callbackUrl } = remoteConfig.providerInfo
+		// const { host, callbackUrl } = options ?? remoteConfig.providerInfo
+
+		const clientId = options?.clientId || remoteConfig.providerInfo.clientId
+		const host = options?.host || remoteConfig.providerInfo.host
+		const callbackUrl = options?.callbackUrl || remoteConfig.providerInfo.callbackUrl
 
 		if (!host) {
 			throw new Error('Missing required remote config variables')
@@ -172,8 +217,13 @@ export class AuthService {
 				'accounts.google.com',
 				'accounts.google.com.br',
 				'accounts.youtube.com',
-				'accounts.youtube.com.br'
+				'accounts.youtube.com.br',
+				// For callback URL with Headless App on Shopify
+				'callback',
+				...(options?.allowedDomains ?? [])
 			]
+
+			Logger.log('Allowed domains for web flow:', allowedDomains)
 
 			authorizeUrl.searchParams.append('client_id', clientId)
 			authorizeUrl.searchParams.append('response_type', 'code')
@@ -188,6 +238,8 @@ export class AuthService {
 
 			authorizeUrl.searchParams.append('code_challenge', challenge)
 			authorizeUrl.searchParams.append('code_challenge_method', 'S256')
+
+			console.log('Authorization URL:', authorizeUrl.toString())
 
 			const webFlowRes = await Eitri.webFlow.start({
 				startUrl: authorizeUrl.toString(),
@@ -228,9 +280,12 @@ export class AuthService {
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
 
+			const customer = await this.notifyLogin()
+
 			return {
 				success: true,
-				data: tokenResponse
+				data: tokenResponse,
+				customer: customer || undefined
 			}
 		} catch (e) {
 			Logger.error('Login error:', e)
@@ -288,7 +343,7 @@ export class AuthService {
 	}
 
 	private static async getRemoteConfigParams(): Promise<{ clientId: string; configUrl: string } | null> {
-		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+		const remoteConfig = await RemoteConfig.getRemoteConfig()
 		const { host, clientId } = remoteConfig?.providerInfo || {}
 
 		if (!host || !clientId) {
