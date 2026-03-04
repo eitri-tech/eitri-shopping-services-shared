@@ -9,6 +9,8 @@ fragment CustomerAddressFields on CustomerAddress {
 	phoneNumber
 	firstName
 	lastName
+	territoryCode
+	zoneCode
 }
 
 fragment CustomerFields on Customer {
