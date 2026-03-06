@@ -5,6 +5,7 @@ import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
 import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 import EventBus from '@/services/EventBus'
+import EventBusChannels from '@/services/EventBusChannels'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -272,6 +273,11 @@ export default class VtexCustomerService {
 		await VtexCustomerService.notifyLogoutToExposedApis()
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		EventBus.publish({
+			channel: EventBusChannels.USER_LOGGED_OUT,
+			broadcast: true,
+			data: {}
+		})
 		return
 	}
 
@@ -595,6 +601,11 @@ export default class VtexCustomerService {
 			accountAuthCookieValue
 		)
 		VtexCustomerService.notifyLoginToExposedApis(userId)
+		EventBus.publish({
+			channel: EventBusChannels.USER_LOGGED_IN,
+			broadcast: true,
+			data: {}
+		})
 	}
 
 	static async _processPostSocialLogin(finishNavigationUrl) {
@@ -613,6 +624,12 @@ export default class VtexCustomerService {
 		await VtexCustomerService.setCustomerData('email', email)
 		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
 		VtexCustomerService.notifyLoginToExposedApis(userId)
+
+		EventBus.publish({
+			channel: EventBusChannels.USER_LOGGED_IN,
+			broadcast: true,
+			data: {}
+		})
 	}
 
 	static async getAddresses() {
