@@ -20,7 +20,7 @@ export default class WakeService {
 	static configs = {
 		verbose: false,
 		gaVerbose: false,
-		autoTriggerGAEvents: true,
+		autoTriggerGAEvents: false,
 		clarityId: '',
 		provider: 'WAKE',
 		account: '',
@@ -44,13 +44,12 @@ export default class WakeService {
 		if (providerInfo.apiHost && !providerInfo.apiHost.startsWith('https://')) {
 			providerInfo.apiHost = 'https://' + providerInfo.apiHost
 		}
-
 		WakeService.configs = {
 			...WakeService.configs,
 			...providerInfo,
 			...rest,
 			verbose: remoteConfig.verbose ?? false,
-			autoTriggerGAEvents: remoteConfig?.autoTriggerGAEvents ?? true,
+			autoTriggerGAEvents: remoteConfig?.appConfigs?.autoTriggerGAEvents ?? false,
 			graphqlApi: `https://storefront-api.fbits.net/graphql`,
 			marketingTag: marketingTag ?? 'eitri-shop'
 		}
