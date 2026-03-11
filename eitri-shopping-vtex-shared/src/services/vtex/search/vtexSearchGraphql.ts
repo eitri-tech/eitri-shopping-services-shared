@@ -15,10 +15,11 @@ import getSalesChannel from '../_helpers/getSalesChannel'
 
 export default class VtexSearchGraphql {
 	static toGraphQLArgs(obj: any) {
+		const enumFields = ['simulationBehavior']
+
 		return Object.entries(obj)
 			.map(([key, value]) => {
 				if (Array.isArray(value)) {
-					// Verifica se são objetos (ex: selectedFacets)
 					const arrayStr = value
 						.map(item => {
 							if (typeof item === 'object') {
@@ -29,10 +30,16 @@ export default class VtexSearchGraphql {
 						.join(', ')
 					return `${key}: [${arrayStr}]`
 				}
+
 				if (typeof value === 'object') {
 					return `${key}: { ${VtexSearchGraphql.toGraphQLArgs(value)} }`
 				}
-				return `${key}: ${typeof value === 'string' ? `"${value}"` : value}`
+
+				if (typeof value === 'string') {
+					return enumFields.includes(key) ? `${key}: ${value}` : `${key}: "${value}"`
+				}
+
+				return `${key}: ${value}`
 			})
 			.join(', ')
 	}
