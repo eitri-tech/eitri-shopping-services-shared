@@ -171,7 +171,10 @@ export default class GAVtexInternalService {
 			const totalItemPrice = cart.totalizers.find(item => item.id === 'Items')?.value / 100
 			const shippingPrice = cart.totalizers.find(item => item.id === 'Shipping')?.value / 100
 
+			console.log('VALIDATE EVENT [PURCHASE] - MARKETING_DATA', cart?.marketingData)
+
 			const coupon = cart?.marketingData?.coupon || undefined
+			console.log('VALIDATE EVENT [PURCHASE] - COUPON', coupon)
 
 			const params = {
 				currency: 'BRL',
@@ -182,6 +185,8 @@ export default class GAVtexInternalService {
 				items: items,
 				...(coupon && { coupon })
 			}
+
+			console.log('VALIDATE EVENT [PURCHASE] - PARAMS', params)
 
 			GAService.logEvent('purchase', params)
 		} catch (error) {
