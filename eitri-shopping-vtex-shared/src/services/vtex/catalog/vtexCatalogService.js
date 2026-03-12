@@ -79,6 +79,53 @@ export default class VtexCatalogService {
 		return response.data
 	}
 
+	// -- Cross Selling API -- //
+	static async getCrossSellingProducts(productId, crossSellingType) {
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		let url = `api/catalog_system/pub/products/crossselling/${crossSellingType}/${productId}${sc}`
+		const result = await VtexCaller.get(url)
+
+		if (!result || result?.data.length === 0) return []
+		const availableProducts = VtexCatalogService.filterAvailableProductsOnly(result.data)
+
+		return availableProducts
+	}
+
+	static async getWhosawalsosawProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'whosawalsosaw')
+	}
+
+	static async getWhosawalsoboughtProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'whosawalsobought')
+	}
+
+	static async getWhoboughtalsoboughtProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'whoboughtalsobought')
+	}
+
+	static async getShowTogetherProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'showtogether')
+	}
+
+	static async getAccessoriesProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'accessories')
+	}
+
+	static async getSimilarsProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'similars')
+	}
+
+	static async getSuggestionsProducts(productId) {
+		return this.getCrossSellingProducts(productId, 'suggestions')
+	}
+
+	/**
+	 * @deprecated Use getSimilarsProducts instead
+	 */
 	static async getSimilarProducts(productId) {
 		const salesChannel = await getSalesChannel()
 		let sc = ''
@@ -93,6 +140,7 @@ export default class VtexCatalogService {
 
 		return availableProducts
 	}
+	// -- End of Cross Selling API -- //
 
 	static async legacySearch(search) {
 		const salesChannel = await getSalesChannel()
