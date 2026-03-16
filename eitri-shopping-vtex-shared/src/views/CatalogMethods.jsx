@@ -17,6 +17,26 @@ export default function CatalogMethods() {
 		console.log(product)
 	}
 
+	const showTogether = async () => {
+		const product = await Vtex.catalog.showTogether(3729693)
+		console.log(product)
+	}
+
+	const METHODS = [
+		{
+			label: 'Obter produto por id',
+			executor: getProduct
+		},
+		{
+			label: 'Buscar Produtos',
+			executor: search
+		},
+		{
+			label: 'Compre junto',
+			executor: showTogether
+		}
+	]
+
 	return (
 		<Window
 			topInset
@@ -28,19 +48,14 @@ export default function CatalogMethods() {
 				justifyContent='center'
 				alignItems='center'
 				width='100%'>
-				<Button
-					wide
-					color='background-color'
-					onPress={getProduct}
-					label='Obter produto por id'
-				/>
-
-				<Button
-					wide
-					color='background-color'
-					onPress={search}
-					label='Buscar Produtos'
-				/>
+				{METHODS.map(method => (
+					<Button
+						wide
+						color='background-color'
+						onPress={method.executor}
+						label={method.label}
+					/>
+				))}
 			</View>
 		</Window>
 	)

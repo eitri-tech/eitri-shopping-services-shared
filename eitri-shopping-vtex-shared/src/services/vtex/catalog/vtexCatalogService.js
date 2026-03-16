@@ -161,4 +161,15 @@ export default class VtexCatalogService {
 		const result = await VtexCaller.get(url)
 		return result?.data
 	}
+
+	static async showTogether(productId) {
+		const salesChannel = await getSalesChannel()
+		let sc = ''
+		if (salesChannel) {
+			sc = `?sc=${salesChannel}`
+		}
+		let url = `/api/catalog_system/pub/products/crossselling/showtogether/${productId}${sc}`
+		const result = await VtexCaller.get(url)
+		return result?.data
+	}
 }
