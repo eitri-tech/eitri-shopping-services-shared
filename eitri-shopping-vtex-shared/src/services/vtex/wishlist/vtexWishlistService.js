@@ -25,7 +25,7 @@ export default class VtexWishlistService {
 		const shopperId = decoded?.sub
 
 		const body = {
-			query: 'query ViewLists($shopperId: String!, $from: Int, $to: Int) { viewLists(shopperId: $shopperId, from: $from, to: $to) { data { productId sku title id } name public }}',
+			query: 'query ViewLists($shopperId: String!, $from: Int, $to: Int) @context(provider: "vtex.wish-list") { viewLists(shopperId: $shopperId, from: $from, to: $to) { data { productId sku title id } name public }}',
 			variables: {
 				shopperId: shopperId,
 				from: from,
@@ -54,7 +54,7 @@ export default class VtexWishlistService {
 
 
 		const body = {
-			query: 'mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) { removeFromList(shopperId: $shopperId, id: $id, name: $name) }',
+			query: 'mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) @context(provider: "vtex.wish-list") { removeFromList(shopperId: $shopperId, id: $id, name: $name) }',
 			variables: {
 				id: id,
 				shopperId: shopperId,
@@ -92,7 +92,7 @@ export default class VtexWishlistService {
 		const shopperId = decoded?.sub
 
 		const body = {
-			query: 'mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) { addToList(shopperId: $shopperId, listItem: $listItem, name: $name) }',
+			query: 'mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) @context(provider: "vtex.wish-list") { addToList(shopperId: $shopperId, listItem: $listItem, name: $name) }',
 			variables: {
 				listItem: {
 					productId: productId,
@@ -135,7 +135,7 @@ export default class VtexWishlistService {
 		const shopperId = decoded?.sub
 
 		const body = {
-			query: 'query CheckItem ($shopperId: String!, $productId: String!) { checkList(shopperId: $shopperId, productId: $productId) { inList listNames listIds message }}',
+			query: 'query CheckItem ($shopperId: String!, $productId: String!) @context(provider: "vtex.wish-list") { checkList(shopperId: $shopperId, productId: $productId) { inList listNames listIds message }}',
 			variables: {
 				shopperId: shopperId,
 				productId: productId
