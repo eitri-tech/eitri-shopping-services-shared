@@ -1,6 +1,8 @@
 import Vtex from '../services/Vtex'
 import Eitri from 'eitri-bifrost'
 import Recaptcha from '@/recaptcha/Recaptcha'
+import { VtexGooglePayServices } from '@/services/vtex/googlePay/vtexGooglePayServices'
+import VtexCartService from '@/services/vtex/cart/VtexCartService'
 
 export default function CheckoutMethods() {
 
@@ -179,91 +181,18 @@ export default function CheckoutMethods() {
 	}
 
 	const googlePay = async () => {
-		const googlePayAvailable = await Eitri.googlePay.isAvailable();
-		if (!googlePayAvailable) {
-			return;
-		}
 
-		const paymentsClient = await Eitri.googlePay.init("PRODUCTION"); // or "PRODUCTION"
+		const paymentData = await VtexGooglePayServices.loadPaymentData()
 
-		const host = window.location.host;
-
-		const res = await Eitri.http.get(`https://wallet-hub.services.vtexpayments.com/wallet-hub/pub/wallets/googlePay/merchant-info?merchantOrigin=${host}&an=toymania`);
-
-		const merchantInfo = res.data
-
-		const cart = await Vtex.cart.getCurrentOrCreateCart()
+		const cart = await VtexCartService.getCartIfExists()
 
 
-		const paymentDataRequest = {
-			"apiVersion": 2,
-			"apiVersionMinor": 0,
-			"allowedPaymentMethods": [
-				{
-					"type": "CARD",
-					"parameters": {
-						"allowedAuthMethods": [
-							"PAN_ONLY"
-						],
-						"allowedCardNetworks": [
-							"MASTERCARD",
-							"AMEX",
-							"ELO",
-							"VISA"
-						],
-						"assuranceDetailsRequired": true,
-						"billingAddressRequired": true,
-						"billingAddressParameters": {
-							"format": "FULL"
-						},
-						"cvcRequired": true
-					},
-					"tokenizationSpecification": {
-						"type": "PAYMENT_GATEWAY",
-						"parameters": {
-							"gateway": "vtex",
-							"gatewayMerchantId": "vtex"
-						}
-					}
-				}
-			],
-			"transactionInfo": {
-				"countryCode": "BR",
-				"currencyCode": "BRL",
-				"totalPriceStatus": "FINAL",
-				"totalPrice": (cart.value / 100).toFixed(2),
-				"totalPriceLabel": "Total"
-			},
-			merchantInfo: {
-				merchantId: merchantInfo.merchantId,
-				merchantOrigin: merchantInfo.merchantOrigin,
-				merchantName: merchantInfo.merchantName,
-				authJwt: merchantInfo.authJwt,
-			}
-		}
-
-		console.log("Payment Data Request:", paymentDataRequest);
+		console.log('Payment Data Request:', paymentData)
 
 		try {
-			const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
-
-			const token = paymentData.paymentMethodData.tokenizationData.token
-			const billingAddress = paymentData.paymentMethodData.info.billingAddress
 
 			const payload = {
-				fields: {
-					"metadata": JSON.stringify({
-						"walletId": "googlePay",
-						"paymentData": {
-							"assuranceDetails": {
-								"cardHolderAuthenticated": false,
-								"accountVerified": true
-							},
-							"billingAddress": billingAddress,
-							"token": token
-						}
-					})
-				},
+				fields: paymentData,
 				captchaToken: '',
 				captchaSiteKey: '',
 				savePersonalData: true,
