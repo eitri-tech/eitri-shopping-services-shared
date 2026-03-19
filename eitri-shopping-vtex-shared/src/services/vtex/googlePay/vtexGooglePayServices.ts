@@ -1,5 +1,6 @@
 import Eitri from 'eitri-bifrost'
 import VtexCartService from './../cart/VtexCartService'
+import VtexCaller from './../_helpers/_vtexCaller'
 
 interface AssuranceDetails {
 	cardHolderAuthenticated: boolean;
@@ -28,8 +29,8 @@ export class VtexGooglePayServices {
 
 		const account = remoteConfig?.providerInfo?.account
 		const host = window.location.host
-		const wellHubUrl = `https://wallet-hub.services.vtexpayments.com/wallet-hub/pub/wallets/googlePay/merchant-info?merchantOrigin=${host}&an=${account}`
-		const res = await Eitri.http.get(wellHubUrl)
+		const wellHubUrl = `/api/wallet-hub/pub/wallets/googlePay/merchant-info?merchantOrigin=${host}&an=${account}`
+		const res = await VtexCaller.get(wellHubUrl)
 		const walletHub = res.data
 
 		const cart = await VtexCartService.getCartIfExists()
