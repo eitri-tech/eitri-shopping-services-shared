@@ -25,11 +25,11 @@ export default function CheckoutMethods() {
 	const addUser = async () => {
 		try {
 			await Vtex.checkout.addUserData({
-				email: 'kexibod34@cronack.com',
-				firstName: 'Teste',
-				lastName: 'Teste',
+				email: 'fake.wagnerfq@gmail.com',
+				firstName: 'Wagner',
+				lastName: 'Fake',
 				documentType: 'cpf',
-				document: '249.758.540-74',
+				document: '123.456.789-09',
 				phone: '(11) 91234-5678',
 				dob: '1990-05-15',
 				isCorporate: false,
@@ -86,27 +86,29 @@ export default function CheckoutMethods() {
 	const selectPayment = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 
-		const paymentSystem = 2
+		const paymentSystem = 125
 		const installmentsNumber = 1
 
 		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
 		const installmentOption = cart?.paymentData.installmentOptions.find(i => i.paymentSystem === pay.id.toString())
-		const installment = installmentOption.installments.find(i => i.count === installmentsNumber)
+		const installment = installmentOption?.installments?.find(i => i.count === installmentsNumber)
 
 		const payment = {
 			paymentSystem: pay.id,
 			paymentSystemName: pay.name,
 			group: pay.groupName,
-			installments: installment.count,
-			installmentsInterestRate: installment.interestRate,
-			installmentsValue: installment.value,
-			value: installment.total,
+			installments: installment?.count ?? 1,
+			installmentsInterestRate: installment?.interestRate ?? 0,
+			installmentsValue: installment?.value ?? cart.value,
+			value: installment?.total ?? cart.value,
 			referenceValue: cart.value,
 			hasDefaultBillingAddress: true
 		}
+		// console.log("payment=======>", payment)
 		const giftCard = {
-			redemptionCode: 'QPZG-HSCT-IDJR-SQLG',
-			inUse: true
+			redemptionCode: 'KLLU-JRCC-RTAL-TSDY',
+			inUse: true,
+			isSpecialCard: false
 		}
 
 		try {
@@ -131,7 +133,7 @@ export default function CheckoutMethods() {
 			const payload = {
 				fields: {
 					holderName: 'Joao Teste',
-					cardNumber: '4929 0917 7269 4617',
+					cardNumber: ' 6363 6800 0000 0007',
 					validationCode: '123',
 					dueDate: '12/26',
 					address: {
