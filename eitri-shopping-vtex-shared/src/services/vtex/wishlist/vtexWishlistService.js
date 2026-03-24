@@ -116,8 +116,12 @@ export default class VtexWishlistService {
 			}
 		})
 
-		const params = { productId, sku, response: response.data }
-		GAService.logEvent('add_to_wishlist', params)
+		try {
+			const params = { productId, sku, response: response.data }
+			GAService.logEvent('add_to_wishlist', params)
+		} catch (e) {
+			console.error('Error on analytics addItem [GAService]', e)
+		}
 
 		return response.data
 	}

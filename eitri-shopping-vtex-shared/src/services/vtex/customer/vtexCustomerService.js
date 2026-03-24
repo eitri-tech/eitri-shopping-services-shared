@@ -69,8 +69,12 @@ export default class VtexCustomerService {
 			await VtexCustomerService.setCustomerData('email', email)
 			await VtexCustomerService._processPostLogin(data, refreshToken)
 
-			const params = { method: 'email e password' }
-			GAService.logEvent('login', params)
+			try {
+				const params = { method: 'email e password' }
+				GAService.logEvent('login', params)
+			} catch (e) {
+				console.error('Error on analytics loginWithEmailAndPassword [GAService]', e)
+			}
 		}
 
 		return authStatus
@@ -124,8 +128,12 @@ export default class VtexCustomerService {
 			await VtexCustomerService.setCustomerData('email', email)
 			await VtexCustomerService._processPostLogin(data, refreshToken)
 
-			const params = { method: 'email e access_key' }
-			GAService.logEvent('login', params)
+			try {
+				const params = { method: 'email e access_key' }
+				GAService.logEvent('login', params)
+			} catch (e) {
+				console.error('Error on analytics loginWithEmailAndAccessKey [GAService]', e)
+			}
 		}
 
 		return authStatus
