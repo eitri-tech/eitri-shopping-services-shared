@@ -16,8 +16,33 @@ export const productReturn = `{
   		id
    		name
    }
+   itemMetadata {
+        items {
+            id
+            imageUrl
+            name
+            seller
+            assemblyOptions {
+                id
+                name
+                required
+                inputValues {
+                    defaultValue
+                    label
+                    maxLength
+                    type
+                    domain
+                }
+            }
+        }
+   }
 	items {
 		itemId
+		 attachments {
+            id
+            name
+            required
+        }
 		name
 		nameComplete
 		complementName

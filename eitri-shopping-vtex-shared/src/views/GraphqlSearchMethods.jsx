@@ -32,7 +32,10 @@ export default function GraphqlSearchMethods() {
 	const getProduct = async () => {
 		try {
 			const res = await Vtex.searchGraphql.product({
-				identifier: { field: 'id', value: '84051' }
+				identifier: {
+					field: 'slug',
+					value: 'petisco-prefere-natural-orelha-bovina-desidratado-para-caes-com-2-unidades-43235'
+				}
 			})
 			console.log(res)
 		} catch (e) {
