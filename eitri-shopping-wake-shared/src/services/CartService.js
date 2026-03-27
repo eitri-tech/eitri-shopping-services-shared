@@ -154,9 +154,18 @@ export default class CartService {
 			return response.data
 		} catch (e) {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
-			sendLogError(e, 'addItems', {
-				products
-			})
+
+			let sendError = true
+			if (error?.message.includes('Not all products were added to the cart')) {
+				sendError = false
+			}
+
+			if (sendError) {
+				sendLogError(e, 'addItems', {
+					products
+				})
+			}
+			
 			throw e
 		}
 	}
