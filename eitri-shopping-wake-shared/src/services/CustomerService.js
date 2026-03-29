@@ -23,7 +23,7 @@ import {
 	queryCustomerSimple,
 	queryCustomerCheckingAccount
 } from '../queries/Customer'
-import { Wake } from '../export'
+import { EventBus, Wake } from '../export'
 import StoreService from './StoreService'
 import { sendLogError } from './Datadog'
 
@@ -377,7 +377,7 @@ export default class CustomerService {
 			productId: parseInt(productId)
 		})
 
-		Eitri.eventBus.publish({
+		EventBus.publish({
 			channel: "removeFromWishlist",
 			broadcast: true,
 			data: {

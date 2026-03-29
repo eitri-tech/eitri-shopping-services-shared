@@ -24,25 +24,11 @@ export default class VtexCheckoutService {
 				giftCards: paymentOption.giftCards
 			}
 
-			// Tem um erro na Vtex, quando existe gift card só é possível enviar o header VtexIdclientAutCookie_userId
-			let overrideHeaders = null
-			if (Array.isArray(payload?.giftCards) && payload?.giftCards.length > 0) {
-				const tokenData = await vtexCustomerService.getCustomerToken()
-				if (tokenData?.accountAuthCookieValue && tokenData?.accountAuthCookieId) {
-					overrideHeaders = {
-						Cookie: `VtexIdclientAutCookie_${tokenData.accountAuthCookieId}=${tokenData.accountAuthCookieValue}`
-					}
-				} else {
-					overrideHeaders = {}
-				}
-			}
-
 			const response = await VtexCaller.post(
 				`api/checkout/pub/orderForm/${orderFormId}/attachments/paymentData`,
 				payload,
 				null,
-				null,
-				overrideHeaders
+				null
 			)
 
 			const paymentAuthCookie = extractCookies(response, 'CheckoutDataAccess=VTEX_CHK_Payment_Auth')

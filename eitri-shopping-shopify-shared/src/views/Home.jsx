@@ -118,7 +118,11 @@ export default function Home(props) {
 				<Button
 					wide
 					color='background-color'
-					onPress={() => run('Login', () => Shopify.customer.auth.login())}
+					onPress={() =>
+						run('Login', async () => {
+							Shopify.customer.auth.login()
+						})
+					}
 					label='Login'
 				/>
 

@@ -1,3 +1,5 @@
+import { CustomerOrderEdge } from './Order'
+
 export interface Customer {
 	id: string
 	firstName: string | null
@@ -34,6 +36,8 @@ export interface CustomerAddress {
 	phoneNumber: string | null
 	firstName: string | null
 	lastName: string | null
+	territoryCode?: string | null
+	zoneCode?: string | null
 }
 
 export interface CustomerAddressEdge {
@@ -189,4 +193,3 @@ export interface CustomerGraphQLError {
 		requiredAccess?: string
 	}
 }
-
