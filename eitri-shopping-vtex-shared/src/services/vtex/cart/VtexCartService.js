@@ -209,6 +209,7 @@ export default class VtexCartService {
 	 * @returns {Promise<Object>} - OrderForm atualizado
 	 */
 	static async addItems(input, salesChannel) {
+		let payload = {}
 		try {
 			if (!input) {
 				throw new Error('Nenhum item informado.')
@@ -243,7 +244,7 @@ export default class VtexCartService {
 				orderFormId = cart.orderFormId
 			}
 
-			const payload = { orderItems }
+			payload = { orderItems }
 
 			let url = `api/checkout/pub/orderForm/${orderFormId}/items?allowedOutdatedData=paymentData`
 
