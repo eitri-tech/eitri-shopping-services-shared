@@ -156,7 +156,7 @@ export default class CartService {
 			console.error('[SHARED] [addItems] Erro ao adicionar itens ao carrinho', e)
 
 			let sendError = true
-			if (error?.message.includes('Not all products were added to the cart')) {
+			if (e?.message?.includes('Not all products were added to the cart')) {
 				sendError = false
 			}
 
