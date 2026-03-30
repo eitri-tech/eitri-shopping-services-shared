@@ -29,6 +29,18 @@ export default function SessionMethods() {
 		}
 	}
 
+	const saveUtmParams = async () => {
+		try {
+			const res = await Vtex.customer.saveUtmParams({
+				utm_source: '',
+				utm_campaign: 'test'
+			})
+			console.log(res)
+		} catch (e) {
+			console.error('pd', e)
+		}
+	}
+
 	const METHODS = [
 		{
 			label: 'Obter sessao',
@@ -37,6 +49,10 @@ export default function SessionMethods() {
 		{
 			label: 'Atualizar sessao',
 			executor: sessionUpdate
+		},
+		{
+			label: 'Salvar sessão no storage',
+			executor: saveUtmParams
 		}
 	]
 

@@ -2,7 +2,6 @@ import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
 import vtexCustomerService from '../customer/vtexCustomerService'
 import Logger from '../../Logger'
-import vtexCartService from '../cart/VtexCartService'
 import VtexCheckoutService from '../checkout/vtexCheckoutService'
 import StorageService from '../../StorageService'
 import RemoteConfig from '@/services/RemoteConfig'
@@ -31,7 +30,7 @@ export default class VtexCaller {
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
-		if (RemoteConfig.getContent('experimentalSessionManager')) {
+		if (RemoteConfig.getContent('newSessionFlow')) {
 			const session = await vtexSessionService.getSessionToken()
 			if (session) {
 				const cookie = `vtex_segment=${session.segmentToken};vtex_session=${session.sessionToken}`

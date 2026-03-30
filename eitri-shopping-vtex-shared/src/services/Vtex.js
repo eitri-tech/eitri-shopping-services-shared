@@ -11,6 +11,7 @@ import GAService from './tracking/GAService'
 import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
 import { VtexGooglePayServices } from '@/services/vtex/googlePay/vtexGooglePayServices'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
+import RemoteConfig from '@/services/RemoteConfig'
 
 export default class Vtex {
 	static configs = {
@@ -96,6 +97,10 @@ export default class Vtex {
 
 	static async updateSegmentSession(utmParams) {
 		if (!utmParams) return null
+
+		if (RemoteConfig.getContent('newSessionFlow')) {
+			return null
+		}
 
 		const configSegments = Vtex.configs?.segments || {}
 

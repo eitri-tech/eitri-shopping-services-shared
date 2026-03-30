@@ -6,6 +6,7 @@ import extractCookies from '../_helpers/extractCookies'
 import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
+import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -273,12 +274,12 @@ export default class VtexCustomerService {
 		await VtexCustomerService.notifyLogoutToExposedApis()
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		await VtexSessionService.updateSession({})
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_OUT,
 			broadcast: true,
 			data: {}
 		})
-		return
 	}
 
 	static async getCustomerToken() {
@@ -600,6 +601,7 @@ export default class VtexCustomerService {
 			accountAuthCookieId,
 			accountAuthCookieValue
 		)
+		await VtexSessionService.updateSession({})
 		VtexCustomerService.notifyLoginToExposedApis(userId)
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
@@ -623,8 +625,10 @@ export default class VtexCustomerService {
 
 		await VtexCustomerService.setCustomerData('email', email)
 		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
-		VtexCustomerService.notifyLoginToExposedApis(userId)
 
+
+		await VtexSessionService.updateSession({})
+		VtexCustomerService.notifyLoginToExposedApis(userId)
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
 			broadcast: true,

@@ -18,9 +18,11 @@ export default class VtexCartService {
 	static async assertMarketingData(cart) {
 		try {
 			const { segments, marketingTag } = Vtex.configs
+
 			const currentMarketingTags = cart?.marketingData?.marketingTags
 				? [...cart?.marketingData?.marketingTags]
 				: []
+
 			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 
 			const camelCaseKeys = data =>

@@ -9,7 +9,7 @@ export default function Home() {
 
 	const init = async () => {
 		// const a = new Date().getTime()
-		await App.tryAutoConfigure({
+		await App.configure({
 			// providerInfo: {
 			// 	account: 'eitripartnerbr',
 			// 	host: 'https://www.eitripartnerbr.com.br',
@@ -18,8 +18,7 @@ export default function Home() {
 			// 	vtexCmsUrl: 'https://eitripartnerbr.myvtex.com/'
 			// },
 			verbose: true,
-			gaVerbose: false,
-			experimentalSessionManager: true
+			gaVerbose: false
 		})
 
 		// await Vtex.customer.saveUtmParams({
