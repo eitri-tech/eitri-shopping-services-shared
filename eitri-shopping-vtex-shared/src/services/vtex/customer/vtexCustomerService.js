@@ -1,11 +1,12 @@
-import Eitri from 'eitri-bifrost'
-import Vtex from '../../Vtex'
-import StorageService from '../../StorageService'
-import VtexCaller from '../_helpers/_vtexCaller'
-import extractCookies from '../_helpers/extractCookies'
 import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
+import Eitri from 'eitri-bifrost'
+import StorageService from '../../StorageService'
+import GAService from '../../tracking/GAService'
+import Vtex from '../../Vtex'
+import VtexCaller from '../_helpers/_vtexCaller'
+import extractCookies from '../_helpers/extractCookies'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -67,6 +68,13 @@ export default class VtexCustomerService {
 		if (authStatus === 'Success') {
 			await VtexCustomerService.setCustomerData('email', email)
 			await VtexCustomerService._processPostLogin(data, refreshToken)
+
+			try {
+				const params = { method: 'email e password' }
+				GAService.logEvent('login', params)
+			} catch (e) {
+				console.error('Error on analytics loginWithEmailAndPassword [GAService]', e)
+			}
 		}
 
 		return authStatus
@@ -119,6 +127,13 @@ export default class VtexCustomerService {
 		if (authStatus === 'Success') {
 			await VtexCustomerService.setCustomerData('email', email)
 			await VtexCustomerService._processPostLogin(data, refreshToken)
+
+			try {
+				const params = { method: 'email e access_key' }
+				GAService.logEvent('login', params)
+			} catch (e) {
+				console.error('Error on analytics loginWithEmailAndAccessKey [GAService]', e)
+			}
 		}
 
 		return authStatus
@@ -633,7 +648,6 @@ export default class VtexCustomerService {
 	}
 
 	static async getAddresses() {
-
 		const tokenData = await VtexCustomerService.getCustomerToken()
 		const token = tokenData?.token
 
@@ -658,8 +672,6 @@ export default class VtexCustomerService {
 		)
 
 		return result?.data
-
-
 	}
 
 	static async createAddress(address) {
@@ -794,5 +806,4 @@ export default class VtexCustomerService {
 
 		return result?.data
 	}
-
 }

@@ -3,8 +3,9 @@ import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
 import VtexCustomerService from '../customer/vtexCustomerService'
 import decodeJwt from '../_helpers/decodeJWT'
-import EventBusChannels from "./../../EventBusChannels";
+import EventBusChannels from './../../EventBusChannels'
 import EventBus from '@/services/EventBus'
+import GAService from '../../tracking/GAService'
 
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
@@ -51,7 +52,6 @@ export default class VtexWishlistService {
 		}
 
 		const shopperId = decoded?.sub
-
 
 		const body = {
 			query: 'mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) { removeFromList(shopperId: $shopperId, id: $id, name: $name) }',
@@ -114,7 +114,14 @@ export default class VtexWishlistService {
 				sku,
 				response: response.data
 			}
-		});
+		})
+
+		try {
+			const params = { productId, sku, response: response.data }
+			GAService.logEvent('add_to_wishlist', params)
+		} catch (e) {
+			console.error('Error on analytics addItem [GAService]', e)
+		}
 
 		return response.data
 	}
