@@ -4,6 +4,7 @@ import VtexCheckoutService from './vtex/checkout/vtexCheckoutService'
 import VtexCartService from './vtex/cart/VtexCartService'
 import VtexCmsService from './vtex/cms/vtexCmsService'
 import VtexWishlistService from './vtex/wishlist/vtexWishlistService'
+import VtexAvailabilityService from './vtex/availability/vtexAvailabilityService'
 import VtexCaller from './vtex/_helpers/_vtexCaller'
 import VtexStoreService from './vtex/store/vtexStoreService'
 import App from './App'
@@ -115,6 +116,7 @@ export default class Vtex {
 	static cart = VtexCartService
 	static cms = VtexCmsService
 	static wishlist = VtexWishlistService
+	static availability = VtexAvailabilityService
 	static store = VtexStoreService
 	static searchGraphql = VtexSearchGraphql
 	static http = VtexCaller
