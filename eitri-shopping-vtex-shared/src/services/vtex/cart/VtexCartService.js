@@ -443,10 +443,7 @@ export default class VtexCartService {
 
 		const response = await VtexCaller.post(
 			`api/checkout/pub/orderForm/${orderFormId}/attachments/clientPreferencesData`,
-			{
-				locale: payload?.locale,
-				optinNewsLetter: payload?.optinNewsLetter
-			}
+			payload
 		)
 
 		return response.data
