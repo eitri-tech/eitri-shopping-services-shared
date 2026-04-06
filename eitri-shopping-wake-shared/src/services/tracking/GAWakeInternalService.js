@@ -157,7 +157,7 @@ export default class GAWakeInternalService {
 
 			GAService.logEvent('add_payment_info', params)
 		} catch (error) {
-			GAService.logError('Error on begin checkout', error, currentPage)
+			GAService.logError('Error on begin checkout', error)
 		}
 	}
 

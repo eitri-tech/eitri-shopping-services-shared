@@ -23,9 +23,10 @@ import {
 	queryCustomerSimple,
 	queryCustomerCheckingAccount
 } from '../queries/Customer'
-import { EventBus, Wake } from '../export'
 import StoreService from './StoreService'
 import { sendLogError } from './Datadog'
+import EventBus from './EventBus'
+
 
 export default class CustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_key'
