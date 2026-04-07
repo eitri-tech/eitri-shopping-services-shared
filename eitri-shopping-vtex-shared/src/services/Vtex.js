@@ -1,3 +1,4 @@
+import Eitri from 'eitri-bifrost'
 import VtexCatalogService from './vtex/catalog/vtexCatalogService'
 import VtexCustomerService from './vtex/customer/vtexCustomerService'
 import VtexCheckoutService from './vtex/checkout/vtexCheckoutService'
@@ -35,6 +36,22 @@ export default class Vtex {
 
 		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 		const configSegments = remoteConfig?.storePreferences?.segments || {}
+		let soMktTag
+
+
+		try {
+			const device = (await Eitri.device.getInfos()) || {}
+			if (device?.platform == "android" && remoteConfig?.storePreferences?.androidMarketingTag) {
+				soMktTag = remoteConfig?.storePreferences?.androidMarketingTag
+			}
+			if (device?.platform == "ios" && remoteConfig?.storePreferences?.iosMarketingTag) {
+				soMktTag = remoteConfig?.storePreferences?.iosMarketingTag
+			}			
+		} catch (error) {
+			console.error("[SHARED] Error trying to set soMktTag from remote config", error)
+		}
+
+
 		Vtex.configs = {
 			account: remoteConfig?.providerInfo?.account,
 			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
@@ -42,7 +59,7 @@ export default class Vtex {
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
 			segments: { ...configSegments, ...utmParams },
-			marketingTag: remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
+			marketingTag: soMktTag ?? remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
