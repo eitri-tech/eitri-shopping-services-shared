@@ -1,16 +1,18 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Eitri from 'eitri-bifrost'
 import Vtex from '../../Vtex'
 import VtexCustomerService from '../customer/vtexCustomerService'
 import decodeJwt from '../_helpers/decodeJWT'
 import EventBusChannels from "./../../EventBusChannels";
 import EventBus from '@/services/EventBus'
+import RemoteConfig from '../../RemoteConfig'
 
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
 
-	static async listItems(from = 1, to = 50, context) {
+	static async listItems(from = 1, to = 50) {
 		const tokenData = await VtexCustomerService.getCustomerToken()
+
+		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
 		if (!tokenData || !tokenData.token) {
 			throw new Error('User not logged')
@@ -45,8 +47,10 @@ export default class VtexWishlistService {
 		return response.data
 	}
 
-	static async removeItem(id, name = 'Wishlist', context) {
+	static async removeItem(id, name = 'Wishlist') {
 		const tokenData = await VtexCustomerService.getCustomerToken()
+
+		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
 		if (!tokenData || !tokenData.token) {
 			throw new Error('User not logged')
@@ -88,8 +92,10 @@ export default class VtexWishlistService {
 		return response.data
 	}
 
-	static async addItem(productId, title, sku, listName = 'Wishlist', context) {
+	static async addItem(productId, title, sku, listName = 'Wishlist') {
 		const tokenData = await VtexCustomerService.getCustomerToken()
+
+		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
 		if (!tokenData || !tokenData.token) {
 			throw new Error('User not logged')
@@ -135,8 +141,10 @@ export default class VtexWishlistService {
 		return response.data
 	}
 
-	static async checkItem(productId, context) {
+	static async checkItem(productId) {
 		const tokenData = await VtexCustomerService.getCustomerToken()
+
+		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
 		if (!tokenData || !tokenData.token) {
 			throw new Error('User not logged')
