@@ -41,6 +41,14 @@ export default function CustomerMethods() {
 		await Vtex.customer.loginWithGoogle()
 	}
 
+	const oauthLogin = async () => {
+		try {
+			await Vtex.customer.vtexOAuth()
+		} catch (e) {
+			console.log('oauthLogin error', e)
+		}
+	}
+
 	const facebookAuth = async () => {
 		await Vtex.customer.loginWithFacebook()
 	}
@@ -236,6 +244,18 @@ export default function CustomerMethods() {
 						grow={1}
 						onPress={googleAuth}
 						label='Google login'
+					/>
+				</View>
+
+				<View
+					display='flex'
+					gap={10}>
+					<Button
+						wide
+						color='background-color'
+						grow={1}
+						onPress={oauthLogin}
+						label='Oauth Login'
 					/>
 				</View>
 
