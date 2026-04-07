@@ -9,7 +9,7 @@ import EventBus from '@/services/EventBus'
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
 
-	static async listItems(from = 1, to = 50) {
+	static async listItems(from = 1, to = 50, context) {
 		const tokenData = await VtexCustomerService.getCustomerToken()
 
 		if (!tokenData || !tokenData.token) {
@@ -25,7 +25,15 @@ export default class VtexWishlistService {
 		const shopperId = decoded?.sub
 
 		const body = {
-			query: 'query ViewLists($shopperId: String!, $from: Int, $to: Int) { viewLists(shopperId: $shopperId, from: $from, to: $to) { data { productId sku title id } name public }}',
+			query: `
+			query ViewLists($shopperId: String!, $from: Int, $to: Int) { 
+				viewLists(shopperId: $shopperId, from: $from, to: $to) 
+				${ context ? `@context(provider: "${context}")` : ''}
+				{ 
+					data { productId sku title id } 
+					name public 
+				}
+			}`,
 			variables: {
 				shopperId: shopperId,
 				from: from,
@@ -37,7 +45,7 @@ export default class VtexWishlistService {
 		return response.data
 	}
 
-	static async removeItem(id, name = 'Wishlist') {
+	static async removeItem(id, name = 'Wishlist', context) {
 		const tokenData = await VtexCustomerService.getCustomerToken()
 
 		if (!tokenData || !tokenData.token) {
@@ -54,7 +62,11 @@ export default class VtexWishlistService {
 
 
 		const body = {
-			query: 'mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) { removeFromList(shopperId: $shopperId, id: $id, name: $name) }',
+			query: `
+			mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) { 
+				removeFromList(shopperId: $shopperId, id: $id, name: $name) 
+				${ context ? `@context(provider: "${context}")` : ''}
+			}`,
 			variables: {
 				id: id,
 				shopperId: shopperId,
@@ -76,7 +88,7 @@ export default class VtexWishlistService {
 		return response.data
 	}
 
-	static async addItem(productId, title, sku, listName = 'Wishlist') {
+	static async addItem(productId, title, sku, listName = 'Wishlist', context) {
 		const tokenData = await VtexCustomerService.getCustomerToken()
 
 		if (!tokenData || !tokenData.token) {
@@ -92,7 +104,11 @@ export default class VtexWishlistService {
 		const shopperId = decoded?.sub
 
 		const body = {
-			query: 'mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) { addToList(shopperId: $shopperId, listItem: $listItem, name: $name) }',
+			query: `
+			mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) { 
+				addToList(shopperId: $shopperId, listItem: $listItem, name: $name) 
+				${ context ? `@context(provider: "${context}")` : ''}
+			}`,
 			variables: {
 				listItem: {
 					productId: productId,
@@ -119,7 +135,7 @@ export default class VtexWishlistService {
 		return response.data
 	}
 
-	static async checkItem(productId) {
+	static async checkItem(productId, context) {
 		const tokenData = await VtexCustomerService.getCustomerToken()
 
 		if (!tokenData || !tokenData.token) {
@@ -135,7 +151,14 @@ export default class VtexWishlistService {
 		const shopperId = decoded?.sub
 
 		const body = {
-			query: 'query CheckItem ($shopperId: String!, $productId: String!) { checkList(shopperId: $shopperId, productId: $productId) { inList listNames listIds message }}',
+			query: `
+			query CheckItem ($shopperId: String!, $productId: String!) { 
+				checkList(shopperId: $shopperId, productId: $productId) 
+				${context ? `@context(provider: "${context}")` : ''}
+				{ 
+					inList listNames listIds message 
+				}
+			}`,
 			variables: {
 				shopperId: shopperId,
 				productId: productId
