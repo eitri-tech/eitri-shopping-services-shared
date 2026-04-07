@@ -3,10 +3,13 @@ import Vtex from '../../Vtex'
 
 export default class VtexAvailabilityService {
 
-	static async subscribeAvailability(skuId, name, email) {
+	static async subscribeAvailability(skuId, name, email, sellerId, sellerName) {
 		const SUBSCRIBE_AVAILABILITY_MUTATION = 'mutation AvailabilitySubscribe($name: String, $email: String, $skuId: String, $locale: String, $sellerObj: SellerObjInputType!) @context(sender: "vtex.availability-notify@1.14.1") @runtimeMeta(hash: "d975646fd9ed900ff082021a138d3db656e9ba33844b79d84d2bba15160cdcf3") {\n  availabilitySubscribe(name: $name, email: $email, skuId: $skuId, locale: $locale, sellerObj: $sellerObj)\n}\n'
 		const locale = Vtex.configs.locale
-		const sellerObj = {}
+		const sellerObj = {
+			sellerId: sellerId ?? '',
+			sellerName: sellerName ?? ''
+		}
 
 		const variables = {
 			skuId: String(skuId),
