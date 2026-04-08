@@ -5,6 +5,7 @@ import VtexCheckoutService from './vtex/checkout/vtexCheckoutService'
 import VtexCartService from './vtex/cart/VtexCartService'
 import VtexCmsService from './vtex/cms/vtexCmsService'
 import VtexWishlistService from './vtex/wishlist/vtexWishlistService'
+import VtexStockAlertService from './vtex/stockAlert/vtexStockAlertService'
 import VtexCaller from './vtex/_helpers/_vtexCaller'
 import VtexStoreService from './vtex/store/vtexStoreService'
 import App from './App'
@@ -18,6 +19,7 @@ export default class Vtex {
 		api: '',
 		host: '',
 		domain: '',
+		locale: 'pt-BR',
 		vtexCmsUrl: '',
 		sendGACampaignAlongSession: true,
 		searchOptions: {},
@@ -56,6 +58,7 @@ export default class Vtex {
 			account: remoteConfig?.providerInfo?.account,
 			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
 			host: _host,
+			locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
 			segments: { ...configSegments, ...utmParams },
@@ -132,6 +135,7 @@ export default class Vtex {
 	static cart = VtexCartService
 	static cms = VtexCmsService
 	static wishlist = VtexWishlistService
+	static stockAlert = VtexStockAlertService
 	static store = VtexStoreService
 	static searchGraphql = VtexSearchGraphql
 	static http = VtexCaller
