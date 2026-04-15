@@ -372,23 +372,19 @@ export default class VtexCheckoutService {
 	}
 
 	static async getPixStatus(transactionId, paymentId, hostStore) {
-		try {
-			const host = hostStore || Vtex.configs.account
-			const result = await Eitri.http.get(
-				`https://${host}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
-				{
-					headers: {
-						'accept': 'application/json, text/javascript, */*; q=0.01',
-						'content-type': 'application/json',
-						'user-agent':
-							'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
-					}
+		const host = hostStore || Vtex.configs.account
+		const result = await Eitri.http.get(
+			`https://${host}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
+			{
+				headers: {
+					'accept': 'application/json, text/javascript, */*; q=0.01',
+					'content-type': 'application/json',
+					'user-agent':
+						'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
 				}
-			)
-			return result.data
-		} catch (e) {
-			console.log('erro no getPixStatus', e)
-		}
+			}
+		)
+		return result.data
 	}
 
 	static async resolveZipCode(zipcode) {
