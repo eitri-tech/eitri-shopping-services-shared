@@ -59,6 +59,68 @@ export const productReturn = `{
 			imageUrl
 			imageText
 		}
+		kitItems {
+            itemId
+            amount
+            product {
+                productId
+                productName
+            }
+            sku {
+                name
+                nameComplete
+                complementName
+                variations {
+                    originalName
+                    name
+                    values
+                }
+                images {
+                    imageUrl
+                }
+                sellers {
+                    sellerId
+                    sellerName
+                    sellerDefault
+                    commertialOffer {
+                        Installments {
+                            Value
+                            InterestRate
+                            TotalValuePlusInterestRate
+                            NumberOfInstallments
+                            PaymentSystemName
+                            Name
+                        }
+                        Price
+                        ListPrice
+                        PriceWithoutDiscount
+                        spotPrice
+                        RewardValue
+                        PriceValidUntil
+                        AvailableQuantity
+                        discountHighlights {
+                            name
+                        }
+                        teasers {
+                            name
+                            conditions {
+                                minimumQuantity
+                                parameters {
+                                    name
+                                    value
+                                }
+                            }
+                            effects {
+                                parameters {
+                                    name
+                                    value
+                                }
+                            }
+                        }
+                    }
+		        }
+            }
+        }
 		videos {
 			videoUrl
 		}
