@@ -204,6 +204,10 @@ export default class VtexPaymentService {
 			if (giftCardPaymentSystem) {
 				cart?.paymentData?.giftCards?.forEach(giftCard => {
 
+					if (!giftCard.inUse || giftCard.value === 0) {
+						return
+					}
+
 					const giftCardId = giftCard.id
 					const giftCardMerchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.payments?.some(p => p.giftCardId === giftCardId))
 
