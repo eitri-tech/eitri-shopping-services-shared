@@ -63,17 +63,36 @@ export default class VtexCaller {
 			...options.headers
 		})
 
-		const res = await Eitri.http.get(url.href, {
-			...options,
-			headers: {
-				...headers,
-				...options.headers
+		const fullHeaders = {
+			...headers,
+			...options.headers
+		}
+		try {
+			const res = await Eitri.http.get(url.href, {
+				...options,
+				headers: fullHeaders
+			})
+	
+			Logger.log('==Resposta do Get Recebida===')
+	
+			return res
+			
+		} catch (error) {
+			if (error?.response?.data === 'The informed credentials are invalid' && fullHeaders.VtexIdclientAutCookie) {
+				fullHeaders.VtexIdclientAutCookie = ''
+				Logger.log('NEW HEADERS ========>', { ...fullHeaders })	
+				const res = await Eitri.http.get(url.href, {
+					...options,
+					headers: fullHeaders
+				})
+	
+				Logger.log('==Resposta do Get Recebida===')
+		
+				return res
 			}
-		})
 
-		Logger.log('==Resposta do Get Recebida===')
-
-		return res
+			throw error
+		}
 	}
 
 	static async post(path, data, options = {}, baseUrl, overrideHeaders) {
@@ -89,15 +108,33 @@ export default class VtexCaller {
 		})
 		Logger.log('BODY =======>', data)
 
-		const res = await Eitri.http.post(url.href, data, {
-			...options,
-			headers: {
-				...headers,
-				...options?.headers
-			}
-		})
+		const fullHeaders = {
+			...headers,
+			...options.headers
+		}
 
-		return res
+		try {
+			const res = await Eitri.http.post(url.href, data, {
+				...options,
+				headers: fullHeaders
+			})
+			Logger.log('==Resposta do Get Recebida===')
+			return res
+			
+		} catch (error) {
+			if (error?.response?.data === 'The informed credentials are invalid' && fullHeaders.VtexIdclientAutCookie) {
+				fullHeaders.VtexIdclientAutCookie = ''
+				Logger.log('NEW HEADERS ========>', { ...fullHeaders })	
+				const res = await Eitri.http.post(url.href, data, {
+					...options,
+					headers: fullHeaders
+				})	
+				Logger.log('==Resposta do Get Recebida===')
+				return res
+			}
+
+			throw error
+		}
 	}
 
 	static async patch(path, data, options = {}, baseUrl) {
