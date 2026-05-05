@@ -60,12 +60,12 @@ export default class VtexCaller {
 		Logger.log('URL ========>', url.href)
 		Logger.log('HEADERS ========>', {
 			...headers,
-			...options.headers
+			...options?.headers
 		})
 
 		const fullHeaders = {
 			...headers,
-			...options.headers
+			...options?.headers
 		}
 
 		const res = await Eitri.http.get(url.href, {
@@ -93,7 +93,7 @@ export default class VtexCaller {
 
 		const fullHeaders = {
 			...headers,
-			...options.headers
+			...options?.headers
 		}
 
 		const res = await Eitri.http.post(url.href, data, {
@@ -113,7 +113,7 @@ export default class VtexCaller {
 		Logger.log('URL ========>', url.href)
 		Logger.log('HEADERS ======>', {
 			...headers,
-			...options.headers
+			...options?.headers
 		})
 		Logger.log('BODY =======>', data)
 
@@ -121,7 +121,7 @@ export default class VtexCaller {
 			...options,
 			headers: {
 				...headers,
-				...options.headers
+				...options?.headers
 			}
 		})
 
