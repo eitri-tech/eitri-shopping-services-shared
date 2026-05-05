@@ -25,7 +25,7 @@ export default class VtexCaller {
 
 		if (tokenData) {
 			const account = Vtex.configs.account
-			headers['VtexIdclientAutCookie'] = tokenData.token
+			// headers[`VtexIdclientAutCookie`] = tokenData.token
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
@@ -67,32 +67,15 @@ export default class VtexCaller {
 			...headers,
 			...options.headers
 		}
-		try {
-			const res = await Eitri.http.get(url.href, {
-				...options,
-				headers: fullHeaders
-			})
-	
-			Logger.log('==Resposta do Get Recebida===')
-	
-			return res
-			
-		} catch (error) {
-			if (error?.response?.data === 'The informed credentials are invalid' && fullHeaders.VtexIdclientAutCookie) {
-				fullHeaders.VtexIdclientAutCookie = ''
-				Logger.log('NEW HEADERS ========>', { ...fullHeaders })	
-				const res = await Eitri.http.get(url.href, {
-					...options,
-					headers: fullHeaders
-				})
-	
-				Logger.log('==Resposta do Get Recebida===')
-		
-				return res
-			}
 
-			throw error
-		}
+		const res = await Eitri.http.get(url.href, {
+			...options,
+			headers: fullHeaders
+		})
+
+		Logger.log('==Resposta do Get Recebida===')
+
+		return res
 	}
 
 	static async post(path, data, options = {}, baseUrl, overrideHeaders) {
@@ -113,28 +96,12 @@ export default class VtexCaller {
 			...options.headers
 		}
 
-		try {
-			const res = await Eitri.http.post(url.href, data, {
-				...options,
-				headers: fullHeaders
-			})
-			Logger.log('==Resposta do Get Recebida===')
-			return res
-			
-		} catch (error) {
-			if (error?.response?.data === 'The informed credentials are invalid' && fullHeaders.VtexIdclientAutCookie) {
-				fullHeaders.VtexIdclientAutCookie = ''
-				Logger.log('NEW HEADERS ========>', { ...fullHeaders })	
-				const res = await Eitri.http.post(url.href, data, {
-					...options,
-					headers: fullHeaders
-				})	
-				Logger.log('==Resposta do Get Recebida===')
-				return res
-			}
-
-			throw error
-		}
+		const res = await Eitri.http.post(url.href, data, {
+			...options,
+			headers: fullHeaders
+		})
+		Logger.log('==Resposta do Get Recebida===')
+		return res
 	}
 
 	static async patch(path, data, options = {}, baseUrl) {
