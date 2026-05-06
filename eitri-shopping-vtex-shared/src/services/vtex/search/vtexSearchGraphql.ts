@@ -11,6 +11,8 @@ import { searchSuggestionReturn } from './graphqlReturn/SearchSuggestionReturn'
 import { ProductRecommendationsInput } from './types/ProductRecommendationsInput'
 import { suggestionReturn } from './graphqlReturn/SuggestionReturn'
 import { AutoCompleteSearchSuggestionInput } from './types/AutoCompleteSearchSuggestionInput'
+import { ProductsToSummaryInput } from './types/ProductsToSummaryInput'
+import { productsToSummaryReturn } from './graphqlReturn/ProductsToSummaryReturn'
 import getSalesChannel from '../_helpers/getSalesChannel'
 
 export default class VtexSearchGraphql {
@@ -164,6 +166,18 @@ export default class VtexSearchGraphql {
 
 		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 		return response?.data?.data?.autocompleteSearchSuggestions
+	}
+
+	static async productsToSummary(input: ProductsToSummaryInput, returnProperties?: any): Promise<any> {
+		const { host } = Vtex.configs
+		const query = this.toGraphQLArgs(input)
+
+		const body = {
+			query: `{ products(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productsToSummaryReturn}  }`
+		}
+
+		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+		return response?.data?.data?.products
 	}
 
 	static async topSearches(returnProperties?: any): Promise<any> {

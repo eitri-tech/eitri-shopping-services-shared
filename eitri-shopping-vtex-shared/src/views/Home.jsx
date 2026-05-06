@@ -104,6 +104,12 @@ export default function Home() {
 					onPress={() => navigateTo('CMSMethods')}
 					label='Métodos de CMS'
 				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('ProductsToSummaryMethods')}
+					label='Products To Summary'
+				/>
 			</View>
 		</Window>
 	)

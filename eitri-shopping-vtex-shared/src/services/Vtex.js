@@ -54,16 +54,28 @@ export default class Vtex {
 		}
 
 
+		// Vtex.configs = {
+		// 	account: remoteConfig?.providerInfo?.account,
+		// 	api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
+		// 	host: _host,
+		// 	locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
+		// 	sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
+		// 	searchOptions: remoteConfig?.searchOptions,
+		// 	segments: { ...configSegments, ...utmParams },
+		// 	marketingTag: soMktTag ?? remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
+		// 	faststore: remoteConfig?.providerInfo?.faststore
+		// }
+
 		Vtex.configs = {
-			account: remoteConfig?.providerInfo?.account,
-			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
-			host: _host,
+			account: "intimissimi",
+			api: `https://intimissimi.vtexcommercestable.com.br`,
+			host: "https://www.intimissimi.com.br",
 			locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
 			segments: { ...configSegments, ...utmParams },
 			marketingTag: soMktTag ?? remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
-			faststore: remoteConfig?.providerInfo?.faststore
+			faststore: "intimissimi"
 		}
 
 		Vtex.configs.session = await Vtex.buildSession({ ...configSegments, ...utmParams })
