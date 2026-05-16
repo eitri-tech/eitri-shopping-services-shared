@@ -92,8 +92,10 @@ export default class App {
 
 		App.setStatusBarColor(RemoteConfig.getContent('appConfigs.statusBarTextColor'))
 		App.startClarity(RemoteConfig.getContent('appConfigs.clarityId'))
+		App.setAppName(RemoteConfig.getContent('appConfigs.appName'))
 
 		try {
+
 			App.configs = {
 				...App.configs,
 				...remoteConfig
@@ -132,6 +134,15 @@ export default class App {
 			}
 		} catch (error) {
 			console.error('[SHARED] Error ao inicializar Clarity', error)
+		}
+	}
+
+	static setAppName(appName) {
+		try {
+			if (!appName) return
+			window.__eitriAppConf.application = appName
+		} catch (error) {
+			console.error('[SHARED] Error ao setar nome do App', error)
 		}
 	}
 

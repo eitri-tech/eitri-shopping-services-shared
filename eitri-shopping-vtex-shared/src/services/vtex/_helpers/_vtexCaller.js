@@ -26,7 +26,7 @@ export default class VtexCaller {
 
 		if (tokenData) {
 			const account = Vtex.configs.account
-			headers['VtexIdclientAutCookie'] = tokenData.token
+			// headers[`VtexIdclientAutCookie`] = tokenData.token
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
@@ -71,15 +71,17 @@ export default class VtexCaller {
 		Logger.log('URL ========>', url.href)
 		Logger.log('HEADERS ========>', {
 			...headers,
-			...options.headers
+			...options?.headers
 		})
+
+		const fullHeaders = {
+			...headers,
+			...options?.headers
+		}
 
 		const res = await Eitri.http.get(url.href, {
 			...options,
-			headers: {
-				...headers,
-				...options.headers
-			}
+			headers: fullHeaders
 		})
 
 		Logger.log('==Resposta do Get Recebida===')
@@ -100,14 +102,16 @@ export default class VtexCaller {
 		})
 		Logger.log('BODY =======>', data)
 
+		const fullHeaders = {
+			...headers,
+			...options?.headers
+		}
+
 		const res = await Eitri.http.post(url.href, data, {
 			...options,
-			headers: {
-				...headers,
-				...options?.headers
-			}
+			headers: fullHeaders
 		})
-
+		Logger.log('==Resposta do Get Recebida===')
 		return res
 	}
 
@@ -120,7 +124,7 @@ export default class VtexCaller {
 		Logger.log('URL ========>', url.href)
 		Logger.log('HEADERS ======>', {
 			...headers,
-			...options.headers
+			...options?.headers
 		})
 		Logger.log('BODY =======>', data)
 
@@ -128,7 +132,7 @@ export default class VtexCaller {
 			...options,
 			headers: {
 				...headers,
-				...options.headers
+				...options?.headers
 			}
 		})
 

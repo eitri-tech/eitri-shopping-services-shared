@@ -7,6 +7,7 @@ import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
+import RemoteConfig from "@/services/RemoteConfig";
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -165,6 +166,35 @@ export default class VtexCustomerService {
 		}
 	}
 
+	static async vtexOAuth(oAuthProvider = 'Google') {
+		const modules = await Eitri.modules()
+		const isAvailable = modules?.vtexOAuth?.isAvailable
+		if (!isAvailable) {
+			console.log('Vtex OAuth is not available on this device.')
+			return
+		}
+
+		const available = await isAvailable()
+		if (!available) {
+			console.log('Vtex OAuth is not available on this device.')
+			return
+		}
+
+		const login = modules?.vtexOAuth?.login
+		if (!login) return
+
+		const hostDomain = RemoteConfig.getContent('providerInfo.host')
+		const vtexAccountId = RemoteConfig.getContent('providerInfo.account')
+
+		const returnUrl = await login({
+			hostDomain,
+			vtexAccountId,
+			oAuthProvider
+		})
+
+		await VtexCustomerService._processPostSocialLogin(returnUrl.authUrl)
+	}
+
 	static async loginWithFacebook() {
 		let webFlowRes = await Eitri.webFlow.start({
 			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
@@ -274,12 +304,12 @@ export default class VtexCustomerService {
 		await VtexCustomerService.notifyLogoutToExposedApis()
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
-		await VtexSessionService.updateSession({})
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_OUT,
 			broadcast: true,
 			data: {}
 		})
+		return
 	}
 
 	static async getCustomerToken() {
@@ -470,7 +500,6 @@ export default class VtexCustomerService {
 
 			if (Object.keys(utmParams).length > 0) {
 				try {
-					console.log('Publicando eventBus', VtexCustomerService.CHANNEL_UTM_PARAMS_KEY)
 					EventBus.publish({
 						channel: VtexCustomerService.CHANNEL_UTM_PARAMS_KEY,
 						broadcast: true,
@@ -601,7 +630,6 @@ export default class VtexCustomerService {
 			accountAuthCookieId,
 			accountAuthCookieValue
 		)
-		await VtexSessionService.updateSession({})
 		VtexCustomerService.notifyLoginToExposedApis(userId)
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
@@ -629,6 +657,7 @@ export default class VtexCustomerService {
 
 		await VtexSessionService.updateSession({})
 		VtexCustomerService.notifyLoginToExposedApis(userId)
+
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
 			broadcast: true,
@@ -637,7 +666,6 @@ export default class VtexCustomerService {
 	}
 
 	static async getAddresses() {
-
 		const tokenData = await VtexCustomerService.getCustomerToken()
 		const token = tokenData?.token
 
@@ -662,8 +690,6 @@ export default class VtexCustomerService {
 		)
 
 		return result?.data
-
-
 	}
 
 	static async createAddress(address) {
@@ -798,5 +824,4 @@ export default class VtexCustomerService {
 
 		return result?.data
 	}
-
 }
