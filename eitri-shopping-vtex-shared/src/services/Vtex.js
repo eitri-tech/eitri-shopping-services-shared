@@ -16,123 +16,74 @@ import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import RemoteConfig from '@/services/RemoteConfig'
 
 export default class Vtex {
-	static configs = {
-		account: '',
-		api: '',
-		host: '',
-		domain: '',
-		locale: 'pt-BR',
-		vtexCmsUrl: '',
-		sendGACampaignAlongSession: true,
-		searchOptions: {},
-		segments: null,
-		session: '',
-		marketingTag: 'eitri-shop',
-		salesChannel: null,
-		faststore: ''
-	}
+	static configs = {}
 
-	static configure = async remoteConfig => {
+	static startVtexParams = async remoteConfig => {
 		let _host = remoteConfig?.providerInfo?.host
+
 		if (_host && !_host.startsWith('https://')) {
-			_host = 'https://' + remoteConfig?.providerInfo?.host
-		}
+			_host = _host.replace(/\/+$/, '')
 
-		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
-		const configSegments = remoteConfig?.storePreferences?.segments || {}
-		let soMktTag
-
-
-		try {
-			const device = (await Eitri.device.getInfos()) || {}
-			if (device?.platform == "android" && remoteConfig?.storePreferences?.androidMarketingTag) {
-				soMktTag = remoteConfig?.storePreferences?.androidMarketingTag
+			if (!_host.startsWith('https://')) {
+				_host = 'https://' + _host
 			}
-			if (device?.platform == "ios" && remoteConfig?.storePreferences?.iosMarketingTag) {
-				soMktTag = remoteConfig?.storePreferences?.iosMarketingTag
-			}			
-		} catch (error) {
-			console.error("[SHARED] Error trying to set soMktTag from remote config", error)
 		}
 
+		const mktTag = await Vtex.getMarketingTag(remoteConfig?.storePreferences)
 
 		Vtex.configs = {
 			account: remoteConfig?.providerInfo?.account,
 			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
 			host: _host,
-			locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
-			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
-			segments: { ...configSegments, ...utmParams },
-			marketingTag: soMktTag ?? remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
+			marketingTag: mktTag,
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		Vtex.configs.session = await Vtex.buildSession({ ...configSegments, ...utmParams })
-
-		if (!remoteConfig.skipRefreshToken) {
-			Vtex.customer.executeRefreshToken()
-		}
+		await Vtex.startSession()
 	}
 
-	static buildSession = async (segments, update) => {
-		if (Vtex.configs.sendGACampaignAlongSession) {
-			try {
-				GAService.sendCampaignDetails(segments)
-				console.log('[SHARED] Campaign segments details sent to GA')
-			} catch (e) {
-				console.error('[SHARED] Error send campaign_details', e)
-			}
-		}
-
+	static startSession = async () => {
 		try {
-			if (segments) {
-				const _public = {}
+			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 
-				for (const key in segments) {
-					if (segments[key] !== null) {
-						_public[key] = { value: segments[key] }
-					}
-				}
+			const payload = {}
 
-				let result
-				if (update) {
-					result = await VtexCaller.patch(`api/sessions`, { public: _public })
-				} else {
-					result = await VtexCaller.post(`api/sessions`, { public: _public })
-				}
-
-				return result?.data
+			if (utmParams) {
+				payload.public = {}
+				const UTM_KEYS = ['utm_source', 'utm_campaign', 'utm_medium', 'utmi_page', 'utmi_part', 'utmi_campaign']
+				Object.keys(utmParams).forEach(key => {
+					if (!UTM_KEYS.includes(key)) return
+					if (!utmParams[key]) return
+					payload.public[key] = { value: utmParams[key] }
+				})
 			}
-			return null
-		} catch (e) {
-			console.error('[SHARED] Error configuring segments', e)
-			return null
+
+			await VtexSessionService.createSession(payload)
+		} catch (error) {
+			console.error('[SHARED] Error ao inicializar session', error)
 		}
 	}
 
-	static tryAutoConfigure = async overwrites => {
-		return await App.tryAutoConfigure(overwrites)
-	}
+	static getMarketingTag = async storePreferences => {
+		try {
+			const device = (await Eitri.device.getInfos()) || {}
 
-	static async updateSegmentSession(utmParams) {
-		if (!utmParams) return null
+			if (device?.platform === 'android' && storePreferences?.androidMarketingTag) {
+				return storePreferences?.androidMarketingTag
+			}
 
-		if (RemoteConfig.getContent('newSessionFlow')) {
-			return null
+			if (device?.platform === 'ios' && storePreferences?.iosMarketingTag) {
+				return storePreferences?.iosMarketingTag
+			}
+
+			return 'eitri-shop'
+		} catch (error) {
+			console.error('[SHARED] Error trying to set soMktTag from remote config', error)
+			return 'eitri-shop'
 		}
 
-		const configSegments = Vtex.configs?.segments || {}
-
-		const segments = { ...configSegments, ...utmParams }
-		const session = await Vtex.buildSession(segments, true)
-		Vtex.configs.session = session
-		Vtex.configs.segments = segments
-	}
-
-	static async refreshSegmentSession() {
-		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
-		Vtex.updateSegmentSession(utmParams)
+		Vtex.configs.marketingTag = marketingTag
 	}
 
 	static catalog = VtexCatalogService

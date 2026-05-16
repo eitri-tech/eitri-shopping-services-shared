@@ -8,6 +8,7 @@ import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import RemoteConfig from "@/services/RemoteConfig";
+import GAService from '@/services/tracking/GAService'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -304,6 +305,7 @@ export default class VtexCustomerService {
 		await VtexCustomerService.notifyLogoutToExposedApis()
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		await VtexSessionService.updateSession({})
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_OUT,
 			broadcast: true,
@@ -465,61 +467,74 @@ export default class VtexCustomerService {
 	 * @property {string} utm_content - O conteúdo da campanha.
 	 */
 	static async saveUtmParams(queryParams) {
-		if (!queryParams) return
+		if (!queryParams) return null
 
 		if (typeof queryParams === 'string') {
-			const queryParamsObj = queryParams.split('&').reduce((acc, param) => {
-				const [key, value] = param.split('=')
+			const search = queryParams.startsWith('?') ? queryParams.slice(1) : queryParams
+			const parsed = search.split('&').reduce((acc, pair) => {
+				const eqIndex = pair.indexOf('=')
+				if (eqIndex === -1) return acc
+				const key = decodeURIComponent(pair.slice(0, eqIndex))
+				const value = decodeURIComponent(pair.slice(eqIndex + 1))
 				acc[key] = value
 				return acc
 			}, {})
-			return VtexCustomerService.saveUtmParams(queryParamsObj)
+			return VtexCustomerService.saveUtmParams(parsed)
 		}
 
-		if (typeof queryParams === 'object') {
-			const utmParams = {}
+		if (typeof queryParams !== 'object') return null
 
-			try {
-				for (const key of Object.keys(queryParams)) {
-					const normalizedKey = key.replace(/[_-]/g, '').toLowerCase()
+		const UTM_KEYS = ['utm_source', 'utm_campaign', 'utm_medium', 'utmi_page', 'utmi_part', 'utmi_campaign']
 
-					if (normalizedKey.startsWith('utm')) {
-						const newKey = 'utm_' + normalizedKey.substring(3)
-						utmParams[newKey] = queryParams[key]
-					}
-				}
+		// Build a lookup: normalized key (no separators, lowercase) → canonical key
+		// e.g. 'utmsource' → 'utm_source', 'utmipage' → 'utmi_page'
+		const UTM_KEYS_LOOKUP = Object.fromEntries(
+			UTM_KEYS.map(k => [k.replace(/[_-]/g, '').toLowerCase(), k])
+		)
 
-				if (Object.keys(utmParams).length > 0) {
-					utmParams.saveAt = new Date().toISOString()
-					await StorageService.setStorageJSON(VtexCustomerService.STORAGE_UTM_PARAMS_KEY, utmParams)
-				}
-			} catch (e) {
-				console.error('Erro ao salvar parâmetros UTM', e)
-				return null
+		const utmParams = {}
+		for (const key of Object.keys(queryParams)) {
+			const normalizedKey = key.replace(/[_-]/g, '').toLowerCase()
+			const canonicalKey = UTM_KEYS_LOOKUP[normalizedKey]
+			if (canonicalKey) {
+				utmParams[canonicalKey] = queryParams[key]
 			}
-
-			if (Object.keys(utmParams).length > 0) {
-				try {
-					EventBus.publish({
-						channel: VtexCustomerService.CHANNEL_UTM_PARAMS_KEY,
-						broadcast: true,
-						data: utmParams
-					})
-				} catch (e) {
-					console.error('Erro ao publicar eventBus UTM', e)
-				}
-
-				try {
-					Vtex.updateSegmentSession(utmParams)
-				} catch (e) {
-					console.error('updateSegmentSession', e)
-				}
-			}
-
-			return utmParams
 		}
 
-		return null
+		if (Object.keys(utmParams).length === 0) return null
+
+		try {
+			await StorageService.setStorageJSON(VtexCustomerService.STORAGE_UTM_PARAMS_KEY, {
+				...utmParams,
+				saveAt: new Date().toISOString()
+			})
+		} catch (e) {
+			console.error('Erro ao salvar parâmetros UTM', e)
+			return null
+		}
+
+		try {
+			await EventBus.publish({
+				channel: VtexCustomerService.CHANNEL_UTM_PARAMS_KEY,
+				broadcast: true,
+				data: utmParams
+			})
+		} catch (e) {
+			console.error('Erro ao publicar eventBus UTM', e)
+		}
+
+		try {
+			const _public = Object.fromEntries(
+				Object.entries(utmParams).map(([k, v]) => [k, { value: v }])
+			)
+			await VtexSessionService.updateSession({ public: _public })
+		} catch (e) {
+			console.error('Erro ao atualizar segment session com UTM', e)
+		}
+
+		GAService.sendCampaignDetails(utmParams)
+
+		return utmParams
 	}
 
 	/**
@@ -591,6 +606,7 @@ export default class VtexCustomerService {
 						res?.accountAuthCookieId,
 						newToken
 					)
+					await VtexSessionService.updateSession({})
 				} else {
 					sendDatadogWarningLog(
 						{
@@ -630,6 +646,9 @@ export default class VtexCustomerService {
 			accountAuthCookieId,
 			accountAuthCookieValue
 		)
+
+		await VtexSessionService.updateSession({})
+
 		VtexCustomerService.notifyLoginToExposedApis(userId)
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
