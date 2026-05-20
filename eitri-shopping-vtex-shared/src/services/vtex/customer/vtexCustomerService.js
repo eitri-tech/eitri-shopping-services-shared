@@ -304,6 +304,7 @@ export default class VtexCustomerService {
 		await VtexCustomerService.notifyLogoutToExposedApis()
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_USER_DATA)
+		await VtexSessionService.updateSession()
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_OUT,
 			broadcast: true,
