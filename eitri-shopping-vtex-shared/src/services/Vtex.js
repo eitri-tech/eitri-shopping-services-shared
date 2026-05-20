@@ -12,6 +12,7 @@ import App from './App'
 import GAService from './tracking/GAService'
 import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
 import { VtexGooglePayServices } from '@/services/vtex/googlePay/vtexGooglePayServices'
+import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class Vtex {
 	static configs = {
@@ -66,7 +67,7 @@ export default class Vtex {
 			faststore: remoteConfig?.providerInfo?.faststore
 		}
 
-		Vtex.configs.session = await Vtex.buildSession({ ...configSegments, ...utmParams })
+		await Vtex.buildSession({ ...configSegments, ...utmParams })
 
 		if (!remoteConfig.skipRefreshToken) {
 			Vtex.customer.executeRefreshToken()
@@ -95,9 +96,9 @@ export default class Vtex {
 
 				let result
 				if (update) {
-					result = await VtexCaller.patch(`api/sessions`, { public: _public })
+					return await VtexSessionService.updateSession({ public: _public })
 				} else {
-					result = await VtexCaller.post(`api/sessions`, { public: _public })
+					return await VtexSessionService.createSession({ public: _public })
 				}
 
 				return result?.data
@@ -119,9 +120,7 @@ export default class Vtex {
 		const configSegments = Vtex.configs?.segments || {}
 
 		const segments = { ...configSegments, ...utmParams }
-		const session = await Vtex.buildSession(segments, true)
-		Vtex.configs.session = session
-		Vtex.configs.segments = segments
+		await Vtex.buildSession(segments, true)
 	}
 
 	static async refreshSegmentSession() {
@@ -140,4 +139,5 @@ export default class Vtex {
 	static searchGraphql = VtexSearchGraphql
 	static http = VtexCaller
 	static googlePay = VtexGooglePayServices
+	static session = VtexSessionService
 }

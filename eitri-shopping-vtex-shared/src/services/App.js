@@ -3,6 +3,8 @@ import Vtex from './Vtex'
 import EventBus from '@/services/EventBus'
 import RemoteConfig from './RemoteConfig'
 
+let loaded = false
+
 export default class App {
 	static configs = {
 		verbose: false,
@@ -10,6 +12,8 @@ export default class App {
 	}
 
 	static tryAutoConfigure = async overwrites => {
+		if (loaded) return App.configs
+
 		try {
 			console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
 			EventBus.subscribe({
@@ -58,6 +62,7 @@ export default class App {
 
 			console.log('[SHARED] *********** App configurado com sucesso ************')
 
+			loaded = true
 			return App.configs
 		} catch (error) {
 			console.error('[SHARED] Error App configure ', error)
