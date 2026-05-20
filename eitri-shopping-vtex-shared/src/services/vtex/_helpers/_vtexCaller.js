@@ -5,6 +5,7 @@ import Logger from '../../Logger'
 import vtexCartService from '../cart/VtexCartService'
 import VtexCheckoutService from '../checkout/vtexCheckoutService'
 import StorageService from '../../StorageService'
+import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class VtexCaller {
 	static _mountUrl = (baseUrl, path) => {
@@ -29,13 +30,16 @@ export default class VtexCaller {
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
-		if (Vtex.configs.session) {
+		const sessionToken = await VtexSessionService.getSessionToken()
+
+		if (sessionToken) {
+
+			const _cookie = `vtex_segment=${sessionToken?.segmentToken};vtex_session=${sessionToken?.sessionToken}`
+
 			if (headers['Cookie']) {
-				headers['Cookie'] +=
-					`;vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
+				headers['Cookie'] += `;${_cookie}`
 			} else {
-				headers['Cookie'] =
-					`vtex_segment=${Vtex.configs?.session?.segmentToken};vtex_session=${Vtex.configs?.session?.sessionToken}`
+				headers['Cookie'] = `${_cookie}`
 			}
 		}
 
