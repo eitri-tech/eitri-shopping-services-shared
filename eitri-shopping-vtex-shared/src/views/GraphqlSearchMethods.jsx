@@ -5,9 +5,9 @@ export default function GraphqlSearchMethods() {
 	const getProducts = async () => {
 		try {
 			const res = await Vtex.searchGraphql.productSearch({
-				fullText: 'Panela'
+				fullText: 'PS5'
 			})
-			console.log(res)
+			console.log("Encontrados:", res.recordsFiltered)
 		} catch (e) {
 			console.log(e)
 		}

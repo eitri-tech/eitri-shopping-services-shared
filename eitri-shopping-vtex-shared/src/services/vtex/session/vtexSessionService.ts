@@ -32,4 +32,8 @@ export default class VtexSessionService {
 	static async getSessionToken(): Promise<Session> {
 		return await StorageService.getStorageJSON('sessionToken')
 	}
+
+	static async removeSession(): Promise<void> {
+		await StorageService.removeItem('sessionToken')
+	}
 }
