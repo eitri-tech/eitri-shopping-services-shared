@@ -1,5 +1,4 @@
 import Vtex from '../services/Vtex'
-import Eitri from 'eitri-bifrost'
 
 export default function CustomerMethods() {
 	const [email, setEmail] = useState('')
@@ -93,22 +92,20 @@ export default function CustomerMethods() {
 
 	const createAddress = async () => {
 		try {
-			const result = await Vtex.customer.createAddress(
-				{
-					"addressName": "Casa dos testes",
-					"addressType": "residential",
-					"city": "Rio de Janeiro",
-					"complement": "Casa 3",
-					"country": "BRA",
-					"neighborhood": "Andaraí",
-					"number": "792",
-					"postalCode": "20541-290",
-					"receiverName": "Seu Teste",
-					"reference": null,
-					"state": "RJ",
-					"street": "Rua dos testes"
-				}
-			)
+			const result = await Vtex.customer.createAddress({
+				addressName: 'Casa dos testes',
+				addressType: 'residential',
+				city: 'Rio de Janeiro',
+				complement: 'Casa 3',
+				country: 'BRA',
+				neighborhood: 'Andaraí',
+				number: '792',
+				postalCode: '20541-290',
+				receiverName: 'Seu Teste',
+				reference: null,
+				state: 'RJ',
+				street: 'Rua dos testes'
+			})
 			console.log('createAddress', result)
 		} catch (e) {
 			console.log('createAddress', e)
@@ -117,23 +114,20 @@ export default function CustomerMethods() {
 
 	const updateAddress = async () => {
 		try {
-			const result = await Vtex.customer.updateAddress(
-				"2c2sxbbz6z",
-				{
-					"addressName": "Casa dos testes",
-					"addressType": "residential",
-					"city": "Rio de Janeiro",
-					"complement": "Casa 10",
-					"country": "BRA",
-					"neighborhood": "Andaraí",
-					"number": "792",
-					"postalCode": "20541-290",
-					"receiverName": "Seu Teste",
-					"reference": null,
-					"state": "RJ",
-					"street": "Rua dos testes"
-				}
-			)
+			const result = await Vtex.customer.updateAddress('2c2sxbbz6z', {
+				addressName: 'Casa dos testes',
+				addressType: 'residential',
+				city: 'Rio de Janeiro',
+				complement: 'Casa 10',
+				country: 'BRA',
+				neighborhood: 'Andaraí',
+				number: '792',
+				postalCode: '20541-290',
+				receiverName: 'Seu Teste',
+				reference: null,
+				state: 'RJ',
+				street: 'Rua dos testes'
+			})
 			console.log('updateAddress', result)
 		} catch (e) {
 			console.log('updateAddress', e)
@@ -142,12 +136,57 @@ export default function CustomerMethods() {
 
 	const deleteAddress = async () => {
 		try {
-			const result = await Vtex.customer.deleteAddress("wobcew7v0jf")
+			const result = await Vtex.customer.deleteAddress('wobcew7v0jf')
 			console.log('deleteAddress', result)
 		} catch (e) {
 			console.log('deleteAddress', e)
 		}
 	}
+
+	const setRegion = async () => {
+		try {
+			const result = await Vtex.customer.setRegion('20541-195')
+			console.log('deleteAddress', result)
+		} catch (e) {
+			console.log('deleteAddress', e)
+		}
+	}
+
+	const removeRegion = async () => {
+		try {
+			const result = await Vtex.customer.removeRegion()
+			console.log('deleteAddress', result)
+		} catch (e) {
+			console.log('deleteAddress', e)
+		}
+	}
+
+	const getStoredRegionData = async () => {
+		try {
+			const result = await Vtex.customer.getStoredRegionData()
+			console.log('getStoredRegionData', result)
+		} catch (e) {
+			console.log('deleteAddress', e)
+		}
+	}
+
+	const METHODS = [
+		{ label: 'Logado?', executor: isLogged },
+		{ label: 'Google login', executor: googleAuth },
+		{ label: 'Oauth Login', executor: oauthLogin },
+		{ label: 'Facebook login', executor: facebookAuth },
+		{ label: 'Meu token', executor: getMyStoredToken },
+		{ label: 'Refresh token', executor: executeRefreshToken },
+		{ label: 'Obter usuário logado', executor: getLoggedCustomer },
+		{ label: 'Obter endereços', executor: getAddresses },
+		{ label: 'Criar endereço', executor: createAddress },
+		{ label: 'Atualizar endereço', executor: updateAddress },
+		{ label: 'Excluir endereço', executor: deleteAddress },
+		{ label: 'Logout', executor: executeLogout },
+		{ label: 'Definir região', executor: setRegion },
+		{ label: 'Remover região', executor: removeRegion },
+		{ label: 'Obter região', executor: getStoredRegionData }
+	]
 
 	return (
 		<Window
@@ -159,13 +198,8 @@ export default function CustomerMethods() {
 				gap={10}
 				justifyContent='center'
 				alignItems='center'
+				overflow='scroll'
 				width='100%'>
-				<Button
-					wide
-					color='background-color'
-					onPress={isLogged}
-					label='Logado?'
-				/>
 				<View
 					display='flex'
 					gap={10}>
@@ -216,7 +250,6 @@ export default function CustomerMethods() {
 						label='Validar login'
 					/>
 				</View>
-
 				<View
 					display='flex'
 					gap={10}>
@@ -234,138 +267,14 @@ export default function CustomerMethods() {
 						label='Nova senha'
 					/>
 				</View>
-
-				<View
-					display='flex'
-					gap={10}>
+				{METHODS.map(method => (
 					<Button
 						wide
 						color='background-color'
-						grow={1}
-						onPress={googleAuth}
-						label='Google login'
+						onPress={method.executor}
+						label={method.label}
 					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={oauthLogin}
-						label='Oauth Login'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={facebookAuth}
-						label='Facebook login'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={getMyStoredToken}
-						label='Meu token'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={executeRefreshToken}
-						label='Refresh token'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={getLoggedCustomer}
-						label='Obter usuário logado'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={getAddresses}
-						label='Obter endereços'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={createAddress}
-						label='Criar endereço'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={updateAddress}
-						label='Atualizar endereço'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={deleteAddress}
-						label='Excluir endereço'
-					/>
-				</View>
-
-				<View
-					display='flex'
-					gap={10}>
-					<Button
-						wide
-						color='background-color'
-						grow={1}
-						onPress={executeLogout}
-						label='Logout'
-					/>
-				</View>
+				))}
 			</View>
 		</Window>
 	)

@@ -12,6 +12,7 @@ import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
 	static STORAGE_USER_DATA = 'user_data'
+	static STORAGE_REGION = 'user_region'
 	static TOKEN_EXPIRATION_TIME_SEC = 86200
 
 	static CHANNEL_UTM_PARAMS_KEY = 'ChanellUTMParams'
@@ -825,5 +826,58 @@ export default class VtexCustomerService {
 		)
 
 		return result?.data
+	}
+
+	static async setRegion(postalCode, country = 'BRA') {
+
+		const cleanedPostalCode = postalCode.replace(/[^0-9]/g, '')
+
+		if (country === 'BRA' && cleanedPostalCode.length !== 8) {
+			throw new Error('invalid.postalcode.length')
+		}
+
+		await VtexSessionService.updateSession({
+			public: {
+				postalCode: {
+					value: cleanedPostalCode
+				},
+				country: {
+					value: country
+				}
+			}
+		})
+
+		const session = await VtexSessionService.getSession()
+		const regionId = session?.namespaces?.checkout?.regionId?.value
+
+		const region = {
+			postalCode: cleanedPostalCode,
+			country: country,
+			regionId: regionId,
+			saveAt: new Date().toISOString()
+		}
+
+		StorageService.setStorageJSON(VtexCustomerService.STORAGE_REGION, region)
+
+		return region
+
+	}
+
+	static async removeRegion() {
+		await VtexSessionService.updateSession({
+			public: {
+				postalCode: {
+					value: ''
+				},
+				country: {
+					value: ''
+				}
+			}
+		})
+		await StorageService.removeItem(VtexCustomerService.STORAGE_REGION)
+	}
+
+	static async getStoredRegionData() {
+		return StorageService.getStorageJSON(VtexCustomerService.STORAGE_REGION)
 	}
 }
