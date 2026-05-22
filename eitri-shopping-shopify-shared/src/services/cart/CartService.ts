@@ -79,9 +79,9 @@ export class CartService {
 
 		if (!cart?.attributes?.some(att => att.key === 'origin' && att.value.includes('eitri'))) {
 			const eitriAttribute = await CartService.getEitriAttribute()
-			const currentAttributes = cart.attributes || []
+			const currentAttributes = cart?.attributes || []
 			const attRes = await CartService.cartAttributesUpdate([...currentAttributes, eitriAttribute])
-			return attRes.cart
+			return attRes?.cart
 		}
 
 		return data.cart
