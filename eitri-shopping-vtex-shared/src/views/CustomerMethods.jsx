@@ -170,6 +170,58 @@ export default function CustomerMethods() {
 		}
 	}
 
+	const addPaymentData = async () => {
+		try {
+			const cardData = {
+					cardNumber: '4111111111111111',
+					cardHolder: 'Wagner Felipe',
+					expiryDate: '05/30',
+					csc: '123',
+					paymentSystem: 'Mastercard',
+					document: '12345678909',
+					documentType: 'cpf',
+					address: {
+						addressType: 'residential',
+						city: 'Rio de Janeiro',
+						complement: 'Apto 201',
+						country: 'BRA',
+						geoCoordinates: [-43.25596618652344, -22.926231384277344],
+						neighborhood: 'Grajaú',
+						number: '30',
+						postalCode: '20541-290',
+						receiverName: 'Wagner Felipe',
+						reference: '',
+						state: 'RJ',
+						street: 'Rua Guamerim',
+						addressQuery: null
+					}
+				}
+
+			const result = await Vtex.customer.addNewCard(cardData, "captchaToken")
+			console.log('addPaymentData', result)
+		} catch (e) {
+			console.log('addPaymentData', e)
+		}
+	}
+
+	const getCards = async () => {
+		try {
+			const result = await Vtex.customer.getSavedCards()
+			console.log('getCards', result)
+		} catch (e) {
+			console.log('getCards', e)
+		}
+	}
+
+	const deleteCard = async () => {
+		try {
+			const result = await Vtex.customer.deleteSavedCard('94DA5D162B964F4EA40C41483A594583')
+			console.log('deleteCard', result)
+		} catch (e) {
+			console.log('deleteCard', e)
+		}
+	}
+
 	const METHODS = [
 		{ label: 'Logado?', executor: isLogged },
 		{ label: 'Google login', executor: googleAuth },
@@ -185,7 +237,10 @@ export default function CustomerMethods() {
 		{ label: 'Logout', executor: executeLogout },
 		{ label: 'Definir região', executor: setRegion },
 		{ label: 'Remover região', executor: removeRegion },
-		{ label: 'Obter região', executor: getStoredRegionData }
+		{ label: 'Obter região', executor: getStoredRegionData },
+		{ label: 'Adicionar dados de pagamento', executor: addPaymentData },
+		{ label: 'Obter cartões salvos', executor: getCards },
+		{ label: 'Excluir cartão', executor: deleteCard }
 	]
 
 	return (
