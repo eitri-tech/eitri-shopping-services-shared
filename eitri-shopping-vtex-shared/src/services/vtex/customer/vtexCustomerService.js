@@ -258,14 +258,15 @@ export default class VtexCustomerService {
 		}
 	}
 
-	static async setPassword(email, accessKey, newPassword) {
+	static async setPassword(email, accessKey, newPassword, currentPassword) {
 		const loginRes = await VtexCaller.post(
 			`api/vtexid/pub/authentication/classic/setpassword?expireSessions=true`,
 			{
 				authenticationToken: VtexCustomerService.cookieValue,
 				accessKey: accessKey,
 				login: email,
-				newPassword: newPassword
+				newPassword: newPassword,
+				currentPassword: currentPassword
 			},
 			{
 				headers: {
@@ -950,7 +951,6 @@ export default class VtexCustomerService {
 	}
 
 	static async getSavedCards() {
-
 		const payload = {
 			query: 'query Payments { profile { cacheId userId email payments { id paymentSystem paymentSystemName cardNumber isExpired expirationDate accountStatus address { addressId addressType city complement country neighborhood number postalCode state street } }  } }'
 		}
@@ -970,7 +970,6 @@ export default class VtexCustomerService {
 	}
 
 	static async deleteSavedCard(tokenId) {
-
 		const payload = {
 			query: 'mutation DeleteCreditCardToken($tokenId: ID!) @context(sender: "vtex.my-cards@1.23.0") { deletePaymentToken(tokenId: $tokenId) @context(provider: "vtex.my-cards-graphql") }',
 			variables: {
