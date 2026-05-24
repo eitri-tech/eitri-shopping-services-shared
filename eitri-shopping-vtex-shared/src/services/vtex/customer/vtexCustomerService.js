@@ -258,14 +258,13 @@ export default class VtexCustomerService {
 		}
 	}
 
-	static async setPassword(email, accessKey, newPassword, currentPassword) {
-
+	static async setPassword(email, accessKey, newPassword, currentPassword, expireSessions = true) {
 		if (!VtexCustomerService.cookieValue) {
 			await VtexCustomerService._startLogin(email)
 		}
 
 		const loginRes = await VtexCaller.post(
-			`api/vtexid/pub/authentication/classic/setpassword?expireSessions=true`,
+			`api/vtexid/pub/authentication/classic/setpassword?expireSessions=${expireSessions}`,
 			{
 				authenticationToken: VtexCustomerService.cookieValue,
 				accessKey: accessKey,
