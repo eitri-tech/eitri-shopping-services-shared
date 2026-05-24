@@ -259,6 +259,11 @@ export default class VtexCustomerService {
 	}
 
 	static async setPassword(email, accessKey, newPassword, currentPassword) {
+
+		if (!VtexCustomerService.cookieValue) {
+			await VtexCustomerService._startLogin(email)
+		}
+
 		const loginRes = await VtexCaller.post(
 			`api/vtexid/pub/authentication/classic/setpassword?expireSessions=true`,
 			{
@@ -271,8 +276,7 @@ export default class VtexCustomerService {
 			{
 				headers: {
 					'Content-Type': 'multipart/form-data',
-					'accept': '*/*',
-					'Cookie': `_vss=${VtexCustomerService.cookieValue}`
+					'accept': '*/*'
 				}
 			}
 		)
