@@ -403,7 +403,7 @@ export default class VtexCustomerService {
 		}
 
 		const body = {
-			query: 'query Profile @context(scope: "private") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate } }'
+			query: 'query Profile @context(scope: "private") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate passwordLastUpdate } }'
 		}
 
 		const result = await VtexCaller.post(
@@ -829,7 +829,6 @@ export default class VtexCustomerService {
 	}
 
 	static async setRegion(postalCode, country = 'BRA') {
-
 		const cleanedPostalCode = postalCode.replace(/[^0-9]/g, '')
 
 		if (country === 'BRA' && cleanedPostalCode.length !== 8) {
@@ -860,7 +859,6 @@ export default class VtexCustomerService {
 		StorageService.setStorageJSON(VtexCustomerService.STORAGE_REGION, region)
 
 		return region
-
 	}
 
 	static async removeRegion() {
@@ -879,5 +877,118 @@ export default class VtexCustomerService {
 
 	static async getStoredRegionData() {
 		return StorageService.getStorageJSON(VtexCustomerService.STORAGE_REGION)
+	}
+
+	static async addNewCard(cardData, recaptchaV3Token) {
+		// Create payment session
+		const paymentSessionPayload = {
+			query: `mutation CreatePaymentSession { createPaymentSession @context(provider: "vtex.my-cards-graphql") { id } }`
+		}
+
+		const paymentSessionStartResult = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			paymentSessionPayload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+
+		const paymentSessionId = paymentSessionStartResult?.data?.data?.createPaymentSession?.id
+
+		if (!paymentSessionId) {
+			throw new Error('no payment session id returned')
+		}
+
+		// Create token
+		const tokenCreatePayload = Array.isArray(cardData) ? cardData : [cardData]
+		const tokenCreateResult = await VtexCaller.post(
+			`api/pub/sessions/${paymentSessionId}/tokens`,
+			tokenCreatePayload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			`https://${Vtex.configs.account}.vtexpayments.com.br`
+		)
+
+		const tokenData = tokenCreateResult?.data?.[0]
+		if (!tokenData) {
+			throw new Error('no token data returned')
+		}
+
+		// Add payment data
+		const addPaymentDataPayload = {
+			query: 'mutation AddPaymentMethod3ds($token: PaymentTokenInput!, $recaptchaV3Token: String!) @context(sender: "vtex.my-cards@1.23.0") { paymentMethod3ds: addPaymentMethod3ds(token: $token, recaptchaV3Token: $recaptchaV3Token) @context(provider: "vtex.my-cards-graphql") { accountId paymentSystemId paymentField { name value  } transactionId status }}',
+			variables: {
+				token: {
+					creditCardToken: tokenData?.token,
+					paymentSystem: tokenData?.paymentSystem
+				},
+				recaptchaV3Token
+			}
+		}
+
+		const createCardResult = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			addPaymentDataPayload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+
+		return createCardResult?.data
+	}
+
+	static async getSavedCards() {
+
+		const payload = {
+			query: 'query Payments { profile { cacheId userId email payments { id paymentSystem paymentSystemName cardNumber isExpired expirationDate accountStatus address { addressId addressType city complement country neighborhood number postalCode state street } }  } }'
+		}
+
+		const getSavedCardsResult = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			payload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+		return getSavedCardsResult?.data?.data?.profile
+	}
+
+	static async deleteSavedCard(tokenId) {
+
+		const payload = {
+			query: 'mutation DeleteCreditCardToken($tokenId: ID!) @context(sender: "vtex.my-cards@1.23.0") { deletePaymentToken(tokenId: $tokenId) @context(provider: "vtex.my-cards-graphql") }',
+			variables: {
+				tokenId
+			}
+		}
+
+		const getSavedCardsResult = await VtexCaller.post(
+			`_v/private/graphql/v1`,
+			payload,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+					'accept': '*/*'
+				}
+			},
+			Vtex.configs.host
+		)
+		return getSavedCardsResult?.data?.data
 	}
 }
