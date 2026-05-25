@@ -946,7 +946,7 @@ export default class VtexCustomerService {
 			Vtex.configs.host
 		)
 
-		console.log('createCardResult', createCardResult)
+		return createCardResult?.data
 	}
 
 	static async getSavedCards() {
