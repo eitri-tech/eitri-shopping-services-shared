@@ -75,7 +75,11 @@ export class CartService {
 
 		const { data } = res.data as { data: CartResponse }
 
-		const cart = data.cart
+		const cart = data?.cart
+
+		if (!cart) {
+			return await CartService.generateNewCart()
+		}
 
 		if (!cart?.attributes?.some(att => att.key === 'origin' && att.value.includes('eitri'))) {
 			const eitriAttribute = await CartService.getEitriAttribute()
