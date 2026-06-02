@@ -59,6 +59,7 @@ export default class Vtex {
 			account: remoteConfig?.providerInfo?.account,
 			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
 			host: _host,
+			domain: remoteConfig?.providerInfo?.domain,
 			locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
 			searchOptions: remoteConfig?.searchOptions,
