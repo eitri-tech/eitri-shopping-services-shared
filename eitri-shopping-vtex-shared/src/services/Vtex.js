@@ -94,6 +94,12 @@ export default class Vtex {
 					}
 				}
 
+				const region = await VtexCustomerService.getStoredRegionData()
+				if (region) {
+					_public.postalCode = { value: region.postalCode }
+					_public.country = { value: region.country }
+				}
+
 				let result
 				if (update) {
 					return await VtexSessionService.updateSession({ public: _public })

@@ -8,6 +8,7 @@ import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
 import RemoteConfig from "@/services/RemoteConfig";
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
+import VtexCheckoutService from '@/services/vtex/checkout/vtexCheckoutService'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -367,6 +368,11 @@ export default class VtexCustomerService {
 		)
 	}
 
+	static async isSessionLoggedIn() {
+		const session = await Vtex.session.getSession()
+		return session?.namespaces?.profile?.isAuthenticated?.value === 'true'
+	}
+
 	static async cancelOrder(orderId, payload = {}) {
 		const response = await VtexCaller.post(`api/checkout/pub/orders/${orderId}/user-cancel-request`, payload)
 		return response.data
@@ -561,8 +567,8 @@ export default class VtexCustomerService {
 					return {}
 				}
 			}
-
-			return utmParams || {}
+			const { saveAt, ...rest } = utmParams || {}
+			return rest
 		} catch (e) {
 			console.error('Erro ao obter parâmetros UTM', e)
 		}
@@ -575,7 +581,6 @@ export default class VtexCustomerService {
 			const { account } = Vtex.configs
 
 			const res = await VtexCustomerService.getStorageCustomerToken()
-
 			if (!res || !res.accountAuthCookieId) return
 			if (
 				res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >
@@ -585,13 +590,18 @@ export default class VtexCustomerService {
 			}
 
 			if (res?.refreshToken && res?.token) {
+				const sessionToken = await VtexSessionService.getSessionToken()
+				const _cookie = sessionToken
+					? `vtex_segment=${sessionToken?.segmentToken};vtex_session=${sessionToken?.sessionToken}`
+					: null
+
 				const loginRes = await VtexCaller.post(
 					`api/vtexid/refreshtoken/webstore`,
 					{},
 					{
 						headers: {
 							accept: '*/*',
-							Cookie: `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}`
+							Cookie: `vid_rt=${res.refreshToken};VtexIdclientAutCookie_${account}=${res.token}${_cookie ? `;${_cookie}` : ''}`
 						}
 					}
 				)
@@ -608,6 +618,12 @@ export default class VtexCustomerService {
 					)
 					await VtexSessionService.updateSession()
 				} else {
+					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
+					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
+						// Evita ficar retentando, nao está logado e rt nao funciona
+						VtexCustomerService.logout()
+					}
+
 					sendDatadogWarningLog(
 						{
 							message: 'Refresh token executado sem novos tokens na resposta',
@@ -848,6 +864,8 @@ export default class VtexCustomerService {
 			throw new Error('invalid.postalcode.length')
 		}
 
+		const address = await VtexCheckoutService.resolveZipCode(postalCode, country)
+
 		await VtexSessionService.updateSession({
 			public: {
 				postalCode: {
@@ -866,6 +884,7 @@ export default class VtexCustomerService {
 			postalCode: cleanedPostalCode,
 			country: country,
 			regionId: regionId,
+			address: address,
 			saveAt: new Date().toISOString()
 		}
 

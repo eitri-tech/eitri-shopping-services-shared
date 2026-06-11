@@ -100,7 +100,7 @@ export default class VtexCheckoutService {
 			{
 				retries: 3,
 				delay: 800,
-				onFinalError: (e) => {
+				onFinalError: e => {
 					sendLogError(e, 'setLogisticInfo', { logisticInfo })
 				}
 			}
@@ -363,8 +363,6 @@ export default class VtexCheckoutService {
 			sendLogError(e, 'pay')
 			throw e
 		}
-
-
 	}
 
 	static async executePayment(cart, options) {
@@ -387,8 +385,8 @@ export default class VtexCheckoutService {
 		return result.data
 	}
 
-	static async resolveZipCode(zipcode) {
-		const response = await VtexCaller.get(`api/checkout/pub/postal-code/BRA/${zipcode}`)
+	static async resolveZipCode(zipcode, country = 'BRA') {
+		const response = await VtexCaller.get(`api/checkout/pub/postal-code/${country}/${zipcode}`)
 		return response.data
 	}
 
