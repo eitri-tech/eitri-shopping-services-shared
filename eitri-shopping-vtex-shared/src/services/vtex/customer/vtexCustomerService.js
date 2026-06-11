@@ -17,7 +17,7 @@ export default class VtexCustomerService {
 
 	static CHANNEL_UTM_PARAMS_KEY = 'ChanellUTMParams'
 	static STORAGE_UTM_PARAMS_KEY = 'utm_params_key'
-	static TIME_EXPIRES_UTM_PARAMS_IN_DAYS = 30
+	static TIME_EXPIRES_UTM_PARAMS_IN_MINUTES = 43200
 
 	static async _startLogin(email) {
 		const { account } = Vtex.configs
@@ -69,7 +69,7 @@ export default class VtexCustomerService {
 
 		if (authStatus === 'Success') {
 			await VtexCustomerService.setCustomerData('email', email)
-			await VtexCustomerService._processPostLogin(data, refreshToken)
+			await VtexCustomerService._processPostLogin(data, refreshToken, email)
 		}
 
 		return authStatus
@@ -121,7 +121,7 @@ export default class VtexCustomerService {
 
 		if (authStatus === 'Success') {
 			await VtexCustomerService.setCustomerData('email', email)
-			await VtexCustomerService._processPostLogin(data, refreshToken)
+			await VtexCustomerService._processPostLogin(data, refreshToken, email)
 		}
 
 		return authStatus
@@ -236,14 +236,21 @@ export default class VtexCustomerService {
 		}
 	}
 
-	static async notifyLoginToExposedApis(customerId) {
+	static async notifyLoginToExposedApis(customerId, email) {
 		try {
 			if (!customerId) {
 				console.log('notifyLoginToExposedApis error', 'customerId not found')
 				return
 			}
-			console.log('notificando login', customerId)
-			Eitri.exposedApis.session.notifyLogin({ customerId })
+
+			const modules = await Eitri.modules()
+			const notifyLogin = modules?.session?.notifyLogin
+			if (!notifyLogin) return
+
+			return notifyLogin({
+				customerId: customerId,
+				email: email
+			})
 		} catch (e) {
 			console.log('notifyLoginToExposedApis error', e)
 		}
@@ -287,7 +294,7 @@ export default class VtexCustomerService {
 
 		if (authStatus === 'Success') {
 			await VtexCustomerService.setCustomerData('email', email)
-			await VtexCustomerService._processPostLogin(data, refreshToken)
+			await VtexCustomerService._processPostLogin(data, refreshToken, email)
 		}
 
 		return authStatus
@@ -545,8 +552,10 @@ export default class VtexCustomerService {
 
 			if (utmParams?.saveAt) {
 				const cutDate = new Date()
-				cutDate.setDate(cutDate.getDate() - VtexCustomerService.TIME_EXPIRES_UTM_PARAMS_IN_DAYS) // atrasa a data em X dias
-
+				const expirationDate =
+					RemoteConfig.getContent('appConfigs.utmExpirationTimeInMinutes') ||
+					VtexCustomerService.TIME_EXPIRES_UTM_PARAMS_IN_MINUTES
+				cutDate.setMinutes(cutDate.getMinutes() - Number(expirationDate))
 				if (cutDate.toISOString() > utmParams.saveAt) {
 					// retornando vazio se o valor expirou
 					return {}
@@ -622,7 +631,7 @@ export default class VtexCustomerService {
 		}
 	}
 
-	static async _processPostLogin(loginData, refreshToken) {
+	static async _processPostLogin(loginData, refreshToken, email) {
 		const authCookieValue = loginData?.authCookie?.Value
 		const accountAuthCookie = loginData?.accountAuthCookie
 
@@ -638,7 +647,7 @@ export default class VtexCustomerService {
 			accountAuthCookieValue
 		)
 		await VtexSessionService.updateSession()
-		VtexCustomerService.notifyLoginToExposedApis(userId)
+		VtexCustomerService.notifyLoginToExposedApis(userId, email)
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
 			broadcast: true,
@@ -663,7 +672,7 @@ export default class VtexCustomerService {
 		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
 		await VtexSessionService.updateSession()
 
-		VtexCustomerService.notifyLoginToExposedApis(userId)
+		VtexCustomerService.notifyLoginToExposedApis(userId, email)
 
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
