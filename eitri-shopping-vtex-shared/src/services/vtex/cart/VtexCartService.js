@@ -38,8 +38,7 @@ export default class VtexCartService {
 			const preparedSegments = segments ? camelCaseKeys(segments) : {}
 			const preparedUtmParams = utmParams ? camelCaseKeys(utmParams) : {}
 			const currentCartMarketingData = cart?.marketingData || {}
-			console.log('preparedUtmParams', preparedUtmParams)
-			console.log('currentCartMarketingData', currentCartMarketingData)
+
 			const marketingData = {
 				utmSource: null,
 				utmMedium: null,
@@ -52,8 +51,6 @@ export default class VtexCartService {
 				...preparedUtmParams,
 				marketingTags: currentMarketingTags
 			}
-
-			console.log('marketingData', marketingData)
 
 			const objectsEqual = objectsAreEqual(marketingData, currentCartMarketingData)
 
