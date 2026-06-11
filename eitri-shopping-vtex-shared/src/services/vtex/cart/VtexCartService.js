@@ -21,7 +21,10 @@ export default class VtexCartService {
 			const currentMarketingTags = cart?.marketingData?.marketingTags
 				? [...cart?.marketingData?.marketingTags]
 				: []
-			let utmParams = (await VtexCustomerService.getUtmParams()) || {}
+
+			let _utmParams = (await VtexCustomerService.getUtmParams()) || {}
+			const { saveAt, ...rest } = _utmParams
+			const utmParams = rest || {}
 
 			const camelCaseKeys = data =>
 				Object.fromEntries(
@@ -37,7 +40,13 @@ export default class VtexCartService {
 			const currentCartMarketingData = cart?.marketingData || {}
 
 			const marketingData = {
-				...currentCartMarketingData,
+				utmSource: null,
+				utmMedium: null,
+				utmCampaign: null,
+				utmipage: null,
+				utmiPart: null,
+				utmiCampaign: null,
+				coupon: currentCartMarketingData.coupon,
 				...preparedSegments,
 				...preparedUtmParams,
 				marketingTags: currentMarketingTags
