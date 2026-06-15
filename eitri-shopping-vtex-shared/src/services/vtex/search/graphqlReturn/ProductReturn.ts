@@ -7,6 +7,11 @@ export const productReturn = `{
 		name
 		href
 	}
+	deliveryPromisesBadges {
+	  typeName
+	  pickupId
+	  pickupName
+	}
 	description
 	clusterHighlights {
     	id
@@ -129,6 +134,17 @@ export const productReturn = `{
 			sellerName
 			sellerDefault
 			commertialOffer {
+				DeliverySlaSamples {
+					Region {
+						Id
+						ZipCode
+					}
+					DeliverySlaPerTypes {
+						TypeName
+						Price
+						EstimatedTimeSpanToDelivery
+					}
+				}
 				Installments {
 					Value
 					InterestRate
