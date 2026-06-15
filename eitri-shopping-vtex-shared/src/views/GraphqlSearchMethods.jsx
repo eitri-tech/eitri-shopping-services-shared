@@ -5,9 +5,10 @@ export default function GraphqlSearchMethods() {
 	const getProducts = async () => {
 		try {
 			const res = await Vtex.searchGraphql.productSearch({
-				fullText: 'PS5'
+				fullText: '8365591',
+				hideUnavailableItems: true
 			})
-			console.log("Encontrados:", res.recordsFiltered)
+			console.log("Encontrados:", res)
 		} catch (e) {
 			console.log(e)
 		}
@@ -34,7 +35,7 @@ export default function GraphqlSearchMethods() {
 			const res = await Vtex.searchGraphql.product({
 				identifier: {
 					field: 'slug',
-					value: 'petisco-prefere-natural-orelha-bovina-desidratado-para-caes-com-2-unidades-43235'
+					value: 'blister-com-12-pacotes-de-figurinhas-copa-do-mundo-fifa-2026-eua-pre-venda-8377065'
 				}
 			})
 			console.log(res)

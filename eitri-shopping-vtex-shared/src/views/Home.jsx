@@ -27,6 +27,7 @@ export default function Home() {
 		// console.log('[SHARED] End ===> ', new Date().getTime() - a)
 		// await Vtex.cart.setOrderFormId('25fa3690032940d6930031caadeb3289')
 		await Vtex.cart.getCurrentOrCreateCart()
+		// navigateTo('GraphqlSearchMethods')
 	}
 
 	const navigateTo = async path => {
