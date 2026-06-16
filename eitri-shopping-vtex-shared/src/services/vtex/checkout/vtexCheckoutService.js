@@ -84,14 +84,7 @@ export default class VtexCheckoutService {
 			async () => {
 				const response = await VtexCaller.post(
 					`api/checkout/pub/orderForm/${orderFormId}/attachments/shippingData`,
-					logisticInfo,
-					{
-						headers: {
-							'Content-Type': 'application/json',
-							'Accept': 'application/json',
-							'Cookie': `CheckoutOrderFormOwnership=; checkout.vtex.com=__ofid=${orderFormId}`
-						}
-					}
+					logisticInfo
 				)
 
 				GAVtexInternalService.addShippingInfo(response.data)
