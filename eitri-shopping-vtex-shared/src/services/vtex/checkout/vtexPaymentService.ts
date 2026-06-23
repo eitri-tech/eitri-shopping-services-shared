@@ -234,7 +234,7 @@ export default class VtexPaymentService {
 
 			Logger.log('====> Setando o método de pagamento com o payload', paymentsMethods)
 
-			const useNewVtexVaultApi = RemoteConfig.getContent('checkout.useVaultApi')
+			const useNewVtexVaultApi = RemoteConfig.getContent('appConfigs.checkout.useVaultApi')
 
 			// Testar e tornar padrao https://developers.vtex.com/updates/release-notes/2025-10-28-mandatory-migration-to-vtexvault-com-for-send-payments-request
 			const url = useNewVtexVaultApi
