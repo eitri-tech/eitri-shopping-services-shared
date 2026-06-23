@@ -6,6 +6,7 @@ import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
+import RemoteConfig from '../../RemoteConfig'
 
 type PaymentOptions = {
 	fields: {
@@ -203,13 +204,14 @@ export default class VtexPaymentService {
 
 			if (giftCardPaymentSystem) {
 				cart?.paymentData?.giftCards?.forEach(giftCard => {
-
 					if (!giftCard.inUse || giftCard.value === 0) {
 						return
 					}
 
 					const giftCardId = giftCard.id
-					const giftCardMerchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.payments?.some(p => p.giftCardId === giftCardId))
+					const giftCardMerchant = startTransactionReturn?.merchantTransactions?.find(mt =>
+						mt.payments?.some(p => p.giftCardId === giftCardId)
+					)
 
 					paymentsMethods.push({
 						paymentSystem: giftCardPaymentSystem.id,
@@ -232,16 +234,19 @@ export default class VtexPaymentService {
 
 			Logger.log('====> Setando o método de pagamento com o payload', paymentsMethods)
 
-			await Eitri.http.post(
-				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`,
-				paymentsMethods,
-				{
-					headers: {
-						'accept': 'application/json, text/javascript, */*; q=0.01',
-						'content-type': 'application/json'
-					}
+			const useNewVtexVaultApi = RemoteConfig.getContent('checkout.useVaultApi')
+
+			// Testar e tornar padrao https://developers.vtex.com/updates/release-notes/2025-10-28-mandatory-migration-to-vtexvault-com-for-send-payments-request
+			const url = useNewVtexVaultApi
+				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${Vtex.configs.account}&orderId=${startTransactionReturn.orderGroup}`
+				: `https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
+
+			await Eitri.http.post(url, paymentsMethods, {
+				headers: {
+					'accept': 'application/json, text/javascript, */*; q=0.01',
+					'content-type': 'application/json'
 				}
-			)
+			})
 
 			console.timeEnd('setPaymentMethod')
 			console.log('====> Método de pagamento definido para o transactionId', startTransactionReturn.id)
