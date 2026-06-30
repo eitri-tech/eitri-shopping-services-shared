@@ -8,13 +8,11 @@ import getSalesChannel from '../_helpers/getSalesChannel'
 export default class VtexCatalogService {
 	static getSearchOptions = async () => {
 		const salesChannel = await getSalesChannel()
-
 		const opt = Vtex.configs.searchOptions || {}
 
 		if (salesChannel) {
 			opt['salesChannel'] = salesChannel
 		}
-		console.log(opt)
 		return opt
 	}
 
