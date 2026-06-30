@@ -1,6 +1,5 @@
-import Eitri from 'eitri-bifrost'
+import RemoteConfig from '../../RemoteConfig'
 
 export default async function getSalesChannel() {
-	const remoteConfig = await Eitri.environment.getRemoteConfigs()
-	return remoteConfig?.storePreferences?.salesChannel
+	return RemoteConfig.getContent('storePreferences.salesChannel')
 }
