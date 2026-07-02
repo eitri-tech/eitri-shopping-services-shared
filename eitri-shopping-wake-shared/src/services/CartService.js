@@ -8,6 +8,8 @@ import GAWakeInternalService from './tracking/GAWakeInternalService'
 import GAService from './tracking/GAService'
 import Logger from './Logger'
 import { sendLogError } from '@/services/Datadog'
+import StoreService from './StoreService'
+import { queryCheckoutPartnerAssociate } from '@/queries/Checkout'
 
 export default class CartService {
 	static CART_KEY = 'cart_key'
@@ -93,9 +95,23 @@ export default class CartService {
 		try {
 			Logger.log('====> Gerando novo carrinho')
 
-			const response = await GraphqlService.query(queryCreteCheckout)
+			let response = await GraphqlService.query(queryCreteCheckout)
 
 			Logger.log('====> Novo carrinho gerado', response.data.checkoutId)
+
+			try {
+				// identificar partner e associar ao checkout
+				// obs: partner só será exibido no retorno do checkout quando adicionar um produto
+				const partnerAccessToken = await StoreService.getPartnerAccessToken()
+				if (partnerAccessToken && response?.data?.checkoutId) {
+					await GraphqlService.query(queryCheckoutPartnerAssociate, {
+						pat: partnerAccessToken,
+						cId: response?.data?.checkoutId
+					})
+				}
+			} catch (e) {
+				Logger.log('====> [generateNewCart] Erro ao associar parceiro ao carrinho', e)
+			}
 
 			CartService.CACHED_CART = response?.data
 
