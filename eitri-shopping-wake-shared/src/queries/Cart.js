@@ -45,6 +45,7 @@ const checkoutModel = `
       key
       value
     }
+    partner { partnerId }
     minimumRequirements {
       isMinimumOrderValueReached
       isMinimumProductQuantityReached
