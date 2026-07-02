@@ -95,7 +95,7 @@ export default class CartService {
 		try {
 			Logger.log('====> Gerando novo carrinho')
 
-			let response = await GraphqlService.query(queryCreteCheckout)
+			const response = await GraphqlService.query(queryCreteCheckout)
 
 			Logger.log('====> Novo carrinho gerado', response.data.checkoutId)
 
@@ -106,7 +106,7 @@ export default class CartService {
 				if (partnerAccessToken && response?.data?.checkoutId) {
 					await GraphqlService.query(queryCheckoutPartnerAssociate, {
 						pat: partnerAccessToken,
-						cId: response?.data?.checkoutId
+						cId: response.data.checkoutId
 					})
 				}
 			} catch (e) {
