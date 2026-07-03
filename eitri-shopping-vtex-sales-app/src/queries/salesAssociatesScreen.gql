@@ -1,0 +1,19 @@
+query SalesAssociatesScreenQuery($masterdataId: String!) {
+  store(where: { masterdataId: { eq: $masterdataId } }) {
+    id
+    salesAssociates(first: 100, where: { active: { eq: true } }) {
+      nodes {
+        id
+        fullName
+      }
+    }
+  }
+  viewer {
+    configuration {
+      viewOthersSalesAssociatesPerformance
+    }
+    salesAssociate {
+      id
+    }
+  }
+}

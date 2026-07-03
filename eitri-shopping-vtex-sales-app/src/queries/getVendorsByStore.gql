@@ -1,0 +1,10 @@
+
+  query getVendorsByStore($vendorsByStoreInput: VendorsByStoreInput) {
+    getVendorsByStore(vendorsByStoreInput: $vendorsByStoreInput) @context(provider: "vtex.instore-chk-graphql") {
+      id
+      name
+      store
+      user
+      code
+    }
+  }

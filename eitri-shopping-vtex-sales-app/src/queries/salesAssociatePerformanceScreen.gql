@@ -1,0 +1,53 @@
+query SalesAssociatePerformanceScreenQuery(
+  $storeId: ID!
+  $salesAssociateId: ID!
+  $period: SalesPeriod!
+) {
+  salesAssociate: node(id: $salesAssociateId) {
+    __typename
+    ... on SalesAssociate {
+      name
+      __typename
+    }
+    id
+  }
+  viewer {
+    configuration {
+      viewOthersSalesAssociatesPerformance
+    }
+    salesAssociate {
+      id
+    }
+    brand {
+      currencyCode
+      id
+    }
+  }
+  store: node(id: $storeId) {
+    __typename
+    ... on Store {
+      salesIndicators(where: { period: $period }) {
+        averageItemAmount
+        averageItemsPerSale
+        averageSalesAmount
+      }
+      __typename
+    }
+    id
+  }
+  salesAssociate: node(id: $salesAssociateId) {
+    __typename
+    ... on SalesAssociate {
+      salesIndicators(where: { storeId: { eq: $storeId }, period: $period }) {
+        salesAmount
+        salesQuantity
+        totalItemsSold
+        averageItemAmount
+        averageItemsPerSale
+        averageSalesAmount
+      }
+      __typename
+    }
+    id
+  }
+}
