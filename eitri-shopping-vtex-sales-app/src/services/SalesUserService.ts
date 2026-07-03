@@ -3,15 +3,7 @@ import { SalesAuthContext } from "../models/SalesCart";
 import { AuthStatus } from "../models/Auth";
 import { doLogin as _doLogin } from "./AssistedSalesService";
 import Sales from "./Sales";
-
-const SALES_APP_LOGIN_MUTATION = `
-  mutation useSalesAppServerLoginMutation {
-    login {
-      success
-      errors { fullMessages }
-    }
-  }
-`;
+import { useSalesAppServerLoginMutation } from "../queries/salesAppServerLogin.gql";
 
 const JSON_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
@@ -111,7 +103,7 @@ export class SalesUserService {
 
     const res = await Eitri.http.post(
       `${baseUrl}/api/sales-app/graphql?operationName=useSalesAppServerLoginMutation`,
-      { query: SALES_APP_LOGIN_MUTATION },
+      { query: useSalesAppServerLoginMutation },
       { headers: loginHeaders },
     );
 

@@ -11,6 +11,8 @@ import {
 import { Vtex } from "eitri-shopping-vtex-shared";
 import { SalesUserService } from "./SalesUserService";
 import Sales from "./Sales";
+import { SaveSalesAssociatesOrderFormMutation } from "../queries/saveSalesAssociatesOrderForm.gql";
+import { useContractIdentification_GetClientProfileQuery } from "../queries/getClientProfile.gql";
 
 export interface SaveSalesAssistedInput {
   cartTotal?: string;
@@ -19,70 +21,6 @@ export interface SaveSalesAssistedInput {
   customerIdentification?: string;
   customerName?: string;
 }
-
-const SAVE_ASSOCIATE_MUTATION = `
-  mutation SaveSalesAssociatesOrderFormMutation($input: SaveSalesAssociateOrderFormInput!) {
-    saveSalesAssociateOrderForm(input: $input) {
-      id updatedIn cartTotal code customerIdentification customerName
-      numberOfItems orderFormId orderGroupId status vendor
-      vendorLinked {
-        id name user code store
-        storeLinked {
-          id country name tradePolicy address number neighborhood
-          city state postalCode mobileNumber pickupPoint franchiseAccount
-        }
-      }
-      createdIn
-    }
-  }
-`;
-
-const GET_CLIENT_PROFILE_QUERY = `
-  query useContractIdentification_GetClientProfileQuery(
-    $key: String!
-    $includeChildren: Boolean!
-  ) {
-    clientProfile(key: $key) {
-      __typename
-      _id
-      id
-      name
-      user {
-        _id
-        id
-        name
-      }
-      ... on ShopperProfile {
-        organization {
-          _id
-          id
-          contracts {
-            _id
-            id
-            name
-            email
-            tradePolicy { _id id }
-            collections { _id id }
-            priceTables { _id id }
-          }
-          children(shallowSearch: false) @include(if: $includeChildren) {
-            _id
-            id
-            contracts {
-              _id
-              id
-              name
-              email
-              tradePolicy { _id id }
-              collections { _id id }
-              priceTables { _id id }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
 
 const JSON_HEADERS: Record<string, string> = {
   "Content-Type": "application/json",
@@ -317,7 +255,7 @@ export default class SalesCartService {
     const associateRes = await Eitri.http.post(
       `${baseUrl}/api/sales-app/graphql?operationName=SaveSalesAssociatesOrderFormMutation`,
       {
-        query: SAVE_ASSOCIATE_MUTATION,
+        query: SaveSalesAssociatesOrderFormMutation,
         variables: {
           input: {
             id: orderFormId,
@@ -512,7 +450,7 @@ export default class SalesCartService {
       const response = await Eitri.http.post(
         `${baseUrl}/api/sales-app/graphql?operationName=SaveSalesAssociatesOrderFormMutation`,
         {
-          query: SAVE_ASSOCIATE_MUTATION,
+          query: SaveSalesAssociatesOrderFormMutation,
           variables: {
             input: {
               id: orderFormId,
@@ -760,7 +698,7 @@ export default class SalesCartService {
       `${baseUrl}/api/sales-app/graphql?operationName=useContractIdentification_GetClientProfileQuery`,
       {
         id: "useContractIdentification_GetClientProfileQuery",
-        query: GET_CLIENT_PROFILE_QUERY,
+        query: useContractIdentification_GetClientProfileQuery,
         variables: { key: document, includeChildren: false },
       },
       { headers },

@@ -1,0 +1,59 @@
+query useContractIdentification_GetClientProfileQuery($key: String!, $includeChildren: Boolean!) {
+  clientProfile(key: $key) {
+    __typename
+    _id
+    id
+    name
+    user {
+      _id
+      id
+      name
+    }
+    ... on ShopperProfile {
+      organization {
+        _id
+        id
+        contracts {
+          _id
+          id
+          name
+          email
+          tradePolicy {
+            _id
+            id
+          }
+          collections {
+            _id
+            id
+          }
+          priceTables {
+            _id
+            id
+          }
+        }
+        children(shallowSearch: false) @include(if: $includeChildren) {
+          _id
+          id
+          contracts {
+            _id
+            id
+            name
+            email
+            tradePolicy {
+              _id
+              id
+            }
+            collections {
+              _id
+              id
+            }
+            priceTables {
+              _id
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}

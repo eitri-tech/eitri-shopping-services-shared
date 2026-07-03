@@ -1,0 +1,8 @@
+mutation useSalesAppServerLoginMutation {
+  login {
+    success
+    errors {
+      fullMessages
+    }
+  }
+}
