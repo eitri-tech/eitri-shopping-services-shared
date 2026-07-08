@@ -88,7 +88,7 @@ export default function CheckoutMethods() {
 	const selectPayment = async () => {
 		const cart = await Vtex.cart.getCurrentOrCreateCart()
 
-		const paymentSystem = 125
+		const paymentSystem = 2
 		const installmentsNumber = 1
 
 		const pay = cart.paymentData.paymentSystems.find(p => p.id === paymentSystem)
@@ -116,7 +116,7 @@ export default function CheckoutMethods() {
 		try {
 			const result = await Vtex.checkout.selectPaymentOption({
 				payments: [payment],
-				giftCards: [giftCard]
+				giftCards: []
 			})
 			console.log(result?.paymentData?.payments)
 			console.log(result?.paymentData?.giftCards)

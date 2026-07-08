@@ -617,6 +617,11 @@ export default class VtexCustomerService {
 						newToken
 					)
 					await VtexSessionService.updateSession()
+					EventBus.publish({
+						channel: EventBusChannels.USER_LOGGED_IN,
+						broadcast: true,
+						data: {}
+					})
 				} else {
 					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
 					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
