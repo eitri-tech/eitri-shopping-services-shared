@@ -2,6 +2,44 @@ import Eitri from 'eitri-bifrost'
 import VtexCartService from '@/services/vtex/cart/VtexCartService'
 import Logger from '@/services/Logger'
 
+const AUTH_COOKIES = ['VtexIdclientAutCookie', 'CheckoutDataAccess', 'Vtex_CHKO_Auth', 'vtex_session']
+const JWT_PATTERN = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*/g
+
+const sanitizeHeaders = headers => {
+	const sanitized = {}
+	for (const [key, value] of Object.entries(headers)) {
+		if (typeof value !== 'string') {
+			sanitized[key] = value
+			continue
+		}
+		let clean = value.replace(JWT_PATTERN, '[JWT_REDACTED]')
+		if (key.toLowerCase() === 'cookie') {
+			clean = clean
+				.split(';')
+				.map(cookie => {
+					const [name, ...rest] = cookie.split('=')
+					const isAuth = AUTH_COOKIES.some(authName => name.trim().startsWith(authName))
+					return isAuth && rest.length ? `${name}=[REDACTED]` : cookie
+				})
+				.join(';')
+		}
+		sanitized[key] = clean
+	}
+	return sanitized
+}
+
+const sanitizeError = error => {
+	if (!error || typeof error !== 'object') return error
+	const sanitized = { ...error }
+	if (sanitized.request?.headers) {
+		sanitized.request = { ...sanitized.request, headers: sanitizeHeaders(sanitized.request.headers) }
+	}
+	if (sanitized.response?.headers) {
+		sanitized.response = { ...sanitized.response, headers: sanitizeHeaders(sanitized.response.headers) }
+	}
+	return sanitized
+}
+
 export const sendDatadogWarningLog = async (data = {}, method) => {
 	try {
 
@@ -136,12 +174,15 @@ export const sendLogError = async (error, method, data = {}, _cart) => {
 				method: method || '',
 				email: cart?.clientProfileData?.email,
 				cartId: cart?.orderFormId,
-				error: {
-					message: error?.message,
-					stack: error?.stack,
-					name: error?.name,
-					...error
-				},
+				error:
+					typeof error === 'string'
+						? { message: error }
+						: {
+								message: error?.message,
+								stack: error?.stack,
+								name: error?.name,
+								...sanitizeError(error)
+							},
 				...data
 			}
 		}
@@ -181,12 +222,15 @@ export const sendOrderNotComplete = async (error, method, data = {}, _cart) => {
 				method: method || '',
 				email: cart?.clientProfileData?.email,
 				cartId: cart?.orderFormId,
-				error: {
-					message: error?.message,
-					stack: error?.stack,
-					name: error?.name,
-					...error
-				},
+				error:
+					typeof error === 'string'
+						? { message: error }
+						: {
+								message: error?.message,
+								stack: error?.stack,
+								name: error?.name,
+								...sanitizeError(error)
+							},
 				...data
 			}
 		}

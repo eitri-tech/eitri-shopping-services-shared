@@ -69,7 +69,7 @@ export default class Vtex {
 
 		await Vtex.buildSession({ ...configSegments, ...utmParams })
 
-		if (!remoteConfig.skipRefreshToken) {
+		if (window.__eitriAppConf?.slug?.includes('home')) {
 			Vtex.customer.executeRefreshToken()
 		}
 	}
