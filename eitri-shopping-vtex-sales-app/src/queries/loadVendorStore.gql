@@ -1,0 +1,26 @@
+
+  query getVendorAndStore {
+    getVendorAndStore {
+      id
+      name
+      user
+      store
+      code
+      store_linked {
+        id
+        country
+        name
+        tradePolicy
+        address
+        number
+        neighborhood
+        city
+        state
+        postalCode
+        mobileNumber
+        pickupPoint
+        franchiseAccount
+      }
+    }
+  }
+  

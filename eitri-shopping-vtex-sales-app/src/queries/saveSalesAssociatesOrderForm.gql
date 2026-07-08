@@ -1,0 +1,38 @@
+mutation SaveSalesAssociatesOrderFormMutation($input: SaveSalesAssociateOrderFormInput!) {
+  saveSalesAssociateOrderForm(input: $input) {
+    id
+    updatedIn
+    cartTotal
+    code
+    customerIdentification
+    customerName
+    numberOfItems
+    orderFormId
+    orderGroupId
+    status
+    vendor
+    vendorLinked {
+      id
+      name
+      user
+      code
+      store
+      storeLinked {
+        id
+        country
+        name
+        tradePolicy
+        address
+        number
+        neighborhood
+        city
+        state
+        postalCode
+        mobileNumber
+        pickupPoint
+        franchiseAccount
+      }
+    }
+    createdIn
+  }
+}
