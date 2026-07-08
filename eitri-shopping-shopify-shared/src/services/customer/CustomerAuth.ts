@@ -92,7 +92,6 @@ export class AuthService {
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
 			}
 		)
-
 		return response.data
 	}
 
@@ -408,9 +407,48 @@ export class AuthService {
 	}
 
 	/**
-	 * Logs the customer out by clearing all stored tokens and cached configuration.
+	 * Ends the Shopify web session (OIDC end_session) inside the webFlow cookie-jar.
+	 *
+	 * auth.logout() only clears local tokens; the Shopify session cookie persists in the
+	 * webFlow cookie-jar, so a subsequent /oauth/authorize returns a code silently (no login
+	 * prompt). Opening the end_session_endpoint inside Eitri.webFlow (same cookie-jar) clears it.
+	 *
+	 * The Shopify logout endpoint answers 200 without a redirect, so the web flow never closes on
+	 * its own — onLoadJsScript forces a redirect to a sentinel URL that matches stopPattern. The
+	 * flow MUST close cleanly: leaving it hanging corrupts the native webview and breaks the next login.
+	 */
+	private static async endWebSession(): Promise<void> {
+		try {
+			const idToken = await this.getIdToken()
+			if (!idToken) return
+
+			const host = RemoteConfig.getContent('providerInfo.host')
+			if (!host) return
+
+			const configUrl = `https://${host.replace('https://', '').replace('www.', '')}/.well-known/openid-configuration`
+			const { end_session_endpoint } = await this.discoverEndpoints(configUrl)
+			if (!end_session_endpoint) return
+
+			const shopId = end_session_endpoint.match(/authentication\/(\d+)/)?.[1]
+			const postLogoutRedirectUri = encodeURIComponent(`shop.${shopId}.app://callback`)
+
+			await Eitri.webFlow.start({
+				startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${postLogoutRedirectUri}`,
+				stopPattern: 'eitri-logout-done|callback',
+				allowedDomains: ['shopify.com', 'www.shopify.com', 'callback'],
+				maxNavigationLimit: 5,
+				onLoadJsScript: `window.location.href = 'https://www.shopify.com/eitri-logout-done';`
+			})
+		} catch (error) {
+			Logger.error('Failed to end Shopify web session', error)
+		}
+	}
+
+	/**
+	 * Logs the customer out: ends the Shopify web session and clears all stored tokens/config.
 	 */
 	static async logout(): Promise<void> {
+		await this.endWebSession()
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)
