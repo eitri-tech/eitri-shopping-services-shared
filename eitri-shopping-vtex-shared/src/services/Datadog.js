@@ -29,15 +29,20 @@ const sanitizeHeaders = headers => {
 }
 
 const sanitizeError = error => {
-	if (!error || typeof error !== 'object') return error
-	const sanitized = { ...error }
-	if (sanitized.request?.headers) {
-		sanitized.request = { ...sanitized.request, headers: sanitizeHeaders(sanitized.request.headers) }
+	try {
+		if (!error || typeof error !== 'object') return error
+		const sanitized = { ...error }
+		if (sanitized.request?.headers) {
+			sanitized.request = { ...sanitized.request, headers: sanitizeHeaders(sanitized.request.headers) }
+		}
+		if (sanitized.response?.headers) {
+			sanitized.response = { ...sanitized.response, headers: sanitizeHeaders(sanitized.response.headers) }
+		}
+		return sanitized
+	} catch (e) {
+		return error
 	}
-	if (sanitized.response?.headers) {
-		sanitized.response = { ...sanitized.response, headers: sanitizeHeaders(sanitized.response.headers) }
-	}
-	return sanitized
+
 }
 
 export const sendDatadogWarningLog = async (data = {}, method) => {
