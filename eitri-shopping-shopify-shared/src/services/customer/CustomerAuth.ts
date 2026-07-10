@@ -418,30 +418,26 @@ export class AuthService {
 	 * flow MUST close cleanly: leaving it hanging corrupts the native webview and breaks the next login.
 	 */
 	private static async endWebSession(): Promise<void> {
-		try {
-			const idToken = await this.getIdToken()
-			if (!idToken) return
+		const idToken = await this.getIdToken()
+		if (!idToken) throw new Error('no.id.token')
 
-			const host = RemoteConfig.getContent('providerInfo.host')
-			if (!host) return
+		const host = RemoteConfig.getContent('providerInfo.host')
+		if (!host) throw new Error('no.provider.host')
 
-			const configUrl = `https://${host.replace('https://', '').replace('www.', '')}/.well-known/openid-configuration`
-			const { end_session_endpoint } = await this.discoverEndpoints(configUrl)
-			if (!end_session_endpoint) return
+		const configUrl = `https://${host.replace('https://', '').replace('www.', '')}/.well-known/openid-configuration`
+		const { end_session_endpoint } = await this.discoverEndpoints(configUrl)
+		if (!end_session_endpoint) throw new Error('no.end_session_endpoint')
 
-			const shopId = end_session_endpoint.match(/authentication\/(\d+)/)?.[1]
-			const postLogoutRedirectUri = encodeURIComponent(`shop.${shopId}.app://callback`)
+		const shopId = end_session_endpoint.match(/authentication\/(\d+)/)?.[1]
+		const postLogoutRedirectUri = encodeURIComponent(`shop.${shopId}.app://callback`)
 
-			await Eitri.webFlow.start({
-				startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${postLogoutRedirectUri}`,
-				stopPattern: 'eitri-logout-done|callback',
-				allowedDomains: ['shopify.com', 'www.shopify.com', 'callback'],
-				maxNavigationLimit: 5,
-				onLoadJsScript: `window.location.href = 'https://www.shopify.com/eitri-logout-done';`
-			})
-		} catch (error) {
-			Logger.error('Failed to end Shopify web session', error)
-		}
+		await Eitri.webFlow.start({
+			startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${postLogoutRedirectUri}`,
+			stopPattern: 'eitri-logout-done|callback',
+			allowedDomains: ['shopify.com', 'www.shopify.com', 'callback'],
+			maxNavigationLimit: 5,
+			onLoadJsScript: `window.location.href = 'https://www.shopify.com/eitri-logout-done';`
+		})
 	}
 
 	/**
