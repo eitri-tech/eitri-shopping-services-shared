@@ -290,7 +290,7 @@ export default class VtexPaymentService {
 					...e.response.data
 				}
 			} else {
-				console.log('erro no processPayment', e.response)
+				console.log('erro no processPayment', e)
 				throw e
 			}
 
