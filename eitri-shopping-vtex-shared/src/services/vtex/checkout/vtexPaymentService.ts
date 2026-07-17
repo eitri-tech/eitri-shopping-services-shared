@@ -276,12 +276,8 @@ export default class VtexPaymentService {
 			}
 		} catch (e) {
 			console.timeEnd('processPayment')
-			if (!e.response.data) {
-				console.log('erro no processPayment no content', e.response)
-				throw Error(e)
-			}
 
-			if (e.response.status === 428) {
+			if (e?.response?.status === 428) {
 				console.log(
 					'=====> Pagamento processado com sucesso status 428',
 					startTransactionReturn.orderGroup,
@@ -297,6 +293,7 @@ export default class VtexPaymentService {
 				console.log('erro no processPayment', e.response)
 				throw e
 			}
+
 		}
 	}
 }
