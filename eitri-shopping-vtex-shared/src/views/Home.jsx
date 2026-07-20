@@ -96,6 +96,12 @@ export default function Home() {
 				<Button
 					wide
 					color='background-color'
+					onPress={() => navigateTo('IntelligentSearchMethods')}
+					label='Métodos de Intelligent Search'
+				/>
+				<Button
+					wide
+					color='background-color'
 					onPress={() => navigateTo('GooglePayMethods')}
 					label='Métodos de Google pay'
 				/>

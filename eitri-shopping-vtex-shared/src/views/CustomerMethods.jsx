@@ -222,8 +222,59 @@ export default function CustomerMethods() {
 		}
 	}
 
+	const saveUtmParams = async () => {
+		try {
+			const result = await Vtex.customer.saveUtmParams({
+				utm_source: 'eitri',
+				utm_campaign: 'app_test',
+				utm_medium: 'app'
+			})
+			console.log('saveUtmParams', result)
+		} catch (e) {
+			console.log('saveUtmParams error', e)
+		}
+	}
+
+	const saveUtmParamsFromString = async () => {
+		try {
+			const result = await Vtex.customer.saveUtmParams('utm_source=google&utm_campaign=black_friday')
+			console.log('saveUtmParamsFromString', result)
+		} catch (e) {
+			console.log('saveUtmParamsFromString error', e)
+		}
+	}
+
+	const saveAndGetUtmParams = async () => {
+		try {
+			const saved = await Vtex.customer.saveUtmParams({
+				utm_source: 'eitri',
+				utm_campaign: 'roundtrip'
+			})
+			console.log('saveAndGetUtmParams -> saved', saved)
+			const stored = await Vtex.customer.getUtmParams()
+			console.log('saveAndGetUtmParams -> stored', stored)
+			const ok = stored?.utm_source === 'eitri' && stored?.utm_campaign === 'roundtrip'
+			console.log('saveAndGetUtmParams -> persistido corretamente?', ok)
+		} catch (e) {
+			console.log('saveAndGetUtmParams error', e)
+		}
+	}
+
+	const getUtmParams = async () => {
+		try {
+			const result = await Vtex.customer.getUtmParams()
+			console.log('getUtmParams', result)
+		} catch (e) {
+			console.log('getUtmParams error', e)
+		}
+	}
+
 	const METHODS = [
 		{ label: 'Logado?', executor: isLogged },
+		{ label: 'Salvar UTM (objeto)', executor: saveUtmParams },
+		{ label: 'Salvar UTM (string)', executor: saveUtmParamsFromString },
+		{ label: 'Salvar e ler UTM (round-trip)', executor: saveAndGetUtmParams },
+		{ label: 'Obter UTM salvos', executor: getUtmParams },
 		{ label: 'Google login', executor: googleAuth },
 		{ label: 'Oauth Login', executor: oauthLogin },
 		{ label: 'Facebook login', executor: facebookAuth },
