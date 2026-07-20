@@ -6,6 +6,7 @@ import {
 	FacetsOptions,
 	FacetsPath,
 	GetProductOptions,
+	IntelligentSearchRequestConfig,
 	IntelligentSearchBanners,
 	IntelligentSearchCorrection,
 	IntelligentSearchFacetsResult,
@@ -77,19 +78,24 @@ export default class VtexIntelligentSearchService {
 
 	// Builds the base store-context params shared by product/facets endpoints:
 	// sales channel (trade policy) + user region.
-	static _getBaseDefaults = async (): Promise<Record<string, any>> => {
+	static _getBaseDefaults = async (
+		config: IntelligentSearchRequestConfig = {}
+	): Promise<Record<string, any>> => {
+		const { regionalization = true } = config
 		const [salesChannel, region] = await Promise.all([
 			getSalesChannel(),
-			VtexIntelligentSearchService._getRegionParams()
+			regionalization ? VtexIntelligentSearchService._getRegionParams() : Promise.resolve({})
 		])
 		return { sc: salesChannel, ...region }
 	}
 
 	// Builds the defaults for endpoints that also forward params to the pricing
 	// and availability simulation (base context + UTM).
-	static _getSimulationDefaults = async (): Promise<Record<string, any>> => {
+	static _getSimulationDefaults = async (
+		config: IntelligentSearchRequestConfig = {}
+	): Promise<Record<string, any>> => {
 		const [base, utm] = await Promise.all([
-			VtexIntelligentSearchService._getBaseDefaults(),
+			VtexIntelligentSearchService._getBaseDefaults(config),
 			VtexIntelligentSearchService._getUtmParams()
 		])
 		return { ...base, ...utm }
@@ -161,9 +167,10 @@ export default class VtexIntelligentSearchService {
 	// Lists the active products for a given query/facets.
 	static async productSearch(
 		facets: FacetsPath = '',
-		options: ProductSearchOptions = {}
+		options: ProductSearchOptions = {},
+		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchProductSearchResult> {
-		const defaults = await VtexIntelligentSearchService._getSimulationDefaults()
+		const defaults = await VtexIntelligentSearchService._getSimulationDefaults(config)
 		const path = VtexIntelligentSearchService._normalizeFacets(facets)
 		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
 		const url = VtexIntelligentSearchService._appendQuery(
@@ -177,9 +184,10 @@ export default class VtexIntelligentSearchService {
 	// Lists the possible facets (filters) for a given query/facets.
 	static async facets(
 		facets: FacetsPath = '',
-		options: FacetsOptions = {}
+		options: FacetsOptions = {},
+		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchFacetsResult> {
-		const defaults = await VtexIntelligentSearchService._getBaseDefaults()
+		const defaults = await VtexIntelligentSearchService._getBaseDefaults(config)
 		const path = VtexIntelligentSearchService._normalizeFacets(facets)
 		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
 		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/facets/${path}`, queryString)
@@ -193,9 +201,10 @@ export default class VtexIntelligentSearchService {
 	static async getProduct(
 		value: string,
 		field: ProductIdentifierField = 'id',
-		options: GetProductOptions = {}
+		options: GetProductOptions = {},
+		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchProduct> {
-		const defaults = await VtexIntelligentSearchService._getSimulationDefaults()
+		const defaults = await VtexIntelligentSearchService._getSimulationDefaults(config)
 		const queryString = VtexIntelligentSearchService._buildQueryString({
 			...defaults,
 			value,
@@ -212,9 +221,10 @@ export default class VtexIntelligentSearchService {
 	// Lists available pickup points sorted by distance for Delivery Promise.
 	static async pickupPointAvailability(
 		facets: FacetsPath = '',
-		options: PickupPointAvailabilityOptions = {}
+		options: PickupPointAvailabilityOptions = {},
+		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchPickupPointAvailability> {
-		const defaults = await VtexIntelligentSearchService._getBaseDefaults()
+		const defaults = await VtexIntelligentSearchService._getBaseDefaults(config)
 		const path = VtexIntelligentSearchService._normalizeFacets(facets)
 		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
 		const url = VtexIntelligentSearchService._appendQuery(

@@ -12,6 +12,13 @@ export type SelectedFacet = {
 
 export type FacetsPath = string | SelectedFacet[]
 
+// Per-request behavior configuration (autofill toggles, parsers, etc.).
+export type IntelligentSearchRequestConfig = {
+	// When true (default), fills regionalization params (regionId, country, zip-code)
+	// from the user's stored region.
+	regionalization?: boolean
+}
+
 // ===== Common query options =====
 
 export type SimulationBehavior = 'default' | 'skip' | 'only1P' | 'only3P' | 'regionalize1p'
