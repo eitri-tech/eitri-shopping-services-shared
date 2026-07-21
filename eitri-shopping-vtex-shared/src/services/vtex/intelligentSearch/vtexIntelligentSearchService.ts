@@ -228,7 +228,7 @@ export default class VtexIntelligentSearchService {
 		const path = VtexIntelligentSearchService._normalizeFacets(facets)
 		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
 		const url = VtexIntelligentSearchService._appendQuery(
-			`${BASE_PATH}/pickup-point-availability/${path}`,
+			`api/intelligent-search/v0/pickup-point-availability/${path}`,
 			queryString
 		)
 		const result = await VtexCaller.get(url)
