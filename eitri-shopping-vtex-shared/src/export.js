@@ -4,3 +4,4 @@ export { default as RemoteConfig } from './services/RemoteConfig'
 export { default as EventBusChannels } from "./services/EventBusChannels";
 export { default as Tracking } from "./services/Tracking";
 export { default as EventBus } from "./services/EventBus";
+export { default as Widde } from "./services/Widde";
