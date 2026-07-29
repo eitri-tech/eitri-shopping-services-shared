@@ -1,10 +1,8 @@
-import Eitri from 'eitri-bifrost'
-import Vtex from '../services/Vtex'
 import { Widde } from '../export'
 
-export default function WiddeMethods() { 
+export default function WiddeMethods() {
 
-    const changeUrl = async () => {
+    const testWidde = async () => {
         const config = await Widde.getWiddeConfig()
         console.log('[Widde] getWiddeConfig =>', config)
 
@@ -18,7 +16,7 @@ export default function WiddeMethods() {
         <Window
                 topInset
                 bottomInset
-                title='Métodos de trocar de url'>
+                title='Métodos Widde'>
                 <View
                     padding='large'
                     direction='column'
@@ -26,12 +24,12 @@ export default function WiddeMethods() {
                     justifyContent='center'
                     alignItems='center'
                     overflow='scroll'
-            width='100%'>
+                    width='100%'>
                     <Button
                         wide
                         color='background-color'
-                        onPress={changeUrl}
-                        label='Mudar URL'
+                        onPress={testWidde}
+                        label='Testar Widde'
                     />
             </View>
         </Window>
