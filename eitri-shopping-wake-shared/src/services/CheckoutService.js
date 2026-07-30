@@ -269,6 +269,38 @@ export default class CheckoutService {
 		}
 	}
 
+	static async checkoutMultiPaymentsComplete(paymentData, comments) {
+		try {
+			const [cartId, token] = await Promise.all([
+				StorageService.getStorageItem(CartService.CART_KEY),
+				CustomerService.getCustomerToken()
+			])
+
+			if (!cartId || !token) return null
+
+			const _paymentData = Array.isArray(paymentData)
+				? btoa(JSON.stringify(paymentData))
+				: objectToQueryString(paymentData)
+
+			const response = await GraphqlService.query(queryCheckoutComplete, {
+				paymentData: _paymentData,
+				comments: comments ?? '',
+				checkoutId: cartId,
+				customerAccessToken: token
+			})
+
+			sendLogOrderAccepted(response.checkoutComplete)
+
+			GAWakeInternalService.purchase(response.checkoutComplete)
+
+			return response
+		} catch (e) {
+			console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
+			sendLogError(e, 'checkoutComplete')
+			throw e
+		}
+	}
+
 	static async checkoutSelectInstallment(selectedPaymentMethodId, installmentNumber) {
 		try {
 			const cartId = await StorageService.getStorageItem(CartService.CART_KEY)
