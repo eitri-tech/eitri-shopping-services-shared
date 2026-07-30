@@ -28,7 +28,7 @@ export default class Widde {
 		url.searchParams.set('url', productUrl)
 		Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value))
 
-		return Eitri.http.get(url.href, {
+		const res = await Eitri.http.get(url.href, {
 			headers: {
 				'Content-Type': 'application/json',
 				'Accept': 'application/json',
@@ -36,5 +36,7 @@ export default class Widde {
 				'Referer': 'mobile'
 			}
 		})
+
+		return res.data
 	}
 }
