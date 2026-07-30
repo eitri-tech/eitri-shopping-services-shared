@@ -6,25 +6,14 @@ export default function Home() {
         Eitri.navigation.navigate({ path })
     }
 
-    return (
-        <Window
-            topInset
-            bottomInset
-            title='Addons & Integrações'>
-            <View
-                padding='large'
-                direction='column'
-                gap={10}
-                justifyContent='center'
-                alignItems='center'
-                width='100%'>
-                <Button
-                    wide
-                    color='background-color'
-                    onPress={() => navigateTo('WiddeMethods')}
-                    label='Métodos Widde'
-                />
-            </View>
-        </Window>
-    )
+return (
+	<View className='min-h-screen flex flex-col items-center justify-center gap-10 p-8'>
+		<Text className='text-xl font-bold'>Addons & Integrações</Text>
+		<Button
+			className='btn-neutral w-full'
+			onClick={() => navigateTo('WiddeMethods')}>
+			Métodos Widde
+		</Button>
+	</View>
+)
 }
