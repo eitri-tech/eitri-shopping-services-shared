@@ -2,13 +2,6 @@ const selectedShippingModel = `
   selectedShipping {
     deadline
     deadlineInHours
-    deliverySchedule {
-      date
-      endDateTime
-      endTime
-      startDateTime
-      startTime
-    }
     name
     shippingQuoteId
     type
