@@ -41,14 +41,9 @@ export default function CartMethod() {
   };
 
   const addItemCart = async () => {
-    setLoading(true);
     //337013, 340789, 341041, 343687, 344094
-    const _fullCart = await WakeService.cart.addItems([
-      { productVariantId: 346845, quantity: 1 },
-      { productVariantId: 344094, quantity: 1 },
-    ]);
+    const _fullCart = await WakeService.cart.addItems([{ productVariantId: 362108, quantity: 1 }])
     setFullCart(_fullCart);
-    setLoading(false);
   };
 
   const removeItemCart = async () => {
@@ -99,7 +94,7 @@ export default function CartMethod() {
             )}
 
             <View
-              padding="large"
+              padding='nano'
               direction="column"
               justifyContent="center"
               alignItems="center"
@@ -115,7 +110,7 @@ export default function CartMethod() {
             </View>
 
             <View
-              padding="large"
+              padding='nano'
               direction="column"
               justifyContent="center"
               alignItems="center"
@@ -131,7 +126,7 @@ export default function CartMethod() {
             </View>
 
             <View
-              padding="large"
+              padding='nano'
               direction="column"
               justifyContent="center"
               alignItems="center"
@@ -147,7 +142,7 @@ export default function CartMethod() {
             </View>
 
             <View
-              padding="large"
+              padding='nano'
               direction="column"
               justifyContent="center"
               alignItems="center"
@@ -163,7 +158,7 @@ export default function CartMethod() {
             </View>
 
             <View
-              padding="large"
+              padding='nano'
               direction="column"
               justifyContent="center"
               alignItems="center"
@@ -179,7 +174,7 @@ export default function CartMethod() {
             </View>
 
             <View
-              padding="large"
+              padding='nano'
               direction="column"
               justifyContent="center"
               alignItems="center"

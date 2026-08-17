@@ -38,7 +38,7 @@ export default function CheckoutMethod() {
 	const addItemCart = async () => {
 		try {
 			console.log('add item cart')
-			const _fullCart = await WakeService.cart.addItems([{ productVariantId: 343779, quantity: 1 }])
+			const _fullCart = await WakeService.cart.addItems([{ productVariantId: 358165, quantity: 1 }])
 			console.log('add item cart result >>', _fullCart)
 			setFullCart(_fullCart)
 		} catch (error) {
@@ -72,7 +72,12 @@ export default function CheckoutMethod() {
 	}
 
 	const setShippingQuotes = async () => {
-		const response = await WakeService.checkout.checkoutSelectShippingQuote(shippingQuote.shippingQuoteId)
+		// const response = await WakeService.checkout.checkoutSelectShippingQuote(shippingQuote.shippingQuoteId)
+		const response = await WakeService.checkout.checkoutSelectShippingQuote(
+			'e5530014-baee-477b-b506-e4bd70902403',
+			null,
+			'eyJFbnRpdHkiOiJEaXN0cmlidXRpb25DZW50ZXIiLCJJZCI6MTAzNH0='
+		)
 		console.log('response >>', response)
 	}
 
@@ -319,7 +324,7 @@ export default function CheckoutMethod() {
 
 				{METHODS.map((method, idx) => (
 					<View
-						padding='large'
+						padding='nano'
 						direction='column'
 						justifyContent='center'
 						alignItems='center'
