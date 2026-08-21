@@ -5,4 +5,5 @@ export default class EventBusChannels {
 	static UPDATE_CART_ITEM = "updateCartItem"
 	static USER_LOGGED_IN = "userLoggedIn"
 	static USER_LOGGED_OUT = "userLoggedOut"
+	static REGION_CHANGED = "regionChanged"
 }

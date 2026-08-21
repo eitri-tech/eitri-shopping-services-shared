@@ -895,6 +895,12 @@ export default class VtexCustomerService {
 
 		StorageService.setStorageJSON(VtexCustomerService.STORAGE_REGION, region)
 
+		EventBus.publish({
+			channel: EventBusChannels.REGION_CHANGED,
+			broadcast: true,
+			data: { region }
+		})
+
 		return region
 	}
 
