@@ -237,32 +237,94 @@ export default class VtexCustomerService {
 		}
 	}
 
-	static async notifyLoginToExposedApis(customerId, email) {
+	/**
+	 * Notifica o login ao módulo nativo `session`, que registra o device para push.
+	 *
+	 * @param {string} [customerId] - Quando ausente, é resolvido via `getCustomerProfile`.
+	 * @param {string} [email]
+	 * @param {string} [origin] - Fluxo chamador, enviado ao Datadog quando a notificação não ocorre.
+	 */
+	static async notifyLoginToExposedApis(customerId, email, origin) {
 		try {
-			if (!customerId) {
-				console.log('notifyLoginToExposedApis error', 'customerId not found')
+			let _customerId = customerId
+
+			if (!_customerId) {
+				const profile = await VtexCustomerService.getCustomerProfile()
+				_customerId = profile?.data?.profile?.userId
+			}
+
+			if (!_customerId) {
+				sendDatadogWarningLog(
+					{
+						message: 'notifyLogin não executado, customerId não encontrado',
+						origin: origin
+					},
+					'notifyLoginToExposedApis'
+				)
 				return
 			}
 
+			await VtexCustomerService.setCustomerData('customerId', _customerId)
+
 			const modules = await Eitri.modules()
 			const notifyLogin = modules?.session?.notifyLogin
-			if (!notifyLogin) return
+			if (!notifyLogin) {
+				sendDatadogWarningLog(
+					{
+						message: 'notifyLogin não disponível no módulo session',
+						origin: origin
+					},
+					'notifyLoginToExposedApis'
+				)
+				return
+			}
 
-			return notifyLogin({
-				customerId: customerId,
+			return await notifyLogin({
+				customerId: _customerId,
 				email: email
 			})
 		} catch (e) {
-			console.log('notifyLoginToExposedApis error', e)
+			sendLogError(e, 'notifyLoginToExposedApis', { origin })
+		}
+	}
+
+	/**
+	 * Renotifica o login ao módulo nativo quando já existe sessão válida, registrando o device
+	 * para push de status de pedido. `notifyLogin` é idempotente no nativo, por isso não há
+	 * controle de já-notificado.
+	 */
+	static async ensureLoginNotified() {
+		try {
+			const isLoggedIn = await VtexCustomerService.isLoggedIn()
+			if (!isLoggedIn) return
+
+			const userData = await VtexCustomerService.retrieveCustomerData()
+
+			await VtexCustomerService.notifyLoginToExposedApis(
+				userData?.customerId,
+				userData?.email,
+				'ensureLoginNotified'
+			)
+		} catch (e) {
+			sendLogError(e, 'ensureLoginNotified')
 		}
 	}
 
 	static async notifyLogoutToExposedApis() {
 		try {
-			console.log('notificando logout')
-			Eitri.exposedApis.session.notifyLogout()
+			const modules = await Eitri.modules()
+			const notifyLogout = modules?.session?.notifyLogout
+			if (!notifyLogout) {
+				sendDatadogWarningLog(
+					{ message: 'notifyLogout não disponível no módulo session' },
+					'notifyLogoutToExposedApis'
+				)
+				return
+			}
+
+			await notifyLogout()
 		} catch (e) {
-			console.log('notifyLogoutToExposedApis error', e)
+			sendLogError(e, 'notifyLogoutToExposedApis')
 		}
 	}
 
@@ -668,7 +730,7 @@ export default class VtexCustomerService {
 			accountAuthCookieValue
 		)
 		await VtexSessionService.updateSession()
-		VtexCustomerService.notifyLoginToExposedApis(userId, email)
+		await VtexCustomerService.notifyLoginToExposedApis(userId, email, '_processPostLogin')
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
 			broadcast: true,
@@ -693,7 +755,7 @@ export default class VtexCustomerService {
 		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
 		await VtexSessionService.updateSession()
 
-		VtexCustomerService.notifyLoginToExposedApis(userId, email)
+		await VtexCustomerService.notifyLoginToExposedApis(userId, email, '_processPostSocialLogin')
 
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,

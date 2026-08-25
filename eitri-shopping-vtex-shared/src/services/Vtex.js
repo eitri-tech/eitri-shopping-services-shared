@@ -71,7 +71,7 @@ export default class Vtex {
 		await Vtex.buildSession({ ...configSegments, ...utmParams })
 
 		if (window.__eitriAppConf?.slug?.includes('home')) {
-			Vtex.customer.executeRefreshToken()
+			Vtex.customer.executeRefreshToken().then(() => Vtex.customer.ensureLoginNotified())
 		}
 	}
 
