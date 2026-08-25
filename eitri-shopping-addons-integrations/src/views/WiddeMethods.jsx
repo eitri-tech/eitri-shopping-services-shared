@@ -14,13 +14,28 @@ export default function WiddeMethods() {
 	}
 
 	return (
-		<View className='min-h-screen flex flex-col items-center justify-center gap-10 p-8 overflow-y-auto w-full'>
-			<Text className='text-xl font-bold'>Métodos Widde</Text>
-			<Button
-				className='btn-neutral w-full'
-				onClick={testWidde}>
-				Testar Widde
-			</Button>
-		</View>
+		<Window
+			topInset
+			bottomInset>
+			<View
+				padding='large'
+				direction='column'
+				gap={16}
+				justifyContent='center'
+				alignItems='center'
+				width='100%'>
+				<Text
+					fontSize='large'
+					fontWeight='bold'>
+					Métodos Widde
+				</Text>
+				<Button
+					wide
+					color='background-color'
+					onPress={testWidde}
+					label='Testar Widde'
+				/>
+			</View>
+		</Window>
 	)
 }
