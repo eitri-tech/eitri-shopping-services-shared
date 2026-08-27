@@ -131,4 +131,28 @@ export default class VtexCaller {
 
 		return res
 	}
+
+	static async put(path, data, options = {}, baseUrl) {
+		const _baseUrl = baseUrl || Vtex.configs.api
+		const url = VtexCaller._mountUrl(_baseUrl, path)
+		const headers = await VtexCaller._getHeaders()
+
+		Logger.log('===Fazendo PUT na API===')
+		Logger.log('URL ========>', url.href)
+		Logger.log('HEADERS ======>', {
+			...headers,
+			...options?.headers
+		})
+		Logger.log('BODY =======>', data)
+
+		const res = await Eitri.http.put(url.href, data, {
+			...options,
+			headers: {
+				...headers,
+				...options?.headers
+			}
+		})
+
+		return res
+	}
 }
