@@ -194,7 +194,14 @@ export default class VtexCustomerService {
 			oAuthProvider
 		})
 
-		await VtexCustomerService._processPostSocialLogin(returnUrl.authUrl)
+		const authUrl = returnUrl?.authUrl
+
+		if (!authUrl) {
+			sendDatadogWarningLog({ message: 'vtexOAuth retornou sem authUrl', oAuthProvider }, 'vtexOAuth')
+			throw new Error(`${oAuthProvider} login failed`)
+		}
+
+		await VtexCustomerService._processPostSocialLogin(authUrl)
 	}
 
 	static async loginWithFacebook() {
@@ -247,10 +254,12 @@ export default class VtexCustomerService {
 	static async notifyLoginToExposedApis(customerId, email, origin) {
 		try {
 			let _customerId = customerId
+			let _email = email
 
-			if (!_customerId) {
+			if (!_customerId || !_email) {
 				const profile = await VtexCustomerService.getCustomerProfile()
-				_customerId = profile?.data?.profile?.userId
+				_customerId = _customerId || profile?.data?.profile?.userId
+				_email = _email || profile?.data?.profile?.email
 			}
 
 			if (!_customerId) {
@@ -279,9 +288,20 @@ export default class VtexCustomerService {
 				return
 			}
 
+			if (_email) {
+				await VtexCustomerService.setCustomerData('email', _email)
+			}
+
+			console.log('notifyLogin', {
+				origin: origin,
+				customerId: _customerId,
+				hasEmail: !!_email,
+				customerIdFromProfile: !customerId
+			})
+
 			return await notifyLogin({
 				customerId: _customerId,
-				email: email
+				email: _email
 			})
 		} catch (e) {
 			sendLogError(e, 'notifyLoginToExposedApis', { origin })
@@ -485,6 +505,16 @@ export default class VtexCustomerService {
 			query: 'query Profile @context(scope: "private") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate passwordLastUpdate } }'
 		}
 
+		// Quando o token é passado explicitamente, ele ainda não está no Storage (login social),
+		// e o VtexCaller autentica lendo do Storage — por isso o cookie precisa ser forçado aqui.
+		const overrideHeaders = _token
+			? {
+					'Content-Type': 'application/json',
+					'accept': '*/*',
+					'Cookie': `VtexIdclientAutCookie_${Vtex.configs.account}=${_token}`
+				}
+			: undefined
+
 		const result = await VtexCaller.post(
 			`_v/private/graphql/v1`,
 			body,
@@ -494,7 +524,8 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			Vtex.configs.host,
+			overrideHeaders
 		)
 
 		return result?.data
@@ -739,21 +770,56 @@ export default class VtexCustomerService {
 	}
 
 	static async _processPostSocialLogin(finishNavigationUrl) {
-		const params = new URL(finishNavigationUrl).searchParams
+		if (!finishNavigationUrl) {
+			throw new Error('Social login failed: finish url ausente')
+		}
+
+		let params
+		try {
+			params = new URL(finishNavigationUrl).searchParams
+		} catch (e) {
+			sendLogError(e, '_processPostSocialLogin')
+			throw new Error('Social login failed: finish url inválida')
+		}
 
 		const authCookieValue = params.get('authCookieValue')
 
+		if (!authCookieValue) {
+			sendDatadogWarningLog(
+				{ message: 'authCookieValue ausente no retorno do OAuth' },
+				'_processPostSocialLogin'
+			)
+			throw new Error('Social login failed: token ausente')
+		}
+
 		const accountAuthCookieId = params?.get('authCookieName')?.split('_')?.[1]
 		const accountAuthCookieValue = params?.get('accountAuthCookieValue')
+		const refreshToken = params?.get('vid_rt') || ''
 
-		const userProfile = await VtexCustomerService.getCustomerProfile(authCookieValue)
-
-		const userId = userProfile?.data?.profile?.userId
-		const email = userProfile?.data?.profile?.email
-
-		await VtexCustomerService.setCustomerData('email', email)
-		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
+		// O token precisa estar persistido antes de qualquer chamada autenticada:
+		// o VtexCaller monta o cookie a partir do Storage, não do parâmetro.
+		await VtexCustomerService.setCustomerToken(
+			authCookieValue,
+			refreshToken,
+			accountAuthCookieId,
+			accountAuthCookieValue
+		)
 		await VtexSessionService.updateSession()
+
+		let userId
+		let email
+
+		try {
+			const userProfile = await VtexCustomerService.getCustomerProfile(authCookieValue)
+			userId = userProfile?.data?.profile?.userId
+			email = userProfile?.data?.profile?.email
+		} catch (e) {
+			sendLogError(e, '_processPostSocialLogin')
+		}
+
+		if (email) {
+			await VtexCustomerService.setCustomerData('email', email)
+		}
 
 		await VtexCustomerService.notifyLoginToExposedApis(userId, email, '_processPostSocialLogin')
 

@@ -34,6 +34,16 @@ export default function Home() {
 		Eitri.navigation.navigate({ path })
 	}
 
+	const testSocialLogin = async () => {
+		try {
+			await Vtex.customer.vtexOAuth('Google')
+			const userData = await Vtex.customer.retrieveCustomerData()
+			console.log('testSocialLogin ok', userData)
+		} catch (e) {
+			console.log('testSocialLogin error', e)
+		}
+	}
+
 	return (
 		<Window
 			topInset
@@ -116,6 +126,12 @@ export default function Home() {
 					color='background-color'
 					onPress={() => navigateTo('SessionMethods')}
 					label='Métodos de Session'
+				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={testSocialLogin}
+					label='Testar login social'
 				/>
 			</View>
 		</Window>
