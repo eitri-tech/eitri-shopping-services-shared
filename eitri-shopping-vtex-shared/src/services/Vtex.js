@@ -32,6 +32,13 @@ export default class Vtex {
 		faststore: ''
 	}
 
+	static cleanUrl = (url) => {
+		if (typeof url !== 'string' || !url) return url
+		const withProtocol = url.startsWith('https://') ? url : `https://${url}`
+		const withoutTrailingSlash = withProtocol.replace(/\/$/, '')
+		return withoutTrailingSlash
+	}
+
 	static configure = async remoteConfig => {
 		let _host = remoteConfig?.providerInfo?.host
 		if (_host && !_host.startsWith('https://')) {
