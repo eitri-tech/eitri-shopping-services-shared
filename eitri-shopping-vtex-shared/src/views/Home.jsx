@@ -117,6 +117,12 @@ export default function Home() {
 					onPress={() => navigateTo('SessionMethods')}
 					label='Métodos de Session'
 				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => Vtex.customer.vtexOAuth('Google')}
+					label='Testar login social'
+				/>
 			</View>
 		</Window>
 	)
