@@ -40,10 +40,7 @@ export default class Vtex {
 	}
 
 	static configure = async remoteConfig => {
-		let _host = remoteConfig?.providerInfo?.host
-		if (_host && !_host.startsWith('https://')) {
-			_host = 'https://' + remoteConfig?.providerInfo?.host
-		}
+		let _host = cleanUrl(remoteConfig?.providerInfo?.host)
 
 		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 		const configSegments = remoteConfig?.storePreferences?.segments || {}
@@ -57,7 +54,7 @@ export default class Vtex {
 			}
 			if (device?.platform == "ios" && remoteConfig?.storePreferences?.iosMarketingTag) {
 				soMktTag = remoteConfig?.storePreferences?.iosMarketingTag
-			}			
+			}
 		} catch (error) {
 			console.error("[SHARED] Error trying to set soMktTag from remote config", error)
 		}
