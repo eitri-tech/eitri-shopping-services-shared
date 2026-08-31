@@ -33,13 +33,10 @@ export default class Vtex {
 	}
 
 	static cleanUrl = (url) => {
-		let _url = url
-		if (typeof _url !== 'string' || !_url) return _url
-		if (!_url.startsWith('https://')) {
-			_url = `https://${_url}`
-		}
-		_url = _url.replace(/\/$/, '')
-		return _url
+		if (typeof url !== 'string' || !url) return url
+		const withProtocol = url.startsWith('https://') ? url : `https://${url}`
+		const withoutTrailingSlash = withProtocol.replace(/\/$/, '')
+		return withoutTrailingSlash
 	}
 
 	static configure = async remoteConfig => {
