@@ -55,10 +55,11 @@ export default class Vtex {
 			console.error("[SHARED] Error trying to set soMktTag from remote config", error)
 		}
 
+		const account = remoteConfig?.providerInfo?.account
 
 		Vtex.configs = {
-			account: remoteConfig?.providerInfo?.account,
-			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
+			account,
+			api: `https://${account}.vtexcommercestable.com.br`,
 			host: _host,
 			locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
