@@ -244,21 +244,15 @@ export default class VtexCustomerService {
 
 	/**
 	 * Notifica o login ao módulo nativo `session`, que registra o device para push.
-	 *
-	 * @param {string} [customerId] - Quando ausente, é resolvido via `getCustomerProfile`.
-	 * @param {string} [email]
 	 * @param {string} [origin] - Fluxo chamador, enviado ao Datadog quando a notificação não ocorre.
 	 */
-	static async notifyLoginToExposedApis(customerId, email, origin) {
+	static async notifyLoginToExposedApis(origin) {
 		try {
-			let _customerId = customerId
-			let _email = email
 
-			if (!_customerId || !_email) {
-				const profile = await VtexCustomerService.getCustomerProfile()
-				_customerId = _customerId || profile?.data?.profile?.userId
-				_email = _email || profile?.data?.profile?.email
-			}
+			const profile = await VtexCustomerService.getCustomerProfile()
+
+			let _customerId = profile?.data?.profile?.userId
+			let _email = profile?.data?.profile?.email
 
 			if (!_customerId) {
 				sendDatadogWarningLog(
@@ -293,8 +287,7 @@ export default class VtexCustomerService {
 			console.log('notifyLogin', {
 				origin,
 				customerId: _customerId,
-				hasEmail: !!_email,
-				customerIdFromProfile: !customerId
+				hasEmail: !!_email
 			})
 
 			return await notifyLogin({
@@ -318,11 +311,7 @@ export default class VtexCustomerService {
 
 			const userData = await VtexCustomerService.retrieveCustomerData()
 
-			await VtexCustomerService.notifyLoginToExposedApis(
-				userData?.customerId,
-				userData?.email,
-				'ensureLoginNotified'
-			)
+			await VtexCustomerService.notifyLoginToExposedApis('ensureLoginNotified')
 		} catch (e) {
 			sendLogError(e, 'ensureLoginNotified')
 		}
@@ -753,7 +742,7 @@ export default class VtexCustomerService {
 			accountAuthCookieValue
 		)
 		await VtexSessionService.updateSession()
-		await VtexCustomerService.notifyLoginToExposedApis(userId, email, '_processPostLogin')
+		await VtexCustomerService.notifyLoginToExposedApis('_processPostLogin')
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
 			broadcast: true,
@@ -788,15 +777,7 @@ export default class VtexCustomerService {
 			)
 			await VtexSessionService.updateSession()
 
-			const userProfile = await VtexCustomerService.getCustomerProfile(authCookieValue).catch(e =>
-				sendLogError(e, '_processPostSocialLogin')
-			)
-
-			await VtexCustomerService.notifyLoginToExposedApis(
-				userProfile?.data?.profile?.userId,
-				userProfile?.data?.profile?.email,
-				'_processPostSocialLogin'
-			)
+			await VtexCustomerService.notifyLoginToExposedApis('_processPostSocialLogin')
 
 			console.log('_processPostSocialLogin', {
 				authCookieValue,
