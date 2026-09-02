@@ -7,6 +7,7 @@ import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
 import RemoteConfig from '../../RemoteConfig'
+import { PaymentResult } from '../../../models/Payment'
 
 type PaymentOptions = {
 	fields: {
@@ -40,7 +41,7 @@ type StartTransactionReturn = {
 	Vtex_CHKO_Auth: string
 	CheckoutDataAccess: string
 	merchantTransactions: {
-		id: string;
+		id: string
 		merchantName: string
 		transactionId: string
 		payments: {
@@ -73,14 +74,6 @@ type StartTransactionReturn = {
 	}[]
 }
 
-type ProcessPaymentReturn = {
-	orderId: string
-	transactionId: string
-	status: string
-} & {
-	[key: string]: any
-}
-
 export default class VtexPaymentService {
 	static async executePayment(cart: any, options?: PaymentOptions) {
 		try {
@@ -91,8 +84,7 @@ export default class VtexPaymentService {
 
 			await VtexPaymentService.setPaymentMethod(cart, startTransactionReturn, options)
 
-			const paymentProcessed: ProcessPaymentReturn =
-				await VtexPaymentService.processPayment(startTransactionReturn)
+			const paymentProcessed: PaymentResult = await VtexPaymentService.processPayment(startTransactionReturn)
 
 			GAVtexInternalService.purchase(cart, paymentProcessed?.transactionId || paymentProcessed?.orderId)
 
@@ -256,23 +248,28 @@ export default class VtexPaymentService {
 		}
 	}
 
-	static async processPayment(startTransactionReturn: StartTransactionReturn): Promise<ProcessPaymentReturn> {
+	static async processPayment(startTransactionReturn: StartTransactionReturn): Promise<PaymentResult> {
 		console.log('====> Processando o pagamento', startTransactionReturn.orderGroup)
 
 		try {
-			await VtexCaller.post(`/api/checkout/pub/gatewayCallback/${startTransactionReturn.orderGroup}`, null, {
-				headers: {
-					'accept': 'application/json, text/javascript, */*; q=0.01',
-					'content-type': 'application/json',
-					'Cookie': `Vtex_CHKO_Auth=${startTransactionReturn.Vtex_CHKO_Auth};CheckoutDataAccess=VTEX_CHK_Order_Auth=${startTransactionReturn.CheckoutDataAccess}`
+			const result = await VtexCaller.post(
+				`/api/checkout/pub/gatewayCallback/${startTransactionReturn.orderGroup}`,
+				null,
+				{
+					headers: {
+						'accept': 'application/json, text/javascript, */*; q=0.01',
+						'content-type': 'application/json',
+						'Cookie': `Vtex_CHKO_Auth=${startTransactionReturn.Vtex_CHKO_Auth};CheckoutDataAccess=VTEX_CHK_Order_Auth=${startTransactionReturn.CheckoutDataAccess}`
+					}
 				}
-			})
+			)
 
 			console.log('=====> Pagamento processado com sucesso', startTransactionReturn.orderGroup)
 			return {
 				orderId: startTransactionReturn.orderGroup,
 				transactionId: startTransactionReturn.id,
-				status: 'completed'
+				status: 'completed',
+				gatewayCallbackResult: result?.data ?? null
 			}
 		} catch (e) {
 			console.timeEnd('processPayment')
@@ -287,13 +284,13 @@ export default class VtexPaymentService {
 					orderId: startTransactionReturn.orderGroup,
 					transactionId: startTransactionReturn.id,
 					status: 'waiting_payment',
+					data: e.response.data ?? null,
 					...e.response.data
 				}
 			} else {
 				console.log('erro no processPayment', e)
 				throw e
 			}
-
 		}
 	}
 }
