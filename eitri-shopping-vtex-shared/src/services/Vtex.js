@@ -32,11 +32,15 @@ export default class Vtex {
 		faststore: ''
 	}
 
+	static cleanUrl = (url) => {
+		if (typeof url !== 'string' || !url) return url
+		const withProtocol = url.startsWith('https://') ? url : `https://${url}`
+		const withoutTrailingSlash = withProtocol.replace(/\/$/, '')
+		return withoutTrailingSlash
+	}
+
 	static configure = async remoteConfig => {
-		let _host = remoteConfig?.providerInfo?.host
-		if (_host && !_host.startsWith('https://')) {
-			_host = 'https://' + remoteConfig?.providerInfo?.host
-		}
+		let _host = cleanUrl(remoteConfig?.providerInfo?.host)
 
 		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 		const configSegments = remoteConfig?.storePreferences?.segments || {}
@@ -50,15 +54,16 @@ export default class Vtex {
 			}
 			if (device?.platform == "ios" && remoteConfig?.storePreferences?.iosMarketingTag) {
 				soMktTag = remoteConfig?.storePreferences?.iosMarketingTag
-			}			
+			}
 		} catch (error) {
 			console.error("[SHARED] Error trying to set soMktTag from remote config", error)
 		}
 
+		const account = remoteConfig?.providerInfo?.account
 
 		Vtex.configs = {
-			account: remoteConfig?.providerInfo?.account,
-			api: `https://${remoteConfig?.providerInfo?.account}.vtexcommercestable.com.br`,
+			account,
+			api: `https://${account}.vtexcommercestable.com.br`,
 			host: _host,
 			locale: remoteConfig?.storePreferences?.locale ?? 'pt-BR',
 			sendGACampaignAlongSession: remoteConfig?.appConfigs?.sendGACampaignAlongSession ?? true,
