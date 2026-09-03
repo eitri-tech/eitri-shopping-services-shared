@@ -6,7 +6,7 @@ import extractCookies from '../_helpers/extractCookies'
 import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
-import RemoteConfig from "@/services/RemoteConfig";
+import RemoteConfig from '@/services/RemoteConfig'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import VtexCheckoutService from '@/services/vtex/checkout/vtexCheckoutService'
 
@@ -169,32 +169,37 @@ export default class VtexCustomerService {
 	}
 
 	static async vtexOAuth(oAuthProvider = 'Google') {
-		const modules = await Eitri.modules()
-		const isAvailable = modules?.vtexOAuth?.isAvailable
-		if (!isAvailable) {
-			console.log('Vtex OAuth is not available on this device.')
-			return
+		try {
+			const modules = await Eitri.modules()
+			const isAvailable = modules?.vtexOAuth?.isAvailable
+			if (!isAvailable) {
+				console.log('Vtex OAuth is not available on this device.')
+				return
+			}
+
+			const available = await isAvailable()
+			if (!available) {
+				console.log('Vtex OAuth is not available on this device.')
+				return
+			}
+
+			const login = modules?.vtexOAuth?.login
+			if (!login) return
+
+			const hostDomain = RemoteConfig.getContent('providerInfo.host')
+			const vtexAccountId = RemoteConfig.getContent('providerInfo.account')
+
+			const returnUrl = await login({
+				hostDomain,
+				vtexAccountId,
+				oAuthProvider
+			})
+
+			await VtexCustomerService._processPostSocialLogin(returnUrl?.authUrl)
+		} catch (error) {
+			console.error('Error in vtexOAuth:', error)
+			throw error
 		}
-
-		const available = await isAvailable()
-		if (!available) {
-			console.log('Vtex OAuth is not available on this device.')
-			return
-		}
-
-		const login = modules?.vtexOAuth?.login
-		if (!login) return
-
-		const hostDomain = RemoteConfig.getContent('providerInfo.host')
-		const vtexAccountId = RemoteConfig.getContent('providerInfo.account')
-
-		const returnUrl = await login({
-			hostDomain,
-			vtexAccountId,
-			oAuthProvider
-		})
-
-		await VtexCustomerService._processPostSocialLogin(returnUrl.authUrl)
 	}
 
 	static async loginWithFacebook() {
@@ -239,19 +244,15 @@ export default class VtexCustomerService {
 
 	/**
 	 * Notifica o login ao módulo nativo `session`, que registra o device para push.
-	 *
-	 * @param {string} [customerId] - Quando ausente, é resolvido via `getCustomerProfile`.
-	 * @param {string} [email]
 	 * @param {string} [origin] - Fluxo chamador, enviado ao Datadog quando a notificação não ocorre.
 	 */
-	static async notifyLoginToExposedApis(customerId, email, origin) {
+	static async notifyLoginToExposedApis(origin) {
 		try {
-			let _customerId = customerId
 
-			if (!_customerId) {
-				const profile = await VtexCustomerService.getCustomerProfile()
-				_customerId = profile?.data?.profile?.userId
-			}
+			const profile = await VtexCustomerService.getCustomerProfile()
+
+			let _customerId = profile?.data?.profile?.userId
+			let _email = profile?.data?.profile?.email
 
 			if (!_customerId) {
 				sendDatadogWarningLog(
@@ -279,9 +280,19 @@ export default class VtexCustomerService {
 				return
 			}
 
+			if (_email) {
+				await VtexCustomerService.setCustomerData('email', _email)
+			}
+
+			console.log('notifyLogin', {
+				origin,
+				customerId: _customerId,
+				hasEmail: !!_email
+			})
+
 			return await notifyLogin({
 				customerId: _customerId,
-				email: email
+				email: _email
 			})
 		} catch (e) {
 			sendLogError(e, 'notifyLoginToExposedApis', { origin })
@@ -300,11 +311,7 @@ export default class VtexCustomerService {
 
 			const userData = await VtexCustomerService.retrieveCustomerData()
 
-			await VtexCustomerService.notifyLoginToExposedApis(
-				userData?.customerId,
-				userData?.email,
-				'ensureLoginNotified'
-			)
+			await VtexCustomerService.notifyLoginToExposedApis('ensureLoginNotified')
 		} catch (e) {
 			sendLogError(e, 'ensureLoginNotified')
 		}
@@ -485,6 +492,10 @@ export default class VtexCustomerService {
 			query: 'query Profile @context(scope: "private") { profile { userId cacheId firstName lastName birthDate gender homePhone businessPhone document email tradeName corporateName corporateDocument stateRegistration isCorporate passwordLastUpdate } }'
 		}
 
+		const overrideHeaders = _token
+			? { Cookie: `VtexIdclientAutCookie_${Vtex.configs.account}=${_token}` }
+			: undefined
+
 		const result = await VtexCaller.post(
 			`_v/private/graphql/v1`,
 			body,
@@ -494,7 +505,8 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			Vtex.configs.host,
+			overrideHeaders
 		)
 
 		return result?.data
@@ -730,7 +742,7 @@ export default class VtexCustomerService {
 			accountAuthCookieValue
 		)
 		await VtexSessionService.updateSession()
-		await VtexCustomerService.notifyLoginToExposedApis(userId, email, '_processPostLogin')
+		await VtexCustomerService.notifyLoginToExposedApis('_processPostLogin')
 		EventBus.publish({
 			channel: EventBusChannels.USER_LOGGED_IN,
 			broadcast: true,
@@ -739,29 +751,50 @@ export default class VtexCustomerService {
 	}
 
 	static async _processPostSocialLogin(finishNavigationUrl) {
-		const params = new URL(finishNavigationUrl).searchParams
+		try {
+			const params = new URL(finishNavigationUrl).searchParams
 
-		const authCookieValue = params.get('authCookieValue')
+			const authCookieValue = params.get('authCookieValue')
 
-		const accountAuthCookieId = params?.get('authCookieName')?.split('_')?.[1]
-		const accountAuthCookieValue = params?.get('accountAuthCookieValue')
+			if (!authCookieValue) {
+				sendDatadogWarningLog(
+					{ message: 'authCookieValue ausente no retorno do OAuth' },
+					'_processPostSocialLogin'
+				)
+				throw new Error('Social login failed: token ausente')
+			}
 
-		const userProfile = await VtexCustomerService.getCustomerProfile(authCookieValue)
+			const accountAuthCookieId = params.get('authCookieName')?.split('_')?.[1]
+			const accountAuthCookieValue = params.get('accountAuthCookieValue')
 
-		const userId = userProfile?.data?.profile?.userId
-		const email = userProfile?.data?.profile?.email
+			const refreshToken = params.get('vid_rt') || ''
 
-		await VtexCustomerService.setCustomerData('email', email)
-		await VtexCustomerService.setCustomerToken(authCookieValue, '', accountAuthCookieId, accountAuthCookieValue)
-		await VtexSessionService.updateSession()
+			await VtexCustomerService.setCustomerToken(
+				authCookieValue,
+				refreshToken,
+				accountAuthCookieId,
+				accountAuthCookieValue
+			)
+			await VtexSessionService.updateSession()
 
-		await VtexCustomerService.notifyLoginToExposedApis(userId, email, '_processPostSocialLogin')
+			await VtexCustomerService.notifyLoginToExposedApis('_processPostSocialLogin')
 
-		EventBus.publish({
-			channel: EventBusChannels.USER_LOGGED_IN,
-			broadcast: true,
-			data: {}
-		})
+			console.log('_processPostSocialLogin', {
+				authCookieValue,
+				accountAuthCookieId,
+				accountAuthCookieValue,
+				refreshToken
+			})
+
+			EventBus.publish({
+				channel: EventBusChannels.USER_LOGGED_IN,
+				broadcast: true,
+				data: {}
+			})
+		} catch (error) {
+			console.error('Erro em _processPostSocialLogin', error)
+			throw error
+		}
 	}
 
 	static async getAddresses() {
