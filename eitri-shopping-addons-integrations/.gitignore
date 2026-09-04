@@ -10,3 +10,4 @@ teste
 jsconfig.json
 /**/.workspaces
 /.release
+/tsconfig.json
