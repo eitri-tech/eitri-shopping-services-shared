@@ -9,6 +9,7 @@ import EventBusChannels from '@/services/EventBusChannels'
 import RemoteConfig from '@/services/RemoteConfig'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import VtexCheckoutService from '@/services/vtex/checkout/vtexCheckoutService'
+import Logger from '@/services/Logger'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -248,11 +249,11 @@ export default class VtexCustomerService {
 	 */
 	static async notifyLoginToExposedApis(origin) {
 		try {
-
 			const profile = await VtexCustomerService.getCustomerProfile()
+			const profileData = profile?.data?.profile
 
-			let _customerId = profile?.data?.profile?.userId
-			let _email = profile?.data?.profile?.email
+			let _customerId = profileData?.userId
+			let _email = profileData?.email
 
 			if (!_customerId) {
 				sendDatadogWarningLog(
@@ -284,16 +285,24 @@ export default class VtexCustomerService {
 				await VtexCustomerService.setCustomerData('email', _email)
 			}
 
-			console.log('notifyLogin', {
-				origin,
-				customerId: _customerId,
-				hasEmail: !!_email
-			})
+			const optionalFields = {
+				phone: profileData?.homePhone,
+				birthday: profileData?.birthDate,
+				gender: profileData?.gender,
+				firstName: profileData?.firstName,
+				lastName: profileData?.lastName
+			}
 
-			return await notifyLogin({
-				customerId: _customerId,
-				email: _email
-			})
+			const payload = { customerId: _customerId, email: _email }
+			for (const [key, value] of Object.entries(optionalFields)) {
+				if (value !== undefined && value !== null && value !== '') {
+					payload[key] = value
+				}
+			}
+
+			Logger.log('notificando login', payload)
+
+			return await notifyLogin(payload)
 		} catch (e) {
 			sendLogError(e, 'notifyLoginToExposedApis', { origin })
 		}
