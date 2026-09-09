@@ -429,12 +429,12 @@ export class AuthService {
 		if (!end_session_endpoint) throw new Error('no.end_session_endpoint')
 
 		const shopId = end_session_endpoint.match(/authentication\/(\d+)/)?.[1]
-		const postLogoutRedirectUri = encodeURIComponent(`shop.${shopId}.app://callback`)
+		const logoutRedirectUri = RemoteConfig.getContent('providerInfo.callbackUrl') ?? `shop.${shopId}.app://callback`
 
 		await Eitri.webFlow.start({
-			startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${postLogoutRedirectUri}`,
+			startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${logoutRedirectUri}`,
 			stopPattern: 'eitri-logout-done|callback',
-			allowedDomains: ['shopify.com', 'www.shopify.com', 'callback'],
+			allowedDomains: ['shopify.com', 'www.shopify.com', 'callback', new URL(logoutRedirectUri).hostname],
 			maxNavigationLimit: 5,
 			onLoadJsScript: `window.location.href = 'https://www.shopify.com/eitri-logout-done';`
 		})
