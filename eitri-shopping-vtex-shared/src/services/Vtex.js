@@ -32,20 +32,15 @@ export default class Vtex {
 		faststore: ''
 	}
 
-	static cleanUrl = (url) => {
-		if (typeof url !== 'string' || !url) return url
-		const withProtocol = url.startsWith('https://') ? url : `https://${url}`
-		const withoutTrailingSlash = withProtocol.replace(/\/$/, '')
-		return withoutTrailingSlash
-	}
-
 	static configure = async remoteConfig => {
-		let _host = cleanUrl(remoteConfig?.providerInfo?.host)
+
+		const url = remoteConfig?.providerInfo?.host
+		const withProtocol = url.startsWith('https://') ? url : `https://${url}`
+		let _host = withProtocol.replace(/\/$/, '')
 
 		let utmParams = (await VtexCustomerService.getUtmParams()) || {}
 		const configSegments = remoteConfig?.storePreferences?.segments || {}
 		let soMktTag
-
 
 		try {
 			const device = (await Eitri.device.getInfos()) || {}
