@@ -120,6 +120,12 @@ export default function Home() {
 				<Button
 					wide
 					color='background-color'
+					onPress={() => navigateTo('SubscriptionMethods')}
+					label='Métodos de Subscription'
+				/>
+				<Button
+					wide
+					color='background-color'
 					onPress={() => Vtex.customer.vtexOAuth('Google')}
 					label='Testar login social'
 				/>
