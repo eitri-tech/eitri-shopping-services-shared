@@ -308,24 +308,6 @@ export default class VtexCustomerService {
 		}
 	}
 
-	/**
-	 * Renotifica o login ao módulo nativo quando já existe sessão válida, registrando o device
-	 * para push de status de pedido. `notifyLogin` é idempotente no nativo, por isso não há
-	 * controle de já-notificado.
-	 */
-	static async ensureLoginNotified() {
-		try {
-			const isLoggedIn = await VtexCustomerService.isLoggedIn()
-			if (!isLoggedIn) return
-
-			const userData = await VtexCustomerService.retrieveCustomerData()
-
-			await VtexCustomerService.notifyLoginToExposedApis('ensureLoginNotified')
-		} catch (e) {
-			sendLogError(e, 'ensureLoginNotified')
-		}
-	}
-
 	static async notifyLogoutToExposedApis() {
 		try {
 			const modules = await Eitri.modules()
@@ -699,7 +681,7 @@ export default class VtexCustomerService {
 						res?.accountAuthCookieId,
 						newToken
 					)
-					await VtexSessionService.updateSession()
+					VtexCustomerService.notifyLoginToExposedApis('executeRefreshToken')
 					EventBus.publish({
 						channel: EventBusChannels.USER_LOGGED_IN,
 						broadcast: true,
