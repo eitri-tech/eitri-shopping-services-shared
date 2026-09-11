@@ -155,4 +155,27 @@ export default class VtexCaller {
 
 		return res
 	}
+
+	static async delete(path, options = {}, baseUrl) {
+		const _baseUrl = baseUrl || Vtex.configs.api
+		const url = VtexCaller._mountUrl(_baseUrl, path)
+		const headers = await VtexCaller._getHeaders()
+
+		Logger.log('===Fazendo Delete na API===')
+		Logger.log('URL ========>', url.href)
+		Logger.log('HEADERS ======>', {
+			...headers,
+			...options?.headers
+		})
+
+		const res = await Eitri.http.delete(url.href, {
+			...options,
+			headers: {
+				...headers,
+				...options?.headers
+			}
+		})
+
+		return res
+	}
 }

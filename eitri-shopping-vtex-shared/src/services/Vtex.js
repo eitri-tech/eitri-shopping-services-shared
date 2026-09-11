@@ -14,6 +14,7 @@ import VtexSearchGraphql from './vtex/search/vtexSearchGraphql'
 import VtexIntelligentSearchService from './vtex/intelligentSearch/vtexIntelligentSearchService'
 import { VtexGooglePayServices } from '@/services/vtex/googlePay/vtexGooglePayServices'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
+import VtexSubscriptionService from '@/services/vtex/subscription/vtexSubscriptionService'
 
 export default class Vtex {
 	static configs = {
@@ -148,4 +149,5 @@ export default class Vtex {
 	static http = VtexCaller
 	static googlePay = VtexGooglePayServices
 	static session = VtexSessionService
+	static subscription = VtexSubscriptionService
 }
