@@ -71,7 +71,8 @@ export default class Vtex {
 
 		await Vtex.buildSession({ ...configSegments, ...utmParams })
 
-		if (window.__eitriAppConf?.slug?.includes('home')) {
+		const startParams = await Eitri.getInitializationInfos().catch(() => null)
+		if (String(startParams?.tabIndex) === '0') {
 			Vtex.customer.executeRefreshToken()
 		}
 	}

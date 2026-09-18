@@ -3,7 +3,7 @@ import Vtex from '../../Vtex'
 import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
-import { sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
+import { sendDatadogInfoLog, sendDatadogWarningLog, sendLogError } from '@/services/Datadog'
 import EventBus from '@/services/EventBus'
 import EventBusChannels from '@/services/EventBusChannels'
 import RemoteConfig from '@/services/RemoteConfig'
@@ -646,11 +646,17 @@ export default class VtexCustomerService {
 			const { account } = Vtex.configs
 
 			const res = await VtexCustomerService.getStorageCustomerToken()
-			if (!res || !res.accountAuthCookieId) return
+			if (!res || !res.accountAuthCookieId) {
+				Logger.log('executeRefreshToken: sem token armazenado, refresh ignorado')
+				return
+			}
 			if (
 				res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >
 				Math.floor(Date.now() / 1000)
 			) {
+				Logger.log('executeRefreshToken: token ainda válido, refresh ignorado', {
+					creationTimeStamp: res.creationTimeStamp
+				})
 				return null
 			}
 
@@ -659,6 +665,8 @@ export default class VtexCustomerService {
 				const _cookie = sessionToken
 					? `vtex_segment=${sessionToken?.segmentToken};vtex_session=${sessionToken?.sessionToken}`
 					: null
+
+				Logger.log('executeRefreshToken: chamando api/vtexid/refreshtoken/webstore')
 
 				const loginRes = await VtexCaller.post(
 					`api/vtexid/refreshtoken/webstore`,
@@ -674,6 +682,13 @@ export default class VtexCustomerService {
 				const refreshToken = extractCookies(loginRes, 'vid_rt')
 				const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
 
+				Logger.log('executeRefreshToken: resposta recebida', {
+					status: loginRes?.status,
+					hasNewToken: !!newToken,
+					hasRefreshToken: !!refreshToken,
+					data: loginRes?.data
+				})
+
 				if (newToken && refreshToken) {
 					await VtexCustomerService.setCustomerToken(
 						newToken,
@@ -681,36 +696,35 @@ export default class VtexCustomerService {
 						res?.accountAuthCookieId,
 						newToken
 					)
+					await VtexSessionService.updateSession()
+					Logger.log('executeRefreshToken: tokens renovados e sessão atualizada')
 					VtexCustomerService.notifyLoginToExposedApis('executeRefreshToken')
 					EventBus.publish({
 						channel: EventBusChannels.USER_LOGGED_IN,
 						broadcast: true,
 						data: {}
 					})
+					sendDatadogInfoLog(
+						{
+							message: 'Refresh token executado com sucesso'
+						},
+						'executeRefreshToken'
+					)
 				} else {
 					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
 					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
-						// Evita ficar retentando, nao está logado e rt nao funciona
 						VtexCustomerService.logout()
 					}
 
-					sendDatadogWarningLog(
+					sendDatadogInfoLog(
 						{
-							message: 'Refresh token executado sem novos tokens na resposta',
+							message: 'Erro ao executar refresh token',
 							responseHeaders: loginRes?.headers,
 							response: loginRes?.data
 						},
 						'executeRefreshToken'
 					)
 				}
-			} else {
-				sendDatadogWarningLog(
-					{
-						message: 'Usuário não possui o refresh token',
-						creationTimeStamp: res.creationTimeStamp
-					},
-					'executeRefreshToken'
-				)
 			}
 		} catch (e) {
 			sendLogError(e, 'executeRefreshToken')
