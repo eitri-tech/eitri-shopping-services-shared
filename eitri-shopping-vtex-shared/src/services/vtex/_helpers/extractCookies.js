@@ -1,15 +1,16 @@
 export default function extractCookies(response, cookieName) {
-	// Return null if no response, headers, or cookie name
-	if (!response || !response.headers || !cookieName) {
+	if (!response?.headers || !cookieName) {
 		return null
 	}
 
-	const regex = new RegExp(`${cookieName}=(.*?);`, 'i')
-	const test = response?.headers['set-cookie']?.match(regex)
-
-	if (test && test[1]) {
-		return test[1]
-	} else {
+	const raw = response.headers['set-cookie'] ?? response.headers['Set-Cookie']
+	if (!raw) {
 		return null
 	}
+
+	const header = Array.isArray(raw) ? raw.join(';') : String(raw)
+	const regex = new RegExp(`(?:^|[;,]\\s*)${cookieName}=([^;]*)`, 'i')
+	const match = header.match(regex)
+
+	return match?.[1] || null
 }
