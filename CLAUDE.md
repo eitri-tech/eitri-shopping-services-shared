@@ -10,6 +10,7 @@ This repo is a monorepo of independent Eitri "shared" apps — reusable service 
 - `eitri-shopping-shopify-shared/` — Shopify integration (TS, GraphQL)
 - `eitri-shopping-wake-shared/` — Wake ecommerce integration (JS, GraphQL)
 - `eitri-shopping-integrations-shared/` — cross-integration shared views/components
+- `eitri-shopping-vtex-cx-ai-shared/` — Weni + AI customer-service chat (VTEX CX), brand-agnostic; per-store values (channelUuid, VTEX account, accent color, avatar) come from config, never from code. See its README.
 
 Each project has its own `eitri-app.conf.js` with its own `version`, `id`, `applicationId`, and `eitri-luminus` / `eitri-bifrost` pinned versions. Each project's `src/export.{js,ts}` is the public surface — it re-exports services (e.g. `Vtex`, `Shopify`, `Wake`, `App`, `Tracking`, `EventBus`, `RemoteConfig`) and model/type definitions that consumer apps import.
 
@@ -22,7 +23,7 @@ There is no root `package.json`; commands run per-subproject via the `eitri` CLI
 1. Authenticates against Eitri's `blind-guardian-api` using `EITRI_CLI_CLIENT_ID` / `EITRI_CLI_CLIENT_SECRET`.
 2. For each subdirectory containing `eitri-app.conf.js`, compares the local `version` against the latest published revision from `eitri-manager-api`.
 3. If local > published, runs `eitri push-version -m '<messageVersion>' [--shared]` inside that project. Projects with `sharedVersion`/`sharedCompiler` truthy publish first (ordering matters — other projects may depend on shared compiler output).
-4. On success, creates and pushes a git tag named `<suffix-after-last-dash>-<version>` (e.g. `vtex-1.13.0`).
+4. On success, creates and pushes a git tag named `<suffix-after-last-dash>-<version>` — `project.replace(/.*-/g, '')`, i.e. everything after the LAST dash. For `eitri-shopping-vtex-shared` that is `shared-1.13.0`, not `vtex-1.13.0`. Note that `vtex-shared`, `shopify-shared`, `wake-shared` and `vtex-cx-ai-shared` all collapse to the same `shared-` prefix, so their version numbers share one tag namespace and can collide.
 
 **To release: bump `version` in the project's `eitri-app.conf.js` and merge to `main`.** Do not run `eitri push-version` manually unless you understand the tag/order implications.
 
