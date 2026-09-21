@@ -287,7 +287,7 @@ export default class VtexCustomerService {
 
 			const optionalFields = {
 				phone: profileData?.homePhone,
-				birthday: profileData?.birthDate,
+				birthday: profileData?.birthDate?.split('T')[0],
 				gender: profileData?.gender,
 				firstName: profileData?.firstName,
 				lastName: profileData?.lastName
