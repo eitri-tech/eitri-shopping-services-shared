@@ -102,8 +102,8 @@ export default function ChatSheet(props) {
 
 	return (
 		<View
-			style={{ top: sheetTop + viewportOffset, bottom: keyboardInset - viewportOffset }}
-			className={`fixed left-0 right-0 z-[9999] flex flex-col bg-white rounded-t-2xl shadow-2xl overflow-hidden transform transition-transform duration-300 ease-out ${
+			style={{ zIndex: 9999, top: sheetTop + viewportOffset, bottom: keyboardInset - viewportOffset }}
+			className={`fixed left-0 right-0 flex flex-col bg-white rounded-t-2xl shadow-2xl overflow-hidden transform transition-transform duration-300 ease-out ${
 				visible ? 'translate-y-0' : 'translate-y-full'
 			}`}>
 			<View className='w-full pt-2 pb-1' />
