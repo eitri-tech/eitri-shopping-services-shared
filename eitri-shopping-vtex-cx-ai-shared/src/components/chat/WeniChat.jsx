@@ -301,11 +301,10 @@ export default function WeniChat(props) {
 				)}
 
 				{slots.aboveMessages && slots.aboveMessages(chat)}
-				{/* overscroll-contain: sem isso, chegar ao fim da lista continua o
-				    gesto na página atrás (a Home, quando o chat é um sheet). */}
 				<View
 					id={LIST_ID}
-					className='flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4'
+					className='flex-1 px-3 py-4'
+					style={{ minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain' }}
 					onScroll={handleScroll}>
 					{/* Skeleton enquanto a sessão hidrata/conecta — sem dependência externa. */}
 					{!isReady && (

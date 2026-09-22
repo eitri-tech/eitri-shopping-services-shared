@@ -4,14 +4,7 @@ import ChatAvatar from '../chat/ChatAvatar'
 
 const DRAG_THRESHOLD = 6
 const SNAP_DURATION = 200
-
-// Posicionamento e empilhamento vão em `style`, NÃO em className. `z-[9999]` e
-// `bottom-[110px]` são valores arbitrários do Tailwind, e este pacote pode ser
-// uma dependência transitiva do app que renderiza o botão — quando o CSS do
-// consumidor não gera essas classes, o `fixed` fica com offsets `auto`, o botão
-// para na posição estática dele (o fim do conteúdo da página), some abaixo da
-// dobra e não há erro nenhum para denunciar. Inline sempre chega.
-const FAB_LAYER = { position: 'fixed', zIndex: 9999 }
+const FAB_LAYER = { position: 'fixed', zIndex: 9999, touchAction: 'none', userSelect: 'none' }
 
 const RESTING_BOTTOM = 110
 
@@ -135,12 +128,17 @@ export default function ChatFab(props) {
 	return (
 		<View
 			onPointerDown={handlePointerDown}
-			className={`touch-none select-none rounded-full shadow-lg overflow-hidden ${
-				isSnapping ? 'transition-all duration-200 ease-out' : ''
-			}`}
+			className='rounded-full shadow-lg overflow-hidden'
 			style={
 				position
-					? { ...FAB_LAYER, left: position.left, top: position.top, width: fabSize, height: fabSize }
+					? {
+							...FAB_LAYER,
+							left: position.left,
+							top: position.top,
+							width: fabSize,
+							height: fabSize,
+							transition: isSnapping ? `left ${SNAP_DURATION}ms ease-out, top ${SNAP_DURATION}ms ease-out` : undefined
+						}
 					: { ...FAB_LAYER, bottom: RESTING_BOTTOM, right: edgeMargin, width: fabSize, height: fabSize }
 			}>
 			<ChatAvatar
