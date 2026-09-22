@@ -75,11 +75,8 @@ export default function ChatProductItem(props) {
 	return (
 		<View
 			onClick={openProductPage}
-			className='flex-shrink-0 bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden'
-			style={{ width: 160 }}>
-			<View
-				className='w-full bg-neutral-100 flex items-center justify-center'
-				style={{ height: 130 }}>
+			className='w-[160px] flex-shrink-0 bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden'>
+			<View className='w-full h-[130px] bg-neutral-100 flex items-center justify-center'>
 				{item.image && (
 					<Image
 						className='object-contain h-full w-full'

@@ -128,19 +128,10 @@ export default function ChatFab(props) {
 	return (
 		<View
 			onPointerDown={handlePointerDown}
-			className='rounded-full shadow-lg overflow-hidden'
-			style={
-				position
-					? {
-							...FAB_LAYER,
-							left: position.left,
-							top: position.top,
-							width: fabSize,
-							height: fabSize,
-							transition: isSnapping ? `left ${SNAP_DURATION}ms ease-out, top ${SNAP_DURATION}ms ease-out` : undefined
-						}
-					: { ...FAB_LAYER, bottom: RESTING_BOTTOM, right: edgeMargin, width: fabSize, height: fabSize }
-			}>
+			className={`fixed z-[9999] touch-none select-none w-14 h-14 rounded-full shadow-lg overflow-hidden ${
+				isSnapping ? 'transition-all duration-200 ease-out' : ''
+			} ${position ? '' : 'bottom-[110px] right-4'}`}
+			style={position ? { left: position.left, top: position.top } : undefined}>
 			<ChatAvatar
 				config={config}
 				className='w-full h-full'
