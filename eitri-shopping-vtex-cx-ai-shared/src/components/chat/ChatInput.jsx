@@ -11,6 +11,7 @@ import { accentBgStyle, accentTextStyle } from './accentColor'
 // `transition-all duration-150` suaviza a mudança entre ticks.
 const BAR_HEIGHTS = ['h-1', 'h-2', 'h-3', 'h-4', 'h-5', 'h-6', 'h-7', 'h-8']
 const WAVE_COUNT = 16
+const ACTION_BUTTON_SIZE = 44
 
 /**
  * ChatInput
@@ -236,8 +237,8 @@ export default function ChatInput(props) {
 						{showMic ? (
 							<View
 								onClick={() => onDictate && onDictate()}
-								className='rounded-full p-3'
-								style={accentBgStyle(config)}>
+								className='rounded-full flex items-center justify-center'
+								style={{ width: ACTION_BUTTON_SIZE, height: ACTION_BUTTON_SIZE, ...accentBgStyle(config) }}>
 								<FiMic
 									size={20}
 									className='text-white'
@@ -246,8 +247,12 @@ export default function ChatInput(props) {
 						) : (
 							<View
 								onClick={submit}
-								className={`rounded-full p-3 ${disabled || !hasText ? 'bg-neutral-200' : ''}`}
-								style={disabled || !hasText ? undefined : accentBgStyle(config)}>
+								className={`rounded-full flex items-center justify-center ${disabled || !hasText ? 'bg-neutral-200' : ''}`}
+								style={{
+									width: ACTION_BUTTON_SIZE,
+									height: ACTION_BUTTON_SIZE,
+									...(disabled || !hasText ? undefined : accentBgStyle(config))
+								}}>
 								<FiSend
 									size={20}
 									className='text-white'
