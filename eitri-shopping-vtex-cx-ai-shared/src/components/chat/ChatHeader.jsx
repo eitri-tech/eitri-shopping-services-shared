@@ -72,7 +72,7 @@ export default function ChatHeader(props) {
 			{/* avatar do assistente */}
 			<View className='relative'>
 				<ChatAvatar
-					className='w-9 h-9'
+					size={36}
 					iconSize={18}
 				/>
 				<View
