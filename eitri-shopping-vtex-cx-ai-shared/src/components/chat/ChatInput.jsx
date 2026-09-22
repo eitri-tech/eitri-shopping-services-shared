@@ -224,7 +224,8 @@ export default function ChatInput(props) {
 
 						<View className='flex-1'>
 							<TextInput
-								className='w-full rounded-full border-neutral-200 border-solid border-2 bg-white px-4 py-2 text-neutral-900'
+								className='w-full rounded-full bg-white px-4 py-2 text-neutral-900'
+								style={{ border: '2px solid #e5e5e5' }}
 								placeholder={placeholder}
 								value={text}
 								onChange={e => setText(e.target.value)}
