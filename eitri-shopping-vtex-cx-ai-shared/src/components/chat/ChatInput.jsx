@@ -82,13 +82,19 @@ export default function ChatInput(props) {
 		Eitri.bottomBar.hide()
 		onKeyboardShow && onKeyboardShow()
 
+		// Só trata um status "fechado" como fechamento de verdade depois de já
+		// termos visto um "aberto" neste ciclo — se a API ecoar o estado atual
+		// (fechado) assim que o listener é registrado, isso não pode desfazer o
+		// onKeyboardShow que acabamos de disparar.
+		let hasShown = false
 		Eitri.keyboard.setVisibilityListener(status => {
 			const isOpen = status.code === 'keyboardDidShow'
+			if (isOpen) hasShown = true
 			setKeyboardOpen(isOpen)
 
 			if (isOpen) {
 				onKeyboardShow && onKeyboardShow()
-			} else {
+			} else if (hasShown) {
 				Eitri.bottomBar.show()
 				onKeyboardHide && onKeyboardHide()
 			}
@@ -237,7 +243,10 @@ export default function ChatInput(props) {
 
 						{showMic ? (
 							<View
-								onClick={() => onDictate && onDictate()}
+								onPointerDown={e => {
+									e.preventDefault()
+									onDictate && onDictate()
+								}}
 								className='rounded-full flex items-center justify-center'
 								style={{ width: ACTION_BUTTON_SIZE, height: ACTION_BUTTON_SIZE, ...accentBgStyle(config) }}>
 								<FiMic
@@ -247,7 +256,10 @@ export default function ChatInput(props) {
 							</View>
 						) : (
 							<View
-								onClick={submit}
+								onPointerDown={e => {
+									e.preventDefault()
+									submit()
+								}}
 								className={`rounded-full flex items-center justify-center ${disabled || !hasText ? 'bg-neutral-200' : ''}`}
 								style={{
 									width: ACTION_BUTTON_SIZE,

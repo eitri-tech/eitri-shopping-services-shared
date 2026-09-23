@@ -17,10 +17,11 @@ import { loadChatConfig, getChatConfig } from '../../config/ChatConfig'
  *     resolveProduct={getProductBySku}
  *   />
  *
- * Props: { config?, onOpen?, onClose?, ...weniChatProps }
+ * Props: { config?, onOpen?, onClose?, surface?, ...weniChatProps }
  *  - config: overrides da marca (mesmo shape do remoteConfig). Precedência:
  *    defaults < remoteConfig[seção] < este objeto
  *  - onOpen/onClose: ganchos para o host (ex.: tracking de tela)
+ *  - surface (default 'home'): repassado ao <WeniChat/> dentro do painel
  *  - onAddToCart / resolveProduct / components / texts: repassados ao
  *    <WeniChat/> dentro do painel
  *
@@ -29,7 +30,7 @@ import { loadChatConfig, getChatConfig } from '../../config/ChatConfig'
  * e não dentro do <WeniChat/>, que só monta quando o painel abre.
  */
 export default function ChatLauncher(props) {
-	const { config: configOverrides, onOpen, onClose, ...chatProps } = props
+	const { config: configOverrides, onOpen, onClose, surface = 'home', ...chatProps } = props
 	const [isOpen, setIsOpen] = useState(false)
 	const [effectiveConfig, setEffectiveConfig] = useState(getChatConfig)
 
@@ -67,6 +68,7 @@ export default function ChatLauncher(props) {
 				open={isOpen}
 				onClose={handleClose}
 				sheetTop={effectiveConfig?.launcher?.sheetTop}
+				surface={surface}
 			/>
 		</>
 	)

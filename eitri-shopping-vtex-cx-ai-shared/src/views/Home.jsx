@@ -1,4 +1,6 @@
-import { ChatLauncher } from '../export'
+import { useState } from 'react'
+
+import { ChatLauncher, WeniChat } from '../export'
 
 /**
  * Home
@@ -9,6 +11,19 @@ import { ChatLauncher } from '../export'
  *
  * Os apps que consomem o pacote NÃO passam por aqui: eles importam
  * <ChatLauncher/>, <ChatScreen/> ou <WeniChat/> do `export.js`.
+ *
+ * Só uma superfície por vez nesta view, nunca as duas juntas: `ChatService.js`
+ * é um singleton por módulo (um `_service` só, correto pra produção — Home e
+ * Account são apps/WebViews separados, cada um com sua própria instância do
+ * módulo). Montar `<ChatLauncher/>` e um `<WeniChat surface='account'/>` juntos
+ * aqui ficaria nesse MESMO runtime JS, então o segundo a inicializar
+ * derrubaria a conexão do primeiro (o guard de troca de identidade em
+ * `initChat()` faria exatamente isso) — não prova nada sobre o fix, só
+ * reproduz um problema diferente e exclusivo desta view.
+ *
+ * Pra testar as duas superfícies ao mesmo tempo de verdade: abra esta mesma
+ * URL em DUAS abas do navegador (cada aba = um runtime JS separado, como dois
+ * apps de verdade) e deixe uma no modo Home e outra no modo Account.
  *
  * `onAddToCart` e `resolveProduct` ficam de fora de propósito: dependem do
  * carrinho e do catálogo do app host, que não existem aqui.
@@ -39,7 +54,14 @@ const DEV_CHAT_CONFIG = {
 	debug: false
 }
 
+const MODES = [
+	{ id: 'home', label: 'Modo Home (ChatLauncher)' },
+	{ id: 'account', label: 'Modo Account (WeniChat)' }
+]
+
 export default function Home() {
+	const [mode, setMode] = useState('home')
+
 	return (
 		<Page>
 			{/* Conteúdo só para o FAB ter uma tela por baixo, como na home da loja. */}
@@ -49,12 +71,41 @@ export default function Home() {
 				gap={8}>
 				<Text className='text-lg font-bold text-neutral-900'>eitri-shopping-vtex-cx-ai-shared</Text>
 				<Text className='text-sm text-neutral-500'>
-					Toque no botão flutuante para abrir o atendimento. Troque o ChatLauncher pelo ChatScreen para testar
-					a superfície de tela cheia (a /Chat da conta).
+					Só uma superfície por vez nesta aba (motivo no topo do arquivo). Pra testar as duas
+					independentes, abra esta URL em outra aba e escolha o outro modo lá.
 				</Text>
+				<View
+					direction='row'
+					gap={2}>
+					{MODES.map(m => (
+						<View
+							key={m.id}
+							onClick={() => setMode(m.id)}
+							className={`px-3 py-2 rounded-lg border text-sm ${
+								mode === m.id
+									? 'bg-neutral-900 border-neutral-900 text-white'
+									: 'bg-white border-neutral-200 text-neutral-700'
+							}`}>
+							{m.label}
+						</View>
+					))}
+				</View>
 			</View>
 
-			<ChatLauncher config={DEV_CHAT_CONFIG} />
+			{mode === 'account' ? (
+				<View
+					className='w-full border-t border-neutral-200'
+					style={{ height: 520 }}>
+					<WeniChat
+						config={DEV_CHAT_CONFIG}
+						surface='account'
+						topInset={false}
+						showBack={false}
+					/>
+				</View>
+			) : (
+				<ChatLauncher config={DEV_CHAT_CONFIG} />
+			)}
 		</Page>
 	)
 }
