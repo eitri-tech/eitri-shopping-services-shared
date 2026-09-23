@@ -12,11 +12,22 @@ export default function TypingIndicator(props) {
 	if (!isTyping && !isThinking) return null
 
 	return (
-		<View className='w-full flex justify-start mb-2'>
+		<View
+			className='w-full flex mb-2'
+			style={{ justifyContent: 'flex-start' }}>
 			<View className='bg-white border border-neutral-200 shadow-sm rounded-2xl rounded-bl-md px-4 py-3 flex flex-row items-center gap-1'>
-				<View className='w-2 h-2 rounded-full bg-neutral-300 animate-bounce' />
-				<View className='w-2 h-2 rounded-full bg-neutral-300 animate-bounce [animation-delay:0.15s]' />
-				<View className='w-2 h-2 rounded-full bg-neutral-300 animate-bounce [animation-delay:0.3s]' />
+				<View
+					className='rounded-full bg-neutral-300 animate-bounce'
+					style={{ width: 8, height: 8 }}
+				/>
+				<View
+					className='rounded-full bg-neutral-300 animate-bounce'
+					style={{ width: 8, height: 8, animationDelay: '0.15s' }}
+				/>
+				<View
+					className='rounded-full bg-neutral-300 animate-bounce'
+					style={{ width: 8, height: 8, animationDelay: '0.3s' }}
+				/>
 				{isThinking && props.thinkingLabel && (
 					<Text className='text-xs text-neutral-400 ml-2'>{props.thinkingLabel}</Text>
 				)}

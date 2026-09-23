@@ -52,7 +52,7 @@ export default function ChatMessage(props) {
 	const MessageTextComponent = components.MessageText
 	const Link = components.LinkCard
 
-	const alignment = isOutgoing ? 'justify-end' : 'justify-start'
+	const justifyContent = isOutgoing ? 'flex-end' : 'flex-start'
 	const bubbleShape = isOutgoing ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md'
 	const bubbleColor = isOutgoing ? 'text-white' : 'bg-white text-neutral-900 border border-neutral-200 shadow-sm'
 	// Cor da marca (por loja, via remoteConfig['weniChat'].customizeWidget).
@@ -73,7 +73,9 @@ export default function ChatMessage(props) {
 		message.type === 'video' ? texts.openVideo : message.type === 'audio' ? texts.openAudio : texts.openFile
 
 	return (
-		<View className={`w-full flex ${alignment} mb-2`}>
+		<View
+			className='w-full flex mb-2'
+			style={{ justifyContent }}>
 			<View
 				className={`max-w-[85%] px-3 py-2 ${bubbleShape} ${bubbleColor} ${isError ? 'opacity-60' : ''}`}
 				style={bubbleStyle}>

@@ -5,7 +5,7 @@ module.exports = {
 	"eitri-luminus": "2.22.4",
 	"eitri-bifrost": "4.7.0",
 	"eitri-commons": "2.2.0",
-	"version": "1.0.5",
+	"version": "1.0.4",
 	'messageVersion': 'fix: ajuste prateleira produtos',
 	"id": "71363d25-6df8-4064-ad9b-f39e20dbe2d3",
 	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',
