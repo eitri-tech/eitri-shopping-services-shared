@@ -27,9 +27,7 @@ export default function ProductCarousel(props) {
 			{header && <Text className='text-sm font-bold text-neutral-900'>{header}</Text>}
 			{productList?.text && <Text className='text-sm text-neutral-800'>{productList.text}</Text>}
 
-			<View
-				className='w-full flex flex-row gap-3 pb-1'
-				style={{ overflowX: 'auto' }}>
+			<View className='w-full flex flex-row gap-3 overflow-x-auto pb-1'>
 				{items.map((item, index) => (
 					<ProductItem
 						key={`${item.product_retailer_id || 'p'}-${index}`}

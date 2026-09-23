@@ -12,9 +12,7 @@ export default function EmptyState() {
 	const { texts, config } = useChatUI()
 
 	return (
-		<View
-			className='w-full flex flex-col items-center gap-3 px-6'
-			style={{ marginTop: 48 }}>
+		<View className='w-full flex flex-col items-center gap-3 mt-12 px-6'>
 			<View className='rounded-full bg-white border border-neutral-200 shadow-sm p-5'>
 				<FiMessageCircle
 					size={32}

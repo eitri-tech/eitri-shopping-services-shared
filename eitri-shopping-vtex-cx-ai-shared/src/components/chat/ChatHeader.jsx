@@ -91,9 +91,6 @@ export default function ChatHeader(props) {
 				<View
 					onClick={onNewConversation}
 					className='flex flex-row items-center gap-1 p-2'>
-					{/* cor de destaque da marca, não o token `primary` do tema — o
-					    chat pode ser embutido num app cujo `primary` não combina
-					    com a identidade do atendimento. */}
 					<FiEdit
 						size={18}
 						style={actionColor ? { color: actionColor } : accentTextStyle(config)}
