@@ -82,12 +82,8 @@ export default function ChatInput(props) {
 		Eitri.bottomBar.hide()
 		onKeyboardShow && onKeyboardShow()
 
-		// Só trata um status "fechado" como fechamento de verdade depois de já
-		// termos visto um "aberto" neste ciclo — se a API ecoar o estado atual
-		// (fechado) assim que o listener é registrado, isso não pode desfazer o
-		// onKeyboardShow que acabamos de disparar.
 		let hasShown = false
-		Eitri.keyboard.setVisibilityListener(status => {
+		Eitri.keyboard.addVisibilityListener(status => {
 			const isOpen = status.code === 'keyboardDidShow'
 			if (isOpen) hasShown = true
 			setKeyboardOpen(isOpen)
