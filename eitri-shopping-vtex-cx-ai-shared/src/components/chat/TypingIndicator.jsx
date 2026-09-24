@@ -14,9 +14,18 @@ export default function TypingIndicator(props) {
 	return (
 		<View className='w-full flex justify-start mb-2'>
 			<View className='bg-white border border-gray-200 rounded-2xl px-4 py-3 flex flex-row items-center gap-1'>
-				<View className='w-2 h-2 rounded-full bg-gray-400 animate-bounce' />
-				<View className='w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:0.15s]' />
-				<View className='w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:0.3s]' />
+				<View
+					className='animate-bounce'
+					style={{ width: 8, height: 8, borderRadius: 9999, backgroundColor: '#9ca3af' }}
+				/>
+				<View
+					className='animate-bounce'
+					style={{ width: 8, height: 8, borderRadius: 9999, backgroundColor: '#9ca3af', animationDelay: '0.15s' }}
+				/>
+				<View
+					className='animate-bounce'
+					style={{ width: 8, height: 8, borderRadius: 9999, backgroundColor: '#9ca3af', animationDelay: '0.3s' }}
+				/>
 			</View>
 		</View>
 	)
