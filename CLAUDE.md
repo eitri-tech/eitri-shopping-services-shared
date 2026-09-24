@@ -10,7 +10,7 @@ This repo is a monorepo of independent Eitri "shared" apps — reusable service 
 - `eitri-shopping-shopify-shared/` — Shopify integration (TS, GraphQL)
 - `eitri-shopping-wake-shared/` — Wake ecommerce integration (JS, GraphQL)
 - `eitri-shopping-integrations-shared/` — cross-integration shared views/components
-- `eitri-shopping-vtex-cx-ai-shared/` — Weni + AI customer-service chat (VTEX CX), brand-agnostic; per-store values (channelUuid, VTEX account, accent color, avatar) come from config, never from code. See its README.
+- `eitri-shopping-vtex-cx-ai-shared/` — Weni webchat API integration (VTEX CX): socket, session, history, storage and message protocol only. No UI, screen behaviour or styling — those live in each store's app.
 
 Each project has its own `eitri-app.conf.js` with its own `version`, `id`, `applicationId`, and `eitri-luminus` / `eitri-bifrost` pinned versions. Each project's `src/export.{js,ts}` is the public surface — it re-exports services (e.g. `Vtex`, `Shopify`, `Wake`, `App`, `Tracking`, `EventBus`, `RemoteConfig`) and model/type definitions that consumer apps import.
 

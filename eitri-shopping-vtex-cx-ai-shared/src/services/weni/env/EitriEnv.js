@@ -15,15 +15,8 @@
  */
 import Eitri from 'eitri-bifrost'
 
-/**
- * Key under which the whole `weni:aichat:*` snapshot is mirrored, scoped by
- * surface (e.g. 'home', 'account') — each surface gets its own mirror slot.
- * @param {string} [scope]
- * @returns {string}
- */
-function mirrorKey(scope) {
-	return `weni:aichat:mirror:${scope || 'default'}`
-}
+/** Key under which the whole `weni:aichat:*` snapshot is mirrored. */
+const MIRROR_KEY = 'weni:aichat:mirror'
 
 /**
  * Synchronous, Web-Storage-API-compatible in-memory store.
@@ -120,12 +113,11 @@ export function isUsingMemoryStore() {
 /**
  * Loads the persisted `weni:aichat:*` snapshot from Eitri.sharedStorage into
  * the live backing store. Call once before constructing the service.
- * @param {string} [scope]
  * @returns {Promise<void>}
  */
-export async function hydrate(scope) {
+export async function hydrate() {
 	try {
-		const snapshot = await Eitri.sharedStorage.getItemJson(mirrorKey(scope))
+		const snapshot = await Eitri.sharedStorage.getItemJson(MIRROR_KEY)
 		if (!snapshot || typeof snapshot !== 'object') return
 		const store = getWebStorage('local')
 		Object.keys(snapshot).forEach(key => {
@@ -143,21 +135,19 @@ export async function hydrate(scope) {
 /**
  * Mirrors the current `weni:aichat:*` keys from the live backing store back to
  * Eitri.sharedStorage. Safe to call often (callers should debounce).
- * @param {string} [scope]
  * @returns {Promise<void>}
  */
-export async function persist(scope) {
+export async function persist() {
 	try {
-		const key = mirrorKey(scope)
 		const store = getWebStorage('local')
 		const snapshot = {}
 		for (let i = 0; i < store.length; i++) {
-			const storeKey = store.key(i)
-			if (storeKey && storeKey.startsWith('weni:aichat:') && storeKey !== key) {
-				snapshot[storeKey] = store.getItem(storeKey)
+			const key = store.key(i)
+			if (key && key.startsWith('weni:aichat:') && key !== MIRROR_KEY) {
+				snapshot[key] = store.getItem(key)
 			}
 		}
-		await Eitri.sharedStorage.setItemJson(key, snapshot)
+		await Eitri.sharedStorage.setItemJson(MIRROR_KEY, snapshot)
 	} catch (error) {
 		console.log('[weni] persist to sharedStorage failed', error)
 	}
@@ -165,12 +155,11 @@ export async function persist(scope) {
 
 /**
  * Clears the persisted mirror (used when the session is cleared).
- * @param {string} [scope]
  * @returns {Promise<void>}
  */
-export async function clearMirror(scope) {
+export async function clearMirror() {
 	try {
-		await Eitri.sharedStorage.setItemJson(mirrorKey(scope), {})
+		await Eitri.sharedStorage.setItemJson(MIRROR_KEY, {})
 	} catch (error) {
 		console.log('[weni] clearMirror failed', error)
 	}
@@ -196,10 +185,9 @@ export function getStoredSessionId() {
 /**
  * Wipes all `weni:aichat:*` keys from the backing store and the durable mirror.
  * Used when the logged-in user changes so one user never sees another's history.
- * @param {string} [scope]
  * @returns {Promise<void>}
  */
-export async function clearLocalSession(scope) {
+export async function clearLocalSession() {
 	try {
 		const store = getWebStorage('local')
 		const keys = []
@@ -211,5 +199,5 @@ export async function clearLocalSession(scope) {
 	} catch (error) {
 		console.log('[weni] clearLocalSession (store) failed', error)
 	}
-	await clearMirror(scope)
+	await clearMirror()
 }

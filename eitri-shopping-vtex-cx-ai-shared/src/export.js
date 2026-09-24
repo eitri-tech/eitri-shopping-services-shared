@@ -1,75 +1,35 @@
 // eitri-shopping-vtex-cx-ai-shared
 //
-// Experiência de atendimento (chat Weni + IA) para apps Eitri/VTEX, comum a
-// todas as marcas. Nada aqui é específico de loja: cor, avatar, channelUuid e
-// conta VTEX vêm da config (remoteConfig['weniChat'] ou prop `config`).
-//
-// Três pontos de entrada, conforme a superfície:
-//   <ChatLauncher />  botão flutuante + painel sobre a tela (uso típico: home)
-//   <ChatScreen />    tela inteira com voltar (uso típico: /Chat da conta)
-//   <WeniChat />      só a experiência, para compor à mão
-//
-// Tudo abaixo é exportado para dar liberdade total de composição/override.
+// Integração com a API da Weni (webchat) para apps Eitri/VTEX. Só transporte:
+// socket, sessão, histórico, storage e protocolo de mensagens. Nada de UI,
+// comportamento de tela ou estilo — isso vive no app de cada loja.
 
-// --- Pontos de entrada ---------------------------------------------------------
-export { default as ChatLauncher } from './components/launcher/ChatLauncher'
-export { default as ChatScreen } from './components/screen/ChatScreen'
-export { default as WeniChat } from './components/chat/WeniChat'
+// --- Serviço Weni --------------------------------------------------------------
+export { default as WeniWebchatService } from './services/weni/index'
 
-// --- Peças do launcher (para quem quer controlar o estado de abertura) ----------
-export { default as ChatFab } from './components/launcher/ChatFab'
-export { default as ChatSheet } from './components/launcher/ChatSheet'
-
-// --- Componentes individuais (reuso ou base para overrides) ---------------------
-export { default as ChatHeader } from './components/chat/ChatHeader'
-export { default as ChatAvatar } from './components/chat/ChatAvatar'
-export { default as ChatStatusBanner } from './components/chat/ChatStatusBanner'
-export { default as ChatMessage } from './components/chat/ChatMessage'
-export { default as MessageText, tokenizeMessageText } from './components/chat/MessageText'
-export { default as LinkCard } from './components/chat/LinkCard'
-export { default as QuickReplies } from './components/chat/QuickReplies'
-export { default as ListMessage } from './components/chat/ListMessage'
-export { default as TypingIndicator } from './components/chat/TypingIndicator'
-export { default as ChatInput } from './components/chat/ChatInput'
-export { default as ProductCarousel } from './components/chat/ProductCarousel'
-export { default as ChatProductItem, formatPrice } from './components/chat/ChatProductItem'
-export { default as ChatEmptyState } from './components/chat/EmptyState'
-export { ChatUIContext, useChatUI } from './components/chat/ChatUIContext'
-export { getAccentColor, accentBgStyle, accentTextStyle, accentBorderStyle } from './components/chat/accentColor'
-
-// --- Hook (para quem quer montar a própria UI) ----------------------------------
-export { default as useWeniChat } from './hooks/useWeniChat'
-
-// --- Serviços -------------------------------------------------------------------
+// --- Constantes do protocolo ----------------------------------------------------
 export {
-	initChat,
-	resetChat,
-	ensureConnected,
-	suspendChat,
-	syncCustomFields,
-	syncOrderFormField,
-	startNewConversation,
-	sendChatMessage,
-	sendCameraPhoto,
-	sendGalleryImage,
-	sendDocument,
-	startDictation,
-	stopDictation,
-	isVoiceAvailable,
-	loadHistoryPage,
-	getChatService,
-	getDiag,
-	SERVICE_EVENTS
-} from './services/ChatService'
+	SERVICE_EVENTS,
+	CONNECTION_STATUS,
+	MESSAGE_TYPES,
+	MESSAGE_STATUS,
+	MESSAGE_DIRECTIONS,
+	STORAGE_TYPES,
+	ERROR_TYPES,
+	QUICK_REPLY_TYPES,
+	DEFAULTS
+} from './services/weni/utils/constants'
 
+// --- Storage do Eitri (espelho da sessão em sharedStorage) ----------------------
 export {
-	classifyLink,
-	openLink,
-	openProductItem,
-	parseProductRetailerId,
-	navigateToIntent,
-	openInBrowser
-} from './services/LinkRouter'
+	getWebStorage,
+	isUsingMemoryStore,
+	hydrate,
+	persist,
+	clearMirror,
+	getStoredSessionId,
+	clearLocalSession
+} from './services/weni/env/EitriEnv'
 
-// --- Configuração ----------------------------------------------------------------
-export { loadChatConfig, getChatConfig, setChatConfig, deepMerge, DEFAULT_CHAT_CONFIG } from './config/ChatConfig'
+// --- Diagnóstico ----------------------------------------------------------------
+export { diagLog, getDiag, clearDiag } from './services/weni/env/diag'
