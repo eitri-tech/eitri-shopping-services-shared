@@ -27,7 +27,8 @@ import {
  * O serviço por baixo é um singleton: desmontar o hook só remove listeners —
  * a conexão/sessão sobrevive à navegação para fora e de volta ao chat.
  *
- * @param {{ config?: object }} [options] overrides de config (precedência máxima)
+ * @param {{ config?: object, surface?: string }} [options] overrides de config
+ *   (precedência máxima) e superfície do chat ('home', 'account', ...)
  */
 export default function useWeniChat(options = {}) {
 	const [config, setConfig] = useState(() => getChatConfig())
@@ -55,6 +56,7 @@ export default function useWeniChat(options = {}) {
 	// Overrides capturados no primeiro render: a config é resolvida uma vez por
 	// montagem (mudar overrides em runtime exige remontar o chat).
 	const overridesRef = useRef(options.config)
+	const surfaceRef = useRef(options.surface)
 
 	useEffect(() => {
 		let mounted = true
@@ -83,7 +85,7 @@ export default function useWeniChat(options = {}) {
 					.then(available => mounted && setVoiceAvailable(available))
 					.catch(() => {})
 
-				return initChat()
+				return initChat(surfaceRef.current)
 			})
 			.then(s => {
 				if (!mounted || !s) return

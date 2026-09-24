@@ -12,8 +12,10 @@ const ENTER_DELAY = 20
 // propósito: serve para encolher o painel já no `focus`, antes do primeiro
 // `visualViewport.resize`. Se o painel só encolhesse depois que o teclado
 // terminou de abrir, o WebKit do iOS já teria rolado a página para revelar o
-// campo — e é essa rolagem que sobe a tela inteira.
-let lastKeyboardHeight = 0
+// campo — e é essa rolagem que sobe a tela inteira. Começa numa estimativa
+// (não 0): a primeira vez da sessão não tinha medida nenhuma pra aplicar no
+// focus, e o campo ficava atrás do teclado até o resize chegar.
+let lastKeyboardHeight = 300
 
 /**
  * ChatSheet

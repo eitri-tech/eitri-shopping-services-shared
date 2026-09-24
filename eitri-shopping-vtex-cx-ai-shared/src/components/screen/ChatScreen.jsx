@@ -16,10 +16,11 @@ import WeniChat from '../chat/WeniChat'
  *       return <ChatScreen config={CHAT_CONFIG} onAddToCart={...} />
  *   }
  *
- * Props: { config?, onBack?, onMount?, ...weniChatProps }
+ * Props: { config?, onBack?, onMount?, surface?, ...weniChatProps }
  *  - config: overrides da marca (mesmo shape do remoteConfig)
  *  - onBack: default é Eitri.navigation.back()
  *  - onMount: gancho do host para tracking de tela
+ *  - surface (default 'account'): repassado ao <WeniChat/>
  *  - onAddToCart / resolveProduct / components / texts / slots: repassados
  *    ao <WeniChat/>
  *
@@ -39,7 +40,7 @@ import WeniChat from '../chat/WeniChat'
  * sofre disso porque o ChatSheet crava altura em `style`.
  */
 export default function ChatScreen(props) {
-	const { onBack, onMount, ...chatProps } = props
+	const { onBack, onMount, surface = 'account', ...chatProps } = props
 
 	useEffect(() => {
 		onMount && onMount()
@@ -59,6 +60,7 @@ export default function ChatScreen(props) {
 			<WeniChat
 				{...chatProps}
 				onBack={handleBack}
+				surface={surface}
 			/>
 		</Page>
 	)

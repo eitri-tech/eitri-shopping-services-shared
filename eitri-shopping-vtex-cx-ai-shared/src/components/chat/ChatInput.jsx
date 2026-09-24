@@ -82,13 +82,15 @@ export default function ChatInput(props) {
 		Eitri.bottomBar.hide()
 		onKeyboardShow && onKeyboardShow()
 
-		Eitri.keyboard.setVisibilityListener(status => {
+		let hasShown = false
+		Eitri.keyboard.addVisibilityListener(status => {
 			const isOpen = status.code === 'keyboardDidShow'
+			if (isOpen) hasShown = true
 			setKeyboardOpen(isOpen)
 
 			if (isOpen) {
 				onKeyboardShow && onKeyboardShow()
-			} else {
+			} else if (hasShown) {
 				Eitri.bottomBar.show()
 				onKeyboardHide && onKeyboardHide()
 			}
@@ -237,7 +239,10 @@ export default function ChatInput(props) {
 
 						{showMic ? (
 							<View
-								onClick={() => onDictate && onDictate()}
+								onPointerDown={e => {
+									e.preventDefault()
+									onDictate && onDictate()
+								}}
 								className='rounded-full flex items-center justify-center'
 								style={{ width: ACTION_BUTTON_SIZE, height: ACTION_BUTTON_SIZE, ...accentBgStyle(config) }}>
 								<FiMic
@@ -247,7 +252,10 @@ export default function ChatInput(props) {
 							</View>
 						) : (
 							<View
-								onClick={submit}
+								onPointerDown={e => {
+									e.preventDefault()
+									submit()
+								}}
 								className={`rounded-full flex items-center justify-center ${disabled || !hasText ? 'bg-neutral-200' : ''}`}
 								style={{
 									width: ACTION_BUTTON_SIZE,
