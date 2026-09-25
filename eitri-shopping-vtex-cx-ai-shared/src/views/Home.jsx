@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { ChatLauncher, WeniChat } from '../export'
+import ChatLauncher from '../components/launcher/ChatLauncher'
+import WeniChat from '../components/chat/WeniChat'
 
 /**
  * Home
