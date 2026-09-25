@@ -6,7 +6,7 @@ module.exports = {
 	"eitri-bifrost": "4.7.0",
 	"eitri-commons": "2.2.0",
 	"version": "1.0.8",
-	'messageVersion': "fix: color typing indicator",
+	'messageVersion': "fix: color typing indicator 2",
 	"id": "71363d25-6df8-4064-ad9b-f39e20dbe2d3",
 	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',
 	'organizationId': 'cf5660ee-bf90-42cd-9a43-9d2c69ee3c89',
