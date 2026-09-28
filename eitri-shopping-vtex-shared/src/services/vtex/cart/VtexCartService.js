@@ -432,6 +432,10 @@ export default class VtexCartService {
 		VtexCartService._CACHED_CART = null
 		await StorageService.removeItem(VtexCartService.VTEX_CART_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_UTM_PARAMS_KEY)
+		EventBus.publish({
+			channel: EventBusChannels.CLEAR_CART,
+			broadcast: true
+		})
 	}
 
 	static async resolvePostalCode(zipCode, countryCode = 'BRA') {
