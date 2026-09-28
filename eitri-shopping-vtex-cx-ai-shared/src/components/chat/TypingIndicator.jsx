@@ -13,13 +13,19 @@ export default function TypingIndicator(props) {
 
 	return (
 		<View className='w-full flex justify-start mb-2'>
-			<View className='bg-white border border-neutral-200 shadow-sm rounded-2xl rounded-bl-md px-4 py-3 flex flex-row items-center gap-1'>
-				<View className='w-2 h-2 rounded-full bg-neutral-300 animate-bounce' />
-				<View className='w-2 h-2 rounded-full bg-neutral-300 animate-bounce [animation-delay:0.15s]' />
-				<View className='w-2 h-2 rounded-full bg-neutral-300 animate-bounce [animation-delay:0.3s]' />
-				{isThinking && props.thinkingLabel && (
-					<Text className='text-xs text-neutral-400 ml-2'>{props.thinkingLabel}</Text>
-				)}
+			<View className='bg-white border border-gray-200 rounded-2xl px-4 py-3 flex flex-row items-center gap-1'>
+				<View
+					className='animate-bounce'
+					style={{ width: 8, height: 8, borderRadius: 9999, backgroundColor: '#9ca3af' }}
+				/>
+				<View
+					className='animate-bounce'
+					style={{ width: 8, height: 8, borderRadius: 9999, backgroundColor: '#9ca3af', animationDelay: '0.15s' }}
+				/>
+				<View
+					className='animate-bounce'
+					style={{ width: 8, height: 8, borderRadius: 9999, backgroundColor: '#9ca3af', animationDelay: '0.3s' }}
+				/>
 			</View>
 		</View>
 	)

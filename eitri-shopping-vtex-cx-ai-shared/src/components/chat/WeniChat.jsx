@@ -47,9 +47,10 @@ const PREFETCH_CAROUSELS = 3
 // Folga (px) para considerar que a lista "está no fim" — a última mensagem
 // raramente termina exatamente na borda.
 const NEAR_BOTTOM_TOLERANCE = 80
-// Id da lista de mensagens. O Luminus não preenche `ref` com o nó DOM, então é
-// por aqui que se chega no elemento que rola.
-const LIST_ID = 'weni-chat-message-list'
+// Prefixo do id da lista de mensagens. O Luminus não preenche `ref` com o nó
+// DOM, então é por aqui que se chega no elemento que rola — sufixado por
+// `surface` para duas instâncias no mesmo DOM não pegarem a lista uma da outra.
+const LIST_ID_PREFIX = 'weni-chat-message-list'
 // A animação do teclado leva ~300ms e o painel encolhe junto. Um pin só, no
 // macrotask seguinte, roda com a altura antiga da lista e para curto — este
 // segundo roda já com a altura final.
@@ -112,6 +113,10 @@ function collectCarouselSkus(messages) {
  *    Com ela, os produtos do carrossel são pré-carregados assim que a mensagem
  *    chega e a PDP abre com o produto pronto, igual à vitrine. Sem ela, só o
  *    skuId viaja e a PDP resolve — funciona, mas demora mais a pintar.
+ *  - surface ('home' | 'account' | ..., default 'default'): escopa a
+ *    identidade Weni e o storage desta instância — quem monta WeniChat
+ *    diretamente (fora de ChatLauncher/ChatScreen) deve passar um valor único
+ *    por superfície para não colidir com outra
  */
 export default function WeniChat(props) {
 	const {
@@ -130,10 +135,11 @@ export default function WeniChat(props) {
 		showBack = true,
 		topInset = true,
 		backIcon = 'left',
-		className = ''
+		className = '',
+		surface = 'default'
 	} = props
 
-	const chat = useWeniChat({ config: configOverrides })
+	const chat = useWeniChat({ config: configOverrides, surface })
 	const {
 		config,
 		messages,
@@ -162,11 +168,13 @@ export default function WeniChat(props) {
 		sendDocument
 	} = chat
 
+	const listId = `${LIST_ID_PREFIX}-${surface}`
+
 	// O Luminus não preenche `ref` com o nó DOM (só o evento sintético dá acesso a
 	// ele, cf. ChatFab.handlePointerDown) — por isso a lista é achada por id. Com
 	// `ref` o `scrollHeight` vinha undefined, os guards abaixo caíam e tanto o pin
 	// quanto o auto-scroll de mensagem nova viravam no-op silencioso.
-	const getList = () => (typeof document === 'undefined' ? null : document.getElementById(LIST_ID))
+	const getList = () => (typeof document === 'undefined' ? null : document.getElementById(listId))
 
 	// Rola a lista de mensagens até o fim mexendo só no scroll DELA — nunca
 	// pedindo scroll ao documento (ver comentário em ChatInput.handleFocus).
@@ -302,7 +310,7 @@ export default function WeniChat(props) {
 
 				{slots.aboveMessages && slots.aboveMessages(chat)}
 				<View
-					id={LIST_ID}
+					id={listId}
 					className='flex-1 px-3 py-4'
 					style={{ minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain' }}
 					onScroll={handleScroll}>

@@ -246,14 +246,17 @@ export default class VtexCustomerService {
 	/**
 	 * Notifica o login ao módulo nativo `session`, que registra o device para push.
 	 * @param {string} [origin] - Fluxo chamador, enviado ao Datadog quando a notificação não ocorre.
+	 * @param {Object} [params] - Identidade customizada; campos omitidos caem no perfil VTEX.
+	 * @param {string} [params.customerId] - Enviado no lugar do userId VTEX.
+	 * @param {string} [params.email] - Enviado no lugar do e-mail do perfil VTEX.
 	 */
-	static async notifyLoginToExposedApis(origin) {
+	static async notifyLoginToExposedApis(origin, params = {}) {
 		try {
 			const profile = await VtexCustomerService.getCustomerProfile()
 			const profileData = profile?.data?.profile
 
-			let _customerId = profileData?.userId
-			let _email = profileData?.email
+			let _customerId = params?.customerId || profileData?.userId
+			let _email = params?.email || profileData?.email
 
 			if (!_customerId) {
 				sendDatadogWarningLog(

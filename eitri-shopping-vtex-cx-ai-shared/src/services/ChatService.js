@@ -40,17 +40,19 @@ export { getDiag }
 let _service = null
 let _initPromise = null
 let _persistTimer = null
-// Identidade ("email:account") para a qual o _service atual foi construído.
-// Detecta troca de usuário (logout + login) e reseta o chat para o histórico
-// nunca vazar entre usuários.
+// Identidade ("email:account:surface") para a qual o _service atual foi
+// construído. Detecta troca de usuário (logout + login) e reseta o chat para
+// o histórico nunca vazar entre usuários.
 let _builtIdentity = undefined
+// Superfície ('home', 'account', ...) desta instância — setada em initChat().
+let _surface = null
 
 /** Espelho debounced do storage da lib no Eitri.sharedStorage. */
 function schedulePersist() {
 	if (_persistTimer) clearTimeout(_persistTimer)
 	_persistTimer = setTimeout(() => {
 		_persistTimer = null
-		persist()
+		persist(_surface)
 	}, 600)
 }
 
@@ -136,13 +138,15 @@ async function resolveOrderFormId() {
 
 /**
  * Identidade por usuário usada como session id Weni (campo `from`), espelhando
- * o widget web de produção (`${email}:${org}`).
- * @returns {Promise<string|null>}
+ * o widget web de produção (`${email}:${org}`) e escopada por superfície.
+ * Deslogado cai em `anon:${org}:${surface}` — nunca null, pra duas superfícies
+ * sem usuário logado (ex.: Home antes do login) também não colidirem.
+ * @param {string} surface
+ * @returns {Promise<string>}
  */
-async function resolveSessionIdentity() {
+async function resolveSessionIdentity(surface) {
 	const [email, account] = await Promise.all([resolveEmail(), Promise.resolve(resolveVtexAccount())])
-	if (!email) return null
-	return `${email}:${account}`
+	return `${email || 'anon'}:${account}:${surface}`
 }
 
 // Últimos valores enviados, para emitir set_custom_field só quando algo muda
@@ -242,7 +246,7 @@ export function getChatService(sessionId) {
 	_service.on(SERVICE_EVENTS.STATE_CHANGED, schedulePersist)
 	_service.on(SERVICE_EVENTS.MESSAGE_SENT, schedulePersist)
 	_service.on(SERVICE_EVENTS.MESSAGE_RECEIVED, schedulePersist)
-	_service.on(SERVICE_EVENTS.SESSION_CLEARED, () => clearMirror())
+	_service.on(SERVICE_EVENTS.SESSION_CLEARED, () => clearMirror(_surface))
 
 	return _service
 }
@@ -266,20 +270,23 @@ export async function resetChat() {
 		clearTimeout(_persistTimer)
 		_persistTimer = null
 	}
-	await clearLocalSession()
+	await clearLocalSession(_surface)
 }
 
 /**
  * Inicializa o chat: hidrata a sessão persistida, constrói o serviço, aplica
  * custom fields e conecta. Idempotente. A config já deve ter sido resolvida
  * (loadChatConfig) — o hook/Componente cuidam disso.
+ * @param {string} surface superfície do chat ('home', 'account', ...), escopa
+ *   a identidade Weni e o storage para não colidir com outras superfícies
  * @returns {Promise<WeniWebchatService>}
  */
-export function initChat() {
+export function initChat(surface) {
+	_surface = surface
 	// Resolve a identidade em TODA chamada (antes de reusar o init cacheado)
 	// para detectar troca de usuário.
 	return (async () => {
-		const identity = await resolveSessionIdentity()
+		const identity = await resolveSessionIdentity(surface)
 
 		if (_builtIdentity !== undefined && _builtIdentity !== identity) {
 			dbg('initChat: identity changed (' + _builtIdentity + ' -> ' + identity + '), resetting chat')
@@ -289,7 +296,7 @@ export function initChat() {
 		if (_initPromise) return _initPromise
 
 		_builtIdentity = identity
-		_initPromise = buildChat(identity)
+		_initPromise = buildChat(identity, surface)
 		return _initPromise
 	})()
 }
@@ -297,14 +304,15 @@ export function initChat() {
 /**
  * Constrói e conecta o serviço para uma identidade de usuário.
  * @param {string|null} identity
+ * @param {string} surface
  * @returns {Promise<WeniWebchatService>}
  */
-function buildChat(identity) {
+function buildChat(identity, surface) {
 	return (async () => {
 		try {
 			const config = getChatConfig()
 			dbg('initChat: start (identity=' + identity + ')')
-			await hydrate()
+			await hydrate(surface)
 			dbg('initChat: hydrate done')
 
 			// Sessão persistida de outra identidade: limpa para nunca restaurar a
@@ -318,7 +326,7 @@ function buildChat(identity) {
 			const isLegacyHashId = typeof storedId === 'string' && storedId.includes('#')
 			if (storedId && (isLegacyHashId || (identity && !sameUser))) {
 				dbg('initChat: stored session (' + storedId + ') != identity, clearing local cache')
-				await clearLocalSession()
+				await clearLocalSession(surface)
 			}
 			// Sessão nova (sem conversa restaurável) precisa do trigger do flow.
 			const isNewSession = !(storedId && sameUser)
@@ -445,7 +453,7 @@ function waitForSocketClosed(service, timeoutMs = 1500) {
  */
 export async function startNewConversation() {
 	const service = getChatService()
-	const identity = (await resolveSessionIdentity()) || `anon:${resolveVtexAccount()}`
+	const identity = await resolveSessionIdentity(_surface)
 	// Separador '-' e não '#': o '#' vira %23 no URN do contato lá no servidor.
 	const newId = `${identity}-${Date.now()}`
 	try {
