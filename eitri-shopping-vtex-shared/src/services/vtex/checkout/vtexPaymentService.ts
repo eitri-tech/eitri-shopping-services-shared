@@ -224,6 +224,13 @@ export default class VtexPaymentService {
 				})
 			}
 
+			if (App.deviceFingerprint) {
+				paymentsMethods.forEach(payment => {
+					payment.fields = payment.fields || {}
+					payment.fields.deviceFingerprint = App.deviceFingerprint
+				})
+			}
+
 			Logger.log('====> Setando o método de pagamento com o payload', paymentsMethods)
 
 			const useNewVtexVaultApi = RemoteConfig.getContent('appConfigs.checkout.useVaultApi')

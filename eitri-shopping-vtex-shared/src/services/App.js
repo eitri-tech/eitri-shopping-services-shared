@@ -43,6 +43,7 @@ export default class App {
 		App.setStatusBarColor(RemoteConfig.getContent('appConfigs.statusBarTextColor'))
 		App.startClarity(RemoteConfig.getContent('appConfigs.clarityId'))
 		App.setAppName(RemoteConfig.getContent('appConfigs.appName'))
+		App.clearSale(RemoteConfig.getContent('appConfigs.checkout.clearSaleAppKey'))
 
 		try {
 			App.configs = {
@@ -93,6 +94,42 @@ export default class App {
 			window.__eitriAppConf.application = appName
 		} catch (error) {
 			console.error('[SHARED] Error ao setar nome do App', error)
+		}
+	}
+
+	static deviceFingerprint = null
+
+	static clearSale(appKey) {
+		try {
+			if (!appKey) return
+
+			const slug = window.__eitriAppConf?.slug || ''
+			if (!slug.includes('checkout')) {
+				return
+			}
+
+			console.log('[SHARED] ClearSale appKey', appKey)
+
+			const sessionId = String(1e7 + Math.floor(99999999 * Math.random()))
+			App.deviceFingerprint = sessionId
+
+			window.CsdpObject = 'csdp'
+			window.csdp = window.csdp || function () {
+				;(window.csdp.q = window.csdp.q || []).push(arguments)
+			}
+			window.csdp.l = Date.now()
+
+			const script = document.createElement('script')
+			script.async = true
+			script.src = 'https://device.clearsale.com.br/p/fp.js'
+			document.head.appendChild(script)
+
+			window.csdp('app', appKey)
+			window.csdp('sessionid', sessionId)
+
+			console.log('[SHARED] ClearSale inicializado com sessionId', sessionId)
+		} catch (error) {
+			console.error('[SHARED] Error ao inicializar ClearSale', error)
 		}
 	}
 }

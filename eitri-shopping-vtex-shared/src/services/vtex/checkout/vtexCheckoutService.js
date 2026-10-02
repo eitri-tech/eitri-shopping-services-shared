@@ -202,6 +202,13 @@ export default class VtexCheckoutService {
 
 		console.time('setPaymentMethod')
 
+		if (App.deviceFingerprint) {
+			payload.forEach(payment => {
+				payment.fields = payment.fields || {}
+				payment.fields.deviceFingerprint = App.deviceFingerprint
+			})
+		}
+
 		try {
 			const result = await Eitri.http.post(
 				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
