@@ -27,6 +27,12 @@ export default function Home() {
 					onPress={() => navigateTo('WiddeMethods')}
 					label='Métodos Widde'
 				/>
+				<Button
+					wide
+					color='background-color'
+					onPress={() => navigateTo('SizebayDemo')}
+					label='Sizebay'
+				/>
 			</View>
 		</Window>
 	)
