@@ -1,5 +1,5 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Vtex from '../../Vtex'
+import vtexConfig from '../vtexConfig'
 import { ProductSearchInput } from './types/ProductSearch'
 import { productSearchReturn } from './graphqlReturn/ProductSearchReturn'
 import { Facets } from './types/Facets'
@@ -45,7 +45,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async productSearch(searchInput: ProductSearchInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 
 		const salesChannel = await getSalesChannel()
 		if (salesChannel) {
@@ -63,7 +63,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async facets(searchInput: Facets, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 		const query = this.toGraphQLArgs(searchInput)
 
 		const body = {
@@ -75,7 +75,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async product(input: ProductInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 
 		const salesChannel = await getSalesChannel()
 		if (salesChannel) {
@@ -101,7 +101,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async searchSuggestions(input: SearchSuggestionInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 		const query = this.toGraphQLArgs(input)
 
 		const body = {
@@ -113,7 +113,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async productRecommendations(input: ProductRecommendationsInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 		const query = this.toGraphQLArgs(input)
 
 		const _query = query
@@ -140,7 +140,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async autocomplete(input: AutoFillContactField, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 		const query = this.toGraphQLArgs(input)
 
 		const body = {
@@ -155,7 +155,7 @@ export default class VtexSearchGraphql {
 		input: AutoCompleteSearchSuggestionInput,
 		returnProperties?: any
 	): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 		const query = this.toGraphQLArgs(input)
 
 		const body = {
@@ -167,7 +167,7 @@ export default class VtexSearchGraphql {
 	}
 
 	static async topSearches(returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		const { host } = vtexConfig
 
 		const body = {
 			query: `{ topSearches @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`

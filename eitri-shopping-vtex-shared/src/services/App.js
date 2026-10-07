@@ -1,8 +1,13 @@
 import Eitri from 'eitri-bifrost'
 import Vtex from './Vtex'
 import EventBus from '@/services/EventBus'
+import EventBusChannels from './EventBusChannels'
 import RemoteConfig from './RemoteConfig'
 import StorageService from './StorageService'
+import Logger from './Logger'
+import GAService from './tracking/GAService'
+import GAVtexInternalService from './tracking/GAVtexInternalService'
+import vtexConfig from './vtex/vtexConfig'
 
 let loaded = false
 
@@ -16,12 +21,12 @@ export default class App {
 		if (loaded) return App.configs
 
 		try {
-			console.log('Inicializando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
+			console.log('Inicializando eventBus', EventBusChannels.UTM_PARAMS)
 			EventBus.subscribe({
-				channel: Vtex.customer.CHANNEL_UTM_PARAMS_KEY,
+				channel: EventBusChannels.UTM_PARAMS,
 				broadcast: true,
 				callback: segments => {
-					console.log('Executando eventBus', Vtex.customer.CHANNEL_UTM_PARAMS_KEY)
+					console.log('Executando eventBus', EventBusChannels.UTM_PARAMS)
 					Vtex.updateSegmentSession(segments)
 				}
 			})
@@ -54,6 +59,10 @@ export default class App {
 				...remoteConfig
 			}
 
+			Logger.verbose = !!App.configs.verbose
+			GAService.gaVerbose = !!App.configs.gaVerbose
+			GAVtexInternalService.autoTriggerGAEvents = App.configs.appConfigs?.autoTriggerGAEvents ?? true
+
 			if (!App.configs?.storePreferences?.currencyCode) {
 				App.configs = {
 					...App.configs,
@@ -63,6 +72,8 @@ export default class App {
 					}
 				}
 			}
+
+			vtexConfig.currencyCode = App.configs?.storePreferences?.currencyCode || 'BRL'
 
 			console.log('[SHARED] *********** App configurado com sucesso ************')
 
@@ -135,6 +146,7 @@ export default class App {
 
 			const sessionId = String(1e7 + Math.floor(99999999 * Math.random()))
 			App.deviceFingerprint = sessionId
+			vtexConfig.deviceFingerprint = sessionId
 
 			window.CsdpObject = 'csdp'
 			window.csdp = window.csdp || function () {

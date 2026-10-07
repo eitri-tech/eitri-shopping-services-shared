@@ -1,4 +1,5 @@
 import Eitri from 'eitri-bifrost'
+import vtexConfig from './vtex/vtexConfig'
 import VtexCatalogService from './vtex/catalog/vtexCatalogService'
 import VtexCustomerService from './vtex/customer/vtexCustomerService'
 import VtexCheckoutService from './vtex/checkout/vtexCheckoutService'
@@ -17,21 +18,7 @@ import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import VtexSubscriptionService from '@/services/vtex/subscription/vtexSubscriptionService'
 
 export default class Vtex {
-	static configs = {
-		account: '',
-		api: '',
-		host: '',
-		domain: '',
-		locale: 'pt-BR',
-		vtexCmsUrl: '',
-		sendGACampaignAlongSession: true,
-		searchOptions: {},
-		segments: null,
-		session: '',
-		marketingTag: 'eitri-shop',
-		salesChannel: null,
-		faststore: ''
-	}
+	static configs = vtexConfig
 
 	static configure = async remoteConfig => {
 
@@ -57,7 +44,7 @@ export default class Vtex {
 
 		const account = remoteConfig?.providerInfo?.account
 
-		Vtex.configs = {
+		Object.assign(vtexConfig, {
 			account,
 			api: `https://${account}.vtexcommercestable.com.br`,
 			host: _host,
@@ -67,7 +54,7 @@ export default class Vtex {
 			segments: { ...configSegments, ...utmParams },
 			marketingTag: soMktTag ?? remoteConfig?.storePreferences?.marketingTag ?? 'eitri-shop',
 			faststore: remoteConfig?.providerInfo?.faststore
-		}
+		})
 
 		await Vtex.buildSession({ ...configSegments, ...utmParams })
 

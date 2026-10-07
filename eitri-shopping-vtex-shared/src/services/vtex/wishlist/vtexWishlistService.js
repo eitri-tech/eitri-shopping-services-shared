@@ -1,5 +1,5 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Vtex from '../../Vtex'
+import vtexConfig from '../vtexConfig'
 import VtexCustomerService from '../customer/vtexCustomerService'
 import decodeJwt from '../_helpers/decodeJWT'
 import EventBusChannels from "./../../EventBusChannels";
@@ -43,7 +43,7 @@ export default class VtexWishlistService {
 			}
 		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, Vtex.configs.host)
+		const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, vtexConfig.host)
 		return response.data
 	}
 
@@ -78,7 +78,7 @@ export default class VtexWishlistService {
 			}
 		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, vtexConfig.host)
 
 		EventBus.publish({
 			channel: EventBusChannels.REMOVE_FROM_WISHLIST,
@@ -126,7 +126,7 @@ export default class VtexWishlistService {
 			}
 		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, vtexConfig.host)
 
 		EventBus.publish({
 			channel: EventBusChannels.ADD_TO_WISHLIST,
@@ -173,7 +173,7 @@ export default class VtexWishlistService {
 			}
 		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, vtexConfig.host)
 		return response.data
 	}
 }

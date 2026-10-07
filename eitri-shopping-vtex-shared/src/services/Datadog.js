@@ -1,5 +1,5 @@
 import Eitri from 'eitri-bifrost'
-import VtexCartService from '@/services/vtex/cart/VtexCartService'
+import cartCache from '@/services/vtex/cart/cartCache'
 import Logger from '@/services/Logger'
 import StorageService from '@/services/StorageService'
 
@@ -191,7 +191,7 @@ export const sendLogError = async (error, method, data = {}, _cart) => {
 			getDeviceAndSession()
 		])
 
-		const cart = _cart || VtexCartService._CACHED_CART
+		const cart = _cart || cartCache.cart
 
 		const payload = {
 			origin: 'APP-SHOPPING-ERROR',
@@ -243,7 +243,7 @@ export const sendOrderNotComplete = async (error, method, data = {}, _cart) => {
 			getDeviceAndSession()
 		])
 
-		const cart = _cart || VtexCartService._CACHED_CART
+		const cart = _cart || cartCache.cart
 
 		const payload = {
 			origin: 'APP-SHOPPING-ORDER-NOT-COMPLETED',

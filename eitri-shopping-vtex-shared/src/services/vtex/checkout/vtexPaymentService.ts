@@ -2,12 +2,11 @@ import Logger from '../../Logger'
 import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
 import Eitri from 'eitri-bifrost'
-import App from '../../App'
-import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
 import RemoteConfig from '../../RemoteConfig'
 import { PaymentResult } from '../../../models/Payment'
+import vtexConfig from '../vtexConfig'
 
 type PaymentOptions = {
 	fields: {
@@ -176,7 +175,7 @@ export default class VtexPaymentService {
 					paymentsMethods.push({
 						paymentSystem: payment?.paymentSystem,
 						installments: msp?.installments,
-						currencyCode: App.configs?.storePreferences?.currencyCode || 'BRL',
+						currencyCode: vtexConfig.currencyCode,
 						installmentsInterestRate: msp?.interestRate ?? 0,
 						value: msp?.value,
 						installmentsValue: msp?.installmentValue,
@@ -224,10 +223,10 @@ export default class VtexPaymentService {
 				})
 			}
 
-			if (App.deviceFingerprint) {
+			if (vtexConfig.deviceFingerprint) {
 				paymentsMethods.forEach(payment => {
 					payment.fields = payment.fields || {}
-					payment.fields.deviceFingerprint = App.deviceFingerprint
+					payment.fields.deviceFingerprint = vtexConfig.deviceFingerprint
 				})
 			}
 
@@ -237,8 +236,8 @@ export default class VtexPaymentService {
 
 			// Testar e tornar padrao https://developers.vtex.com/updates/release-notes/2025-10-28-mandatory-migration-to-vtexvault-com-for-send-payments-request
 			const url = useNewVtexVaultApi
-				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${Vtex.configs.account}&orderId=${startTransactionReturn.orderGroup}`
-				: `https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
+				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${vtexConfig.account}&orderId=${startTransactionReturn.orderGroup}`
+				: `https://${vtexConfig.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
 
 			await Eitri.http.post(url, paymentsMethods, {
 				headers: {

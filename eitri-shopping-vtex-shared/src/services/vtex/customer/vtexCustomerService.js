@@ -1,5 +1,5 @@
 import Eitri from 'eitri-bifrost'
-import Vtex from '../../Vtex'
+import vtexConfig from '../vtexConfig'
 import StorageService from '../../StorageService'
 import VtexCaller from '../_helpers/_vtexCaller'
 import extractCookies from '../_helpers/extractCookies'
@@ -10,6 +10,7 @@ import RemoteConfig from '@/services/RemoteConfig'
 import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 import VtexCheckoutService from '@/services/vtex/checkout/vtexCheckoutService'
 import Logger from '@/services/Logger'
+import { getCustomerToken } from '../_helpers/vtexAuth'
 
 export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
@@ -22,7 +23,7 @@ export default class VtexCustomerService {
 	static TIME_EXPIRES_UTM_PARAMS_IN_MINUTES = 43200
 
 	static async _startLogin(email) {
-		const { account } = Vtex.configs
+		const { account } = vtexConfig
 
 		const startLoginRes = await VtexCaller.post(
 			`api/vtexid/pub/authentication/startlogin`,
@@ -131,8 +132,8 @@ export default class VtexCustomerService {
 
 	static async loginWithGoogle() {
 		let webFlowRes = await Eitri.webFlow.start({
-			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
-			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
+			startUrl: `${vtexConfig.host}/login?returnUrl=/account`,
+			stopPattern: `${vtexConfig.host}/api/vtexid/oauth/finish`,
 			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
 			keepLoadingScreenUntilDomainChange: true,
@@ -205,8 +206,8 @@ export default class VtexCustomerService {
 
 	static async loginWithFacebook() {
 		let webFlowRes = await Eitri.webFlow.start({
-			startUrl: `${Vtex.configs.host}/login?returnUrl=/account`,
-			stopPattern: `${Vtex.configs.host}/api/vtexid/oauth/finish`,
+			startUrl: `${vtexConfig.host}/login?returnUrl=/account`,
+			stopPattern: `${vtexConfig.host}/api/vtexid/oauth/finish`,
 			allowedDomains: ['*'],
 			maxNavigationLimit: 20,
 			keepLoadingScreenUntilDomainChange: true,
@@ -390,19 +391,7 @@ export default class VtexCustomerService {
 	}
 
 	static async getCustomerToken() {
-		const savedToken = await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
-
-		if (!savedToken) {
-			return null
-		}
-
-		if (
-			savedToken.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC <
-			Math.floor(Date.now() / 1000)
-		) {
-			return null
-		}
-		return savedToken
+		return getCustomerToken()
 	}
 
 	static async getStorageCustomerToken() {
@@ -434,7 +423,7 @@ export default class VtexCustomerService {
 	}
 
 	static async isSessionLoggedIn() {
-		const session = await Vtex.session.getSession()
+		const session = await VtexSessionService.getSession()
 		return session?.namespaces?.profile?.isAuthenticated?.value === 'true'
 	}
 
@@ -489,7 +478,7 @@ export default class VtexCustomerService {
 		}
 
 		const overrideHeaders = _token
-			? { Cookie: `VtexIdclientAutCookie_${Vtex.configs.account}=${_token}` }
+			? { Cookie: `VtexIdclientAutCookie_${vtexConfig.account}=${_token}` }
 			: undefined
 
 		const result = await VtexCaller.post(
@@ -501,7 +490,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host,
+			vtexConfig.host,
 			overrideHeaders
 		)
 
@@ -532,7 +521,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		return result?.data
@@ -590,7 +579,7 @@ export default class VtexCustomerService {
 			if (Object.keys(utmParams).length > 0) {
 				try {
 					EventBus.publish({
-						channel: VtexCustomerService.CHANNEL_UTM_PARAMS_KEY,
+						channel: EventBusChannels.UTM_PARAMS,
 						broadcast: true,
 						data: utmParams
 					})
@@ -598,11 +587,6 @@ export default class VtexCustomerService {
 					console.error('Erro ao publicar eventBus UTM', e)
 				}
 
-				try {
-					Vtex.updateSegmentSession(utmParams)
-				} catch (e) {
-					console.error('updateSegmentSession', e)
-				}
 			}
 
 			return utmParams
@@ -650,7 +634,7 @@ export default class VtexCustomerService {
 		const res = await VtexCustomerService.getStorageCustomerToken()
 
 		try {
-			const { account } = Vtex.configs
+			const { account } = vtexConfig
 
 			if (!res || !res.accountAuthCookieId) {
 				sendDatadogInfoLog(
@@ -840,7 +824,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		return result?.data
@@ -870,7 +854,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		return result?.data
@@ -922,7 +906,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		return result?.data
@@ -973,7 +957,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		return result?.data
@@ -1054,7 +1038,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		const paymentSessionId = paymentSessionStartResult?.data?.data?.createPaymentSession?.id
@@ -1074,7 +1058,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			`https://${Vtex.configs.account}.vtexpayments.com.br`
+			`https://${vtexConfig.account}.vtexpayments.com.br`
 		)
 
 		const tokenData = tokenCreateResult?.data?.[0]
@@ -1103,7 +1087,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 
 		return createCardResult?.data
@@ -1123,7 +1107,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 		return getSavedCardsResult?.data?.data?.profile
 	}
@@ -1145,7 +1129,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			Vtex.configs.host
+			vtexConfig.host
 		)
 		return getSavedCardsResult?.data?.data
 	}

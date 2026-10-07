@@ -1,14 +1,12 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Vtex from '../../Vtex'
-import Eitri from 'eitri-bifrost'
+import vtexConfig from '../vtexConfig'
 import objectToQueryString from '../_helpers/objectToQueryString'
-import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import getSalesChannel from '../_helpers/getSalesChannel'
 
 export default class VtexCatalogService {
 	static getSearchOptions = async () => {
 		const salesChannel = await getSalesChannel()
-		const opt = Vtex.configs.searchOptions || {}
+		const opt = vtexConfig.searchOptions || {}
 
 		if (salesChannel) {
 			opt['salesChannel'] = salesChannel

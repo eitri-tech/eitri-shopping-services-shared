@@ -7,4 +7,5 @@ export default class EventBusChannels {
 	static USER_LOGGED_OUT = "userLoggedOut"
 	static REGION_CHANGED = "regionChanged"
 	static CLEAR_CART = "clearCart"
+	static UTM_PARAMS = "ChanellUTMParams"
 }

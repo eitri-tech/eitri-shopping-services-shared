@@ -1,11 +1,9 @@
 import VtexCaller from '../_helpers/_vtexCaller'
-import Vtex from '../../Vtex'
+import vtexConfig from '../vtexConfig'
 import Eitri from 'eitri-bifrost'
 import Logger from '../../Logger'
-import VtexCartService from '../cart/VtexCartService'
+import { getStoredOrderFormId } from '../cart/cartCache'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
-import App from '../../App'
-import vtexCustomerService from '../customer/vtexCustomerService'
 import VtexPaymentService from './vtexPaymentService'
 import StorageService from '../../StorageService'
 import extractCookies from '../_helpers/extractCookies'
@@ -16,7 +14,7 @@ export default class VtexCheckoutService {
 	static VTEX_CHK_PAYMENT_AUTH = 'vtex_chk_payment_auth'
 
 	static async selectPaymentOption(paymentOption) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		const orderFormId = await getStoredOrderFormId()
 
 		try {
 			const payload = {
@@ -49,7 +47,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async addShippingAddress(address) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		const orderFormId = await getStoredOrderFormId()
 
 		try {
 			const payload = {
@@ -78,7 +76,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async setLogisticInfo(logisticInfo) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		const orderFormId = await getStoredOrderFormId()
 
 		return withRetry(
 			async () => {
@@ -101,7 +99,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async addPromoCode(couponCode) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		const orderFormId = await getStoredOrderFormId()
 
 		const payload = { text: couponCode }
 
@@ -111,7 +109,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async addUserData(userData) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		const orderFormId = await getStoredOrderFormId()
 		try {
 			const response = await VtexCaller.post(
 				`api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
@@ -126,7 +124,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async removeAccount(accountId) {
-		const orderFormId = await VtexCartService.getStoredOrderFormId()
+		const orderFormId = await getStoredOrderFormId()
 
 		const response = await VtexCaller.post(
 			`api/checkout/pub/orderForm/${orderFormId}/paymentAccount/${accountId}/remove`
@@ -202,16 +200,16 @@ export default class VtexCheckoutService {
 
 		console.time('setPaymentMethod')
 
-		if (App.deviceFingerprint) {
+		if (vtexConfig.deviceFingerprint) {
 			payload.forEach(payment => {
 				payment.fields = payment.fields || {}
-				payment.fields.deviceFingerprint = App.deviceFingerprint
+				payment.fields.deviceFingerprint = vtexConfig.deviceFingerprint
 			})
 		}
 
 		try {
 			const result = await Eitri.http.post(
-				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
+				`https://${vtexConfig.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
 				payload,
 				{
 					headers: {
@@ -272,9 +270,9 @@ export default class VtexCheckoutService {
 
 	static async payV2(cart, options) {
 		console.log('==========Iniciando pagamento==========')
-		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+		const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === vtexConfig.marketingTag)
 		if (!hasEitriTag) {
-			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+			const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), vtexConfig.marketingTag]
 			await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
 				...cart?.marketingData,
 				marketingTags: newMarketingTags
@@ -289,9 +287,9 @@ export default class VtexCheckoutService {
 			console.log('==========Iniciando pagamento==========')
 			console.time('Pay total time')
 
-			const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === Vtex.configs.marketingTag)
+			const hasEitriTag = cart?.marketingData?.marketingTags?.some(t => t === vtexConfig.marketingTag)
 			if (!hasEitriTag) {
-				const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), Vtex.configs.marketingTag]
+				const newMarketingTags = [...(cart?.marketingData?.marketingTags ?? []), vtexConfig.marketingTag]
 				await VtexCaller.post(`api/checkout/pub/orderForm/${cart.orderFormId}/attachments/marketingData`, {
 					...cart?.marketingData,
 					marketingTags: newMarketingTags
@@ -370,7 +368,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async getPixStatus(transactionId, paymentId, hostStore) {
-		const host = hostStore || Vtex.configs.account
+		const host = hostStore || vtexConfig.account
 		const result = await Eitri.http.get(
 			`https://${host}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
 			{
@@ -459,7 +457,7 @@ export default class VtexCheckoutService {
 					id: id,
 					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
-				currencyCode: App.configs?.storePreferences?.currencyCode,
+				currencyCode: vtexConfig.currencyCode,
 				originalPaymentIndex: 0
 			}
 		]
@@ -512,7 +510,7 @@ export default class VtexCheckoutService {
 					id: id,
 					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
-				currencyCode: App.configs?.storePreferences?.currencyCode,
+				currencyCode: vtexConfig.currencyCode,
 				originalPaymentIndex: 0
 			}
 		]
@@ -604,7 +602,7 @@ export default class VtexCheckoutService {
 					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
-				currencyCode: App.configs?.storePreferences?.currencyCode,
+				currencyCode: vtexConfig.currencyCode,
 				originalPaymentIndex: 0,
 				groupName: 'creditCardPaymentGroup'
 			}
@@ -768,7 +766,7 @@ export default class VtexCheckoutService {
 					merchantName: merchantTransaction?.merchantName || payment.merchantSellerPayments[0].id
 				},
 				installmentsValue: payment.merchantSellerPayments[0].installmentValue,
-				currencyCode: App.configs?.storePreferences?.currencyCode,
+				currencyCode: vtexConfig.currencyCode,
 				groupName: groupName
 			}
 		]
