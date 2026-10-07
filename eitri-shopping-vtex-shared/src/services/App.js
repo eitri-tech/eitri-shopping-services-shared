@@ -47,6 +47,7 @@ export default class App {
 		App.startClarity(RemoteConfig.getContent('appConfigs.clarityId'))
 		App.setAppName(RemoteConfig.getContent('appConfigs.appName'))
 		App.clearSale(RemoteConfig.getContent('appConfigs.checkout.clearSaleAppKey'))
+		App.koinFingerprint(RemoteConfig.getContent('appConfigs.checkout.koinOrgId'))
 
 		try {
 			App.configs = {
@@ -153,6 +154,34 @@ export default class App {
 			console.log('[SHARED] ClearSale inicializado com sessionId', sessionId)
 		} catch (error) {
 			console.error('[SHARED] Error ao inicializar ClearSale', error)
+		}
+	}
+
+	static koinFingerprint(koinOrgId) {
+		try {
+			if (!koinOrgId) return
+
+			const slug = window.__eitriAppConf?.slug || ''
+			if (!slug.includes('checkout')) {
+				return
+			}
+
+			console.log('[SHARED] Koin orgId', koinOrgId)
+
+			const fingerprint = crypto.randomUUID().replace(/-/g, '')
+			App.deviceFingerprint = fingerprint
+
+			const iframe = document.createElement('iframe')
+			iframe.src = `https://antifraud.koinlatam.com/risk/fingerprint/statics/track.html?org_id=${encodeURIComponent(koinOrgId)}&session_id=${fingerprint}`
+			iframe.id = '__k_fingerprint_iframe__'
+			iframe.title = 'Koin fingerprint'
+			iframe.allow = 'payment'
+			iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;'
+			document.body.appendChild(iframe)
+
+			console.log('[SHARED] Koin fingerprint inicializado', fingerprint)
+		} catch (error) {
+			console.error('[SHARED] Error ao inicializar Koin fingerprint', error)
 		}
 	}
 }
