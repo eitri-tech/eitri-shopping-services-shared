@@ -73,7 +73,7 @@ export default class Vtex {
 
 		const startParams = await Eitri.getInitializationInfos().catch(() => null)
 		if (String(startParams?.tabIndex) === '0') {
-			Vtex.customer.executeRefreshToken()
+			await Vtex.customer.executeRefreshToken()
 		}
 	}
 
