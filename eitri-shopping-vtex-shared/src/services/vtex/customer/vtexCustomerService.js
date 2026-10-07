@@ -653,14 +653,6 @@ export default class VtexCustomerService {
 			const { account } = Vtex.configs
 
 			if (!res || !res.accountAuthCookieId) {
-				sendDatadogInfoLog(
-					{
-						message: 'Erro ao executar refresh token',
-						response: 'sem token armazenado, refresh ignorado',
-						email: res?.email
-					},
-					'executeRefreshToken'
-				)
 				Logger.log('executeRefreshToken: sem token armazenado, refresh ignorado')
 				return
 			}
