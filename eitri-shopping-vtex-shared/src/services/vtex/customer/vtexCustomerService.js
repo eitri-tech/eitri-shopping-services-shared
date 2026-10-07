@@ -723,19 +723,29 @@ export default class VtexCustomerService {
 					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
 						VtexCustomerService.logout()
 					}
-
+					const email = await VtexCustomerService.getCustomerData('email')
 					sendDatadogInfoLog(
 						{
 							message: 'Erro ao executar refresh token',
 							responseHeaders: loginRes?.headers,
-							response: loginRes?.data
+							response: loginRes?.data,
+							loggedInSession,
+							email
 						},
 						'executeRefreshToken'
 					)
 				}
 			}
 		} catch (e) {
-			sendLogError(e, 'executeRefreshToken')
+			const email = await VtexCustomerService.getCustomerData('email')
+			sendDatadogInfoLog(
+				{
+					message: 'Erro ao executar refresh token',
+					email,
+					error: e
+				},
+				'executeRefreshToken'
+			)
 		}
 	}
 
