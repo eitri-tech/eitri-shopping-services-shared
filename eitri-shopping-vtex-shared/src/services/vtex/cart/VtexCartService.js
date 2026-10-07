@@ -2,7 +2,7 @@ import VtexCaller from '../_helpers/_vtexCaller'
 import StorageService from '../../StorageService'
 import Logger from '../../Logger'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
-import Vtex from '../../Vtex'
+import vtexConfig from '../vtexConfig'
 import getSalesChannel from '../_helpers/getSalesChannel'
 import VtexCustomerService from '@/services/vtex/customer/vtexCustomerService'
 import { sendLogError } from '@/services/Datadog'
@@ -10,14 +10,14 @@ import Eitri from 'eitri-bifrost'
 import EventBusChannels from './../../EventBusChannels'
 import objectsAreEqual from '@/services/vtex/_helpers/objectsAreEqual'
 import EventBus from '@/services/EventBus'
+import cartCache, { getStoredOrderFormId } from './cartCache'
 
 export default class VtexCartService {
 	static VTEX_CART_KEY = 'vtex_cart_key'
-	static _CACHED_CART = null
 
 	static async assertMarketingData(cart) {
 		try {
-			const { segments, marketingTag } = Vtex.configs
+			const { segments, marketingTag } = vtexConfig
 			const currentMarketingTags = cart?.marketingData?.marketingTags
 				? [...cart?.marketingData?.marketingTags]
 				: []
@@ -81,7 +81,7 @@ export default class VtexCartService {
 
 			const updatedCart = await VtexCartService.assertMarketingData(cart)
 
-			VtexCartService._CACHED_CART = updatedCart
+			cartCache.cart = updatedCart
 
 			return updatedCart
 		} catch (e) {
@@ -104,7 +104,7 @@ export default class VtexCartService {
 
 			const updatedCart = await VtexCartService.assertMarketingData(cart)
 
-			VtexCartService._CACHED_CART = updatedCart
+			cartCache.cart = updatedCart
 
 			return updatedCart
 		} catch (e) {
@@ -138,8 +138,7 @@ export default class VtexCartService {
 	}
 
 	static async getStoredOrderFormId() {
-		const cartId = await StorageService.getStorageItem(VtexCartService.VTEX_CART_KEY)
-		return cartId
+		return getStoredOrderFormId()
 	}
 
 	/**
@@ -191,7 +190,7 @@ export default class VtexCartService {
 
 			GAVtexInternalService.addItemToCart(itemToSend, addToCartRes.data)
 
-			VtexCartService._CACHED_CART = addToCartRes.data
+			cartCache.cart = addToCartRes.data
 
 			EventBus.publish({
 				channel: EventBusChannels.ADD_TO_CART,
@@ -267,7 +266,7 @@ export default class VtexCartService {
 
 			GAVtexInternalService.addItemToCart(orderItems, addToCartRes.data)
 
-			VtexCartService._CACHED_CART = addToCartRes.data
+			cartCache.cart = addToCartRes.data
 
 			EventBus.publish({
 				channel: EventBusChannels.ADD_TO_CART,
@@ -345,7 +344,7 @@ export default class VtexCartService {
 
 	// 		GAVtexInternalService.addItemToCart(orderItems, addToCartRes.data)
 
-	// 		VtexCartService._CACHED_CART = addToCartRes.data
+	// 		cartCache.cart = addToCartRes.data
 
 	// 		EventBus.publish({
 	// 			channel: EventBusChannels.ADD_TO_CART,
@@ -375,10 +374,10 @@ export default class VtexCartService {
 
 			const updateCart = await VtexCaller.post(`api/checkout/pub/orderForm/${orderFormId}/items/update`, payload)
 			if (newQuantity === 0) {
-				GAVtexInternalService.removeItemFromCart(index, VtexCartService._CACHED_CART)
+				GAVtexInternalService.removeItemFromCart(index, cartCache.cart)
 			}
 
-			VtexCartService._CACHED_CART = updateCart.data
+			cartCache.cart = updateCart.data
 
 			EventBus.publish({
 				channel: EventBusChannels.UPDATE_CART_ITEM,
@@ -413,7 +412,7 @@ export default class VtexCartService {
 			}
 		)
 
-		VtexCartService._CACHED_CART = response.data
+		cartCache.cart = response.data
 
 		return response.data
 	}
@@ -429,7 +428,7 @@ export default class VtexCartService {
 	}
 
 	static async clearCart() {
-		VtexCartService._CACHED_CART = null
+		cartCache.cart = null
 		await StorageService.removeItem(VtexCartService.VTEX_CART_KEY)
 		await StorageService.removeItem(VtexCustomerService.STORAGE_UTM_PARAMS_KEY)
 		EventBus.publish({

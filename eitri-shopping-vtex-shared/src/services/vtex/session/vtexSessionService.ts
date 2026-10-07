@@ -1,5 +1,6 @@
 import VtexCaller from '../_helpers/_vtexCaller'
 import StorageService from './../../StorageService'
+import { getSessionToken as _getSessionToken } from '../_helpers/vtexAuth'
 
 type Session = {
 	sessionToken: string
@@ -30,7 +31,7 @@ export default class VtexSessionService {
 	}
 
 	static async getSessionToken(): Promise<Session> {
-		return await StorageService.getStorageJSON('sessionToken')
+		return _getSessionToken()
 	}
 
 	static async removeSession(): Promise<void> {

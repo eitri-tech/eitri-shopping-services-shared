@@ -1,7 +1,8 @@
 import Eitri from "eitri-bifrost";
-import App from "../App";
 
 export default class GAService {
+  static gaVerbose = false
+
   static logScreenView = (currentPage, pageClass = "") => {
     try {
       if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.currentScreen) {
@@ -9,7 +10,7 @@ export default class GAService {
           screen: currentPage,
           screenClass: pageClass,
         });
-        if (App.configs.gaVerbose) {
+        if (GAService.gaVerbose) {
           console.log("[Analytics]", "[logScreenView]", {
             screen: currentPage,
             screenClass: pageClass,
@@ -34,7 +35,7 @@ export default class GAService {
     // tentativa pelo fb
     try {
       Eitri.exposedApis.fb.logEvent({ eventName: event, data: params });
-      if (App.configs.gaVerbose) {
+      if (GAService.gaVerbose) {
         console.log("[Analytics]", "[logEvent]", {
           eventName: event,
           data: params,
@@ -55,7 +56,7 @@ export default class GAService {
     try {
       if (Eitri.exposedApis.fb && Eitri.exposedApis.fb.logError) {
         Eitri.exposedApis.fb.logError({ message: params });
-        if (App.configs.gaVerbose) {
+        if (GAService.gaVerbose) {
           console.log("[Analytics]", "[logError]", { message: params });
         }
       } else {

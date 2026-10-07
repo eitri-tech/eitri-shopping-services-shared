@@ -1,9 +1,10 @@
 import GAService from './GAService'
-import App from '../App'
 
 export default class GAVtexInternalService {
+	static autoTriggerGAEvents = true
+
 	static _autoSendIsOff = () => {
-		return !(App.configs.appConfigs?.autoTriggerGAEvents ?? true)
+		return !GAVtexInternalService.autoTriggerGAEvents
 	}
 
 	static _resolveCategory = item => {

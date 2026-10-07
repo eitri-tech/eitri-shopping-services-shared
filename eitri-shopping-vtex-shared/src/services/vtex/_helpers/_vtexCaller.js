@@ -1,11 +1,8 @@
 import Eitri from 'eitri-bifrost'
-import Vtex from '../../Vtex'
-import vtexCustomerService from '../customer/vtexCustomerService'
+import vtexConfig from '../vtexConfig'
+import { getCustomerToken, getSessionToken } from './vtexAuth'
 import Logger from '../../Logger'
-import vtexCartService from '../cart/VtexCartService'
-import VtexCheckoutService from '../checkout/vtexCheckoutService'
 import StorageService from '../../StorageService'
-import VtexSessionService from '@/services/vtex/session/vtexSessionService'
 
 export default class VtexCaller {
 	static _mountUrl = (baseUrl, path) => {
@@ -22,15 +19,15 @@ export default class VtexCaller {
 			'accept': 'application/json'
 		}
 
-		const tokenData = await vtexCustomerService.getCustomerToken()
+		const tokenData = await getCustomerToken()
 
 		if (tokenData) {
-			const account = Vtex.configs.account
+			const account = vtexConfig.account
 			// headers[`VtexIdclientAutCookie`] = tokenData.token
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
-		const sessionToken = await VtexSessionService.getSessionToken()
+		const sessionToken = await getSessionToken()
 
 		if (sessionToken) {
 
@@ -43,7 +40,7 @@ export default class VtexCaller {
 			}
 		}
 
-		const paymentAuth = await StorageService.getStorageItem(VtexCheckoutService.VTEX_CHK_PAYMENT_AUTH)
+		const paymentAuth = await StorageService.getStorageItem('vtex_chk_payment_auth')
 		if (paymentAuth) {
 			if (headers['Cookie']) {
 				headers['Cookie'] += `;CheckoutDataAccess=VTEX_CHK_Payment_Auth=${paymentAuth}`
@@ -56,7 +53,7 @@ export default class VtexCaller {
 	}
 
 	static async get(path, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || vtexConfig.api
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -83,7 +80,7 @@ export default class VtexCaller {
 	}
 
 	static async post(path, data, options = {}, baseUrl, overrideHeaders) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || vtexConfig.api
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = overrideHeaders || (await VtexCaller._getHeaders())
 
@@ -109,7 +106,7 @@ export default class VtexCaller {
 	}
 
 	static async patch(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || vtexConfig.api
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -133,7 +130,7 @@ export default class VtexCaller {
 	}
 
 	static async put(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || vtexConfig.api
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -157,7 +154,7 @@ export default class VtexCaller {
 	}
 
 	static async delete(path, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || vtexConfig.api
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
