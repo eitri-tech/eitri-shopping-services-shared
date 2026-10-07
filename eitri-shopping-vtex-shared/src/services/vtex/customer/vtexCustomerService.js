@@ -411,12 +411,14 @@ export default class VtexCustomerService {
 
 	static async setCustomerToken(token, refreshToken, accountAuthCookieId, accountAuthCookieValue) {
 		const creationTimeStamp = Math.floor(Date.now() / 1000)
+		const email = await VtexCustomerService.getCustomerData('email')
 		return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
 			token,
 			refreshToken,
 			creationTimeStamp,
 			accountAuthCookieId,
-			accountAuthCookieValue
+			accountAuthCookieValue,
+			email
 		})
 	}
 
@@ -645,14 +647,24 @@ export default class VtexCustomerService {
 	}
 
 	static async executeRefreshToken() {
+		const res = await VtexCustomerService.getStorageCustomerToken()
+
 		try {
 			const { account } = Vtex.configs
 
-			const res = await VtexCustomerService.getStorageCustomerToken()
 			if (!res || !res.accountAuthCookieId) {
+				sendDatadogInfoLog(
+					{
+						message: 'Erro ao executar refresh token',
+						response: 'sem token armazenado, refresh ignorado',
+						email: res?.email
+					},
+					'executeRefreshToken'
+				)
 				Logger.log('executeRefreshToken: sem token armazenado, refresh ignorado')
 				return
 			}
+
 			if (
 				res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >
 				Math.floor(Date.now() / 1000)
@@ -709,7 +721,8 @@ export default class VtexCustomerService {
 					})
 					sendDatadogInfoLog(
 						{
-							message: 'Refresh token executado com sucesso'
+							message: 'Refresh token executado com sucesso',
+							email: res?.email
 						},
 						'executeRefreshToken'
 					)
@@ -718,19 +731,27 @@ export default class VtexCustomerService {
 					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
 						VtexCustomerService.logout()
 					}
-
 					sendDatadogInfoLog(
 						{
 							message: 'Erro ao executar refresh token',
 							responseHeaders: loginRes?.headers,
-							response: loginRes?.data
+							response: loginRes?.data,
+							loggedInSession,
+							email: res?.email
 						},
 						'executeRefreshToken'
 					)
 				}
 			}
 		} catch (e) {
-			sendLogError(e, 'executeRefreshToken')
+			sendDatadogInfoLog(
+				{
+					message: 'Erro ao executar refresh token',
+					email: res?.email,
+					error: e
+				},
+				'executeRefreshToken'
+			)
 		}
 	}
 
@@ -786,13 +807,6 @@ export default class VtexCustomerService {
 			await VtexSessionService.updateSession()
 
 			await VtexCustomerService.notifyLoginToExposedApis('_processPostSocialLogin')
-
-			console.log('_processPostSocialLogin', {
-				authCookieValue,
-				accountAuthCookieId,
-				accountAuthCookieValue,
-				refreshToken
-			})
 
 			EventBus.publish({
 				channel: EventBusChannels.USER_LOGGED_IN,

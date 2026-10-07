@@ -1,6 +1,7 @@
 import Eitri from 'eitri-bifrost'
 import VtexCartService from '@/services/vtex/cart/VtexCartService'
 import Logger from '@/services/Logger'
+import StorageService from '@/services/StorageService'
 
 const AUTH_COOKIES = ['VtexIdclientAutCookie', 'CheckoutDataAccess', 'Vtex_CHKO_Auth', 'vtex_session']
 const JWT_PATTERN = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*/g
@@ -45,8 +46,22 @@ const sanitizeError = error => {
 
 }
 
+let _cachedDeviceAndSession = null
+
+const getDeviceAndSession = async () => {
+	if (_cachedDeviceAndSession) return _cachedDeviceAndSession
+	const deviceId = await StorageService.getStorageItem('device_id')
+	const sessionId = await StorageService.getStorageItem('session_id')
+	const result = { deviceId, sessionId }
+	if (deviceId && sessionId) {
+		_cachedDeviceAndSession = result
+	}
+	return result
+}
+
 export const sendDatadogWarningLog = async (data = {}, method) => {
 	try {
+		const { deviceId, sessionId } = await getDeviceAndSession()
 
 		const payload = {
 			origin: 'APP-SHOPPING-WARNING',
@@ -56,6 +71,8 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
                 slug: window.__eitriAppConf?.slug,
                 applicationId: window.__eitriAppConf?.applicationId,
                 version: window.__eitriAppConf?.version,
+				deviceId,
+				sessionId,
 				method: method || '',
 				...data
 			}
@@ -78,6 +95,7 @@ export const sendDatadogWarningLog = async (data = {}, method) => {
 
 export const sendDatadogInfoLog = async (data = {}, method) => {
 	try {
+		const { deviceId, sessionId } = await getDeviceAndSession()
 
 		const payload = {
 			origin: 'APP-SHOPPING-INFO',
@@ -87,6 +105,8 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
                 slug: window.__eitriAppConf?.slug,
                 applicationId: window.__eitriAppConf?.applicationId,
                 version: window.__eitriAppConf?.version,
+				deviceId,
+				sessionId,
 				method: method || '',
 				...data
 			}
@@ -109,8 +129,10 @@ export const sendDatadogInfoLog = async (data = {}, method) => {
 
 export const sendLogOrderAccepted = async cart => {
 	try {
-
-		const device = await Eitri.device.getInfos()
+		const [device, { deviceId, sessionId }] = await Promise.all([
+			Eitri.device.getInfos(),
+			getDeviceAndSession()
+		])
 
 		const payload = {
 			origin: 'APP-SHOPPING-ORDER-ACCEPTED',
@@ -120,6 +142,8 @@ export const sendLogOrderAccepted = async cart => {
 				slug: window.__eitriAppConf?.slug,
 				applicationId: window.__eitriAppConf?.applicationId,
 				version: window.__eitriAppConf?.version,
+				deviceId,
+				sessionId,
 				cartId: cart?.orderFormId,
 				value: (cart.value / 100).toFixed(2),
 				platform: device?.platform,
@@ -162,8 +186,10 @@ export const sendLogOrderAccepted = async cart => {
 
 export const sendLogError = async (error, method, data = {}, _cart) => {
 	try {
-
-		const device = await Eitri.device.getInfos()
+		const [device, { deviceId, sessionId }] = await Promise.all([
+			Eitri.device.getInfos(),
+			getDeviceAndSession()
+		])
 
 		const cart = _cart || VtexCartService._CACHED_CART
 
@@ -175,6 +201,8 @@ export const sendLogError = async (error, method, data = {}, _cart) => {
                 slug: window.__eitriAppConf?.slug,
                 applicationId: window.__eitriAppConf?.applicationId,
                 version: window.__eitriAppConf?.version,
+				deviceId,
+				sessionId,
                 device,
 				method: method || '',
 				email: cart?.clientProfileData?.email,
@@ -210,8 +238,10 @@ export const sendLogError = async (error, method, data = {}, _cart) => {
 
 export const sendOrderNotComplete = async (error, method, data = {}, _cart) => {
 	try {
-
-		const device = await Eitri.device.getInfos()
+		const [device, { deviceId, sessionId }] = await Promise.all([
+			Eitri.device.getInfos(),
+			getDeviceAndSession()
+		])
 
 		const cart = _cart || VtexCartService._CACHED_CART
 
@@ -223,6 +253,8 @@ export const sendOrderNotComplete = async (error, method, data = {}, _cart) => {
 				slug: window.__eitriAppConf?.slug,
 				applicationId: window.__eitriAppConf?.applicationId,
 				version: window.__eitriAppConf?.version,
+				deviceId,
+				sessionId,
 				device,
 				method: method || '',
 				email: cart?.clientProfileData?.email,
