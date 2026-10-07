@@ -13,7 +13,7 @@ export default function CartMethods() {
 	const addToCart = async () => {
 		try {
 			const item = {
-				id: '1001',
+				id: '100001315',
 				quantity: 1,
 				seller: '1'
 			}
