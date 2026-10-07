@@ -2,6 +2,7 @@ import Eitri from 'eitri-bifrost'
 import Vtex from './Vtex'
 import EventBus from '@/services/EventBus'
 import RemoteConfig from './RemoteConfig'
+import StorageService from './StorageService'
 
 let loaded = false
 
@@ -29,6 +30,8 @@ export default class App {
 		}
 
 		const remoteConfig = await RemoteConfig.init(overwrites)
+
+		await App.persistDeviceAndSession()
 
 		try {
 			console.log('[SHARED] ********* Config Vtex encontrada, configurando automaticamente *******')
@@ -98,6 +101,26 @@ export default class App {
 	}
 
 	static deviceFingerprint = null
+
+	static persistDeviceAndSession = async () => {
+		try {
+			const startParams = await Eitri.getInitializationInfos().catch(() => null)
+			if (String(startParams?.tabIndex) !== '0') return
+
+			let deviceId = await StorageService.getStorageItem('device_id')
+			if (!deviceId) {
+				deviceId = crypto.randomUUID()
+				await StorageService.setStorageItem('device_id', deviceId)
+			}
+
+			const sessionId = crypto.randomUUID()
+			await StorageService.setStorageItem('session_id', sessionId)
+
+			console.log('[SHARED] Device/Session persisted', { deviceId, sessionId })
+		} catch (error) {
+			console.error('[SHARED] Error persisting device/session info', error)
+		}
+	}
 
 	static clearSale(appKey) {
 		try {
