@@ -80,6 +80,13 @@ type StartTransactionReturn = {
 export default class VtexPaymentService {
 	static async executePayment(cart: any, options?: PaymentOptions) {
 		try {
+			const cartPayments = cart?.paymentData?.payments ?? []
+			if (Array.isArray(options?.fields) && options.fields.length < cartPayments.length) {
+				throw new Error(
+					`options.fields tem ${options.fields.length} item(s), mas o carrinho tem ${cartPayments.length} pagamento(s)`
+				)
+			}
+
 			const startTransactionReturn: StartTransactionReturn = await VtexPaymentService.startTransaction(
 				cart,
 				options
