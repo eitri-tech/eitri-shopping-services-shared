@@ -9,26 +9,29 @@ import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../
 import RemoteConfig from '../../RemoteConfig'
 import { PaymentResult } from '../../../models/Payment'
 
-type PaymentOptions = {
-	fields: {
-		accountId: string
-		holderName: string
-		cardNumber: string
-		validationCode: string
-		dueDate: string
-		bin: string
-		address: {
-			street: string
-			complement: string
-			number: string
-			city: string
-			reference: string
-			neighborhood: string
-			state: string
-			country: string
-			postalCode: string
-		}
+type PaymentFields = {
+	accountId: string
+	holderName: string
+	cardNumber: string
+	validationCode: string
+	dueDate: string
+	bin: string
+	address: {
+		street: string
+		complement: string
+		number: string
+		city: string
+		reference: string
+		neighborhood: string
+		state: string
+		country: string
+		postalCode: string
 	}
+}
+
+type PaymentOptions = {
+	/** Objeto único para todos os pagamentos, ou lista com um item por pagamento na ordem de `cart.paymentData.payments` (ex.: pagamento com 2 cartões). */
+	fields: PaymentFields | PaymentFields[]
 	captchaToken: string
 	captchaSiteKey: string
 	savePersonalData: boolean
@@ -77,6 +80,13 @@ type StartTransactionReturn = {
 export default class VtexPaymentService {
 	static async executePayment(cart: any, options?: PaymentOptions) {
 		try {
+			const cartPayments = cart?.paymentData?.payments ?? []
+			if (Array.isArray(options?.fields) && options.fields.length < cartPayments.length) {
+				throw new Error(
+					`options.fields tem ${options.fields.length} item(s), mas o carrinho tem ${cartPayments.length} pagamento(s)`
+				)
+			}
+
 			const startTransactionReturn: StartTransactionReturn = await VtexPaymentService.startTransaction(
 				cart,
 				options
@@ -169,7 +179,9 @@ export default class VtexPaymentService {
 		try {
 			let paymentsMethods = []
 
-			startTransactionReturn?.payments?.forEach(payment => {
+			startTransactionReturn?.payments?.forEach((payment, paymentIndex) => {
+				const paymentFields = Array.isArray(options?.fields) ? options.fields[paymentIndex] : options?.fields
+
 				payment.merchantSellerPayments.map(msp => {
 					const merchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.id === msp.id)
 
@@ -181,7 +193,7 @@ export default class VtexPaymentService {
 						value: msp?.value,
 						installmentsValue: msp?.installmentValue,
 						referenceValue: msp?.referenceValue,
-						fields: options?.fields,
+						fields: paymentFields,
 						transaction: {
 							id: merchant?.transactionId,
 							merchantName: merchant?.merchantName
