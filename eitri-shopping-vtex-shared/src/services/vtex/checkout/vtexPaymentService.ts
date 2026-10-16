@@ -30,7 +30,7 @@ type PaymentFields = {
 }
 
 type PaymentOptions = {
-	/** Objeto único para todos os pagamentos, ou lista com um item por pagamento na ordem de `cart.paymentData.payments` (ex.: pagamento com 2 cartões). */
+	/** Objeto único para todos os pagamentos, ou lista com um item por pagamento na ordem de `cart.paymentData.payments` (ex.: pagamento com 2 cartões). Cada pagamento da transação é ligado ao item pela bandeira, valor e parcelas, nunca pela posição; sem correspondência, o pagamento é interrompido. */
 	fields: PaymentFields | PaymentFields[]
 	captchaToken: string
 	captchaSiteKey: string
@@ -174,13 +174,47 @@ export default class VtexPaymentService {
 		}
 	}
 
+	static getPaymentFields(
+		cart: any,
+		payment: StartTransactionReturn['payments'][number],
+		paymentIndex: number,
+		matchedCartPaymentIndexes: number[],
+		options?: PaymentOptions
+	) {
+		if (!Array.isArray(options?.fields)) return options?.fields
+
+		const installments = payment?.merchantSellerPayments?.[0]?.installments
+		const cartPaymentIndex = (cart?.paymentData?.payments ?? []).findIndex(
+			(cartPayment, index) =>
+				!matchedCartPaymentIndexes.includes(index) &&
+				String(cartPayment?.paymentSystem) === String(payment?.paymentSystem) &&
+				cartPayment?.referenceValue === payment?.referenceValue &&
+				(cartPayment?.installments == null || installments == null || cartPayment.installments === installments)
+		)
+		if (cartPaymentIndex === -1) {
+			throw new Error(
+				`Não foi possível associar o pagamento ${paymentIndex + 1} da transação a um pagamento do carrinho`
+			)
+		}
+
+		matchedCartPaymentIndexes.push(cartPaymentIndex)
+		return options.fields[cartPaymentIndex]
+	}
+
 	static async setPaymentMethod(cart: any, startTransactionReturn: StartTransactionReturn, options?: PaymentOptions) {
 		console.log('====> Setando o método de pagamento', startTransactionReturn.id)
 		try {
 			let paymentsMethods = []
+			const matchedCartPaymentIndexes: number[] = []
 
 			startTransactionReturn?.payments?.forEach((payment, paymentIndex) => {
-				const paymentFields = Array.isArray(options?.fields) ? options.fields[paymentIndex] : options?.fields
+				const paymentFields = VtexPaymentService.getPaymentFields(
+					cart,
+					payment,
+					paymentIndex,
+					matchedCartPaymentIndexes,
+					options
+				)
 
 				payment.merchantSellerPayments.map(msp => {
 					const merchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.id === msp.id)
