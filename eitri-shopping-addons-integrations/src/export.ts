@@ -1,5 +1,7 @@
 export { default as Widde } from './services/Widde'
 export { default as LiveNotificationService } from './services/LiveNotificationService'
+export { default as SizebayService, DEVICES as SIZEBAY_DEVICES } from './services/SizebayService'
+export { default as SizeBay } from './components/SizeBay'
 export {
 	PUSH_PERMISSION_STATUS,
 	START_RESULT_REASON,
@@ -7,6 +9,14 @@ export {
 	DEFAULT_ORDER_STATUS_PRESETS,
 	ALLOW_ALL_TOKEN
 } from './services/LiveNotificationService'
+export type {
+	SizebayDevice,
+	SizebayServiceConfig,
+	SizeBayUrls,
+	GetSizeBayUrlsInput,
+	SizebayProductInfo
+} from './models/Sizebay'
+export type { SizeBayProps } from './components/SizeBay'
 export type {
 	PushPermissionStatus,
 	StartResultReason,
