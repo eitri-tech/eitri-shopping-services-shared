@@ -44,7 +44,7 @@ Dados sensíveis (JWT, cookies de autenticação) são sanitizados antes do envi
 | ERROR | `addGift` | `selectableGiftId`, `selectedGifts`, `orderFormId` | Falha ao adicionar brindes |
 | ERROR | `removeGift` | `selectableGiftId`, `orderFormId` | Falha ao remover brindes |
 
-### Checkout (`checkout/vtexCheckoutService.js`) — 13 logs
+### Checkout (`checkout/vtexCheckoutService.js`) — 10 logs
 
 | Evento | Método | Dados de contexto | Descrição |
 |--------|--------|-------------------|-----------|
@@ -52,28 +52,26 @@ Dados sensíveis (JWT, cookies de autenticação) são sanitizados antes do envi
 | ERROR | `addShippingAddress` | — | Falha ao adicionar endereço de entrega |
 | ERROR | `setLogisticInfo` | `logisticInfo` | Falha ao definir informações logísticas |
 | ERROR | `addUserData` | — | Falha ao adicionar dados do usuário |
-| ERROR | `startTransaction` | `orderFormId`, `value`, `referenceValue` | Falha ao iniciar transação |
-| ERROR | `setPaymentMethod` | `orderFormId`, `transactionId`, `paymentSystemCount` | Falha ao definir meio de pagamento na gateway |
-| ERROR | `processPayment` | `orderFormId`, `orderGroup`, `transactionId`, `responseStatus` | Falha ao processar pagamento na gateway |
-| ERROR | `pay` | `orderFormId`, cart | Falha genérica no fluxo de pagamento legado |
+| ERROR / ORDER-NOT-COMPLETED | `pay` | `orderFormId`, `step`, contexto do passo, cart | Falha no fluxo de pagamento legado (centralizado — sub-métodos enriquecem o erro com `e.step` e `e.stepContext`) |
 | ORDER-ACCEPTED | `pay` | cart | Pedido aceito — cartão de crédito |
 | ORDER-ACCEPTED | `pay` | cart | Pedido aceito — boleto |
 | ORDER-ACCEPTED | `pay` | cart | Pedido aceito — Pix |
 | ORDER-ACCEPTED | `pay` | cart | Pedido aceito — débito |
 | ORDER-ACCEPTED | `pay` | cart | Pedido aceito — outros meios |
 
-### Payment (`checkout/vtexPaymentService.ts`) — 6 logs
+Nota: `startTransaction`, `setPaymentMethod` e `processPayment` não logam diretamente — enriquecem o erro com `e.step` e `e.stepContext` e relançam para o ponto de entrada (`pay`) logar uma única vez.
 
-Todos os logs da cadeia de pagamento incluem `orderFormId` para correlação.
+### Payment (`checkout/vtexPaymentService.ts`) — 3 logs
+
+Todos os logs da cadeia de pagamento incluem `orderFormId`, `step` e `stepContext` para correlação.
 
 | Evento | Método | Dados de contexto | Descrição |
 |--------|--------|-------------------|-----------|
 | ORDER-ACCEPTED | `executePayment` | cart | Pedido aceito via split payment |
-| ORDER-NOT-COMPLETED | `executePayment` | `orderFormId`, cart | Pedido não finalizado (erro com resposta do servidor) |
-| ERROR | `executePayment` | `orderFormId`, cart | Erro genérico no processamento |
-| ERROR | `startTransaction` | `orderFormId`, `value`, `paymentCount`, cart | Falha ao iniciar transação |
-| ERROR | `setPaymentMethod` | `orderFormId`, `transactionId`, `orderGroup`, `paymentCount`, cart | Falha ao definir meio de pagamento |
-| ERROR | `processPayment` | `orderFormId`, `orderGroup`, `transactionId`, `responseStatus` | Falha ao processar pagamento na gateway |
+| ORDER-NOT-COMPLETED | `executePayment` | `orderFormId`, `step`, `stepContext`, cart | Pedido não finalizado (códigos CHK0328, CHK003, CHK0087, ORD062, CHK0223) |
+| ERROR | `executePayment` | `orderFormId`, `step`, `stepContext`, cart | Erro genérico no processamento |
+
+Nota: `startTransaction`, `setPaymentMethod` e `processPayment` não logam diretamente — enriquecem o erro com `e.step` e `e.stepContext` e relançam para `executePayment` logar uma única vez. Erros já logados por `executePayment` são marcados com `e._datadogLogged` para evitar duplicação quando chamados via `pay`.
 
 ### Customer (`customer/vtexCustomerService.js`) — 12 logs
 
@@ -121,14 +119,9 @@ Todos os logs da cadeia de pagamento incluem `orderFormId` para correlação.
 | ERROR | `updateSession` | — | Falha ao atualizar sessão |
 | ERROR | `getSegments` | — | Falha ao obter segmentos |
 
-### Wishlist (`wishlist/vtexWishlistService.js`) — 4 logs
+### Wishlist (`wishlist/vtexWishlistService.js`) — 0 logs
 
-| Evento | Método | Dados de contexto | Descrição |
-|--------|--------|-------------------|-----------|
-| ERROR | `listItems` | `from`, `to` | Falha ao listar favoritos |
-| ERROR | `removeItem` | `id`, `name` | Falha ao remover favorito |
-| ERROR | `addItem` | `productId`, `sku`, `listName` | Falha ao adicionar favorito |
-| ERROR | `checkItem` | `productId` | Falha ao verificar se item está na lista |
+Logs removidos: os métodos lançam `Error('User not logged')` para visitantes anônimos, que é uma condição esperada de negócio e não deve gerar evento ERROR. A instrumentação foi revertida para evitar ruído.
 
 ### Subscription (`subscription/vtexSubscriptionService.ts`) — 13 logs
 
@@ -216,33 +209,35 @@ Todos os logs da cadeia de pagamento incluem `orderFormId` para correlação.
 
 | Nível | Quantidade |
 |-------|-----------|
-| ERROR | 89 |
+| ERROR | 79 |
 | WARNING | 6 |
 | INFO | 3 |
 | ORDER-ACCEPTED | 6 |
-| ORDER-NOT-COMPLETED | 1 |
-| **Total** | **105** |
+| ORDER-NOT-COMPLETED | 2 |
+| **Total** | **96** |
 
 ## Correlação de Logs na Cadeia de Pagamento
 
-Todos os logs do fluxo de pagamento incluem `orderFormId` como campo explícito no payload, permitindo filtrar no Datadog por `data.orderFormId` para rastrear toda a sequência de uma tentativa de pagamento.
+Logs de pagamento são centralizados nos pontos de entrada (`executePayment` e `pay`). Sub-métodos (`startTransaction`, `setPaymentMethod`, `processPayment`) enriquecem o erro com `e.step` e `e.stepContext` mas não logam — evitando duplicação.
 
 ### VtexPaymentService (payV2)
 
 ```
-executePayment → startTransaction → setPaymentMethod → processPayment
-     ↓                  ↓                  ↓                  ↓
- orderFormId        orderFormId        orderFormId        orderFormId
- (via cart)         (via cart)         (via cart)       (via _CACHED_CART)
+executePayment ← único ponto de log (ERROR ou ORDER-NOT-COMPLETED)
+     ↓
+ startTransaction → enriquece e.step='startTransaction', e.stepContext={orderFormId, value, paymentCount}
+ setPaymentMethod → enriquece e.step='setPaymentMethod', e.stepContext={orderFormId, transactionId, orderGroup, paymentCount}
+ processPayment   → enriquece e.step='processPayment', e.stepContext={orderFormId, orderGroup, transactionId, responseStatus}
 ```
 
 ### vtexCheckoutService (pay legado)
 
 ```
-pay → startTransaction → setPaymentMethod → processPayment
- ↓          ↓                  ↓                  ↓
-orderFormId orderFormId     orderFormId        orderFormId
-(via cart)  (direto)      (via _CACHED_CART)  (via _CACHED_CART)
+pay ← único ponto de log (ERROR ou ORDER-NOT-COMPLETED)
+ ↓   (pula se e._datadogLogged=true, ou seja, se executePayment já logou)
+ startTransaction → enriquece e.step, e.stepContext
+ setPaymentMethod → enriquece e.step, e.stepContext
+ processPayment   → enriquece e.step, e.stepContext
 ```
 
 ## Cobertura por Serviço
@@ -250,12 +245,12 @@ orderFormId orderFormId     orderFormId        orderFormId
 | Serviço | Total de Métodos | Com Datadog | Cobertura |
 |---------|-----------------|-------------|-----------|
 | **Cart** | 27 | 10 | 37% |
-| **Checkout** | 23 | 13 | 57% |
-| **Payment** | 4 | 4 | 100% |
+| **Checkout** | 23 | 10 | 43% |
+| **Payment** | 4 | 3 | 75% |
 | **Customer** | 43 | 9 | 21% |
 | **Catalog** | 17 | 15 | 88% |
 | **Session** | 6 | 4 | 67% |
-| **Wishlist** | 4 | 4 | 100% |
+| **Wishlist** | 4 | 0 | 0% (removido — condição de negócio) |
 | **Subscription** | 15 | 13 | 87% |
 | **CMS** | 3 | 3 | 100% |
 | **Store** | 1 | 1 | 100% |
@@ -265,23 +260,31 @@ orderFormId orderFormId     orderFormId        orderFormId
 | **Search (GraphQL)** | 9 | 8 | 89% |
 | **Search (Intelligent)** | 16 | 9 | 56% |
 | **VtexCaller** | 7 | 0 | N/A (não instrumentar) |
-| **Total** | **184** | **101** | **55%** |
+| **Total** | **184** | **92** | **50%** |
 
 ## Exclusões
 
 ### Métodos não instrumentados (por design)
 
-Métodos utilitários, síncronos ou de storage local que não fazem chamadas HTTP:
+Métodos utilitários, síncronos, de storage local ou delegadores que não fazem chamadas HTTP próprias:
 
-- **Cart**: `saveCartIdOnStorage`, `getCurrentOrCreateCart`, `getCartIfExists`, `getStoredOrderFormId`, `removeItem`, `removeAllItems`, `removeClientData`, `clearCart`, `resolvePostalCode`, `getClientProfileByEmail`, `addClientPreferences`, `addMarketingData`, `listPickPoints`, `clearOrderFormMessages`, `addOpenTextFieldToCart`, `simulateCart`, `updateItem`, `addAttachmentToItem`, `setOrderFormId`
-- **Checkout**: `extractCookieValues`, `payV2`, `executePayment`, `getPixStatus`, `resolveZipCode`, `getGiftCartPaymentMethod`, `payBankInvoice`, `payInstantPayment`, `payWithCard`, `payPromissory`, `payExternalProvider`, `payStoreCart`, `payGiftCard`, `addPromoCode`, `removeAccount`
-- **Customer**: `_startLogin`, `loginWithEmailAndPassword`, `sendAccessKeyByEmail`, `loginWithEmailAndAccessKey`, `loginWithGoogle`, `loginWithFacebook`, `setPassword`, `listOrders`, `getOrderById`, `logout`, `getCustomerToken`, `getStorageCustomerToken`, `setCustomerToken`, `isLoggedIn`, `isSessionLoggedIn`, `cancelOrder`, `setCustomerData`, `getCustomerData`, `retrieveCustomerData`, `clearCustomerData`, `getCustomerProfile`, `updateCustomerProfile`, `newsletterSubscribe`, `_processPostLogin`, `getAddresses`, `createAddress`, `updateAddress`, `deleteAddress`, `setRegion`, `removeRegion`, `getStoredRegionData`, `addNewCard`, `getSavedCards`, `deleteSavedCard`
+- **Cart**: `saveCartIdOnStorage` (storage), `getCurrentOrCreateCart` (delega para métodos instrumentados), `getCartIfExists` (delega), `getStoredOrderFormId` (storage), `removeItem` (delega para `changeItemQuantity`), `clearCart` (storage + EventBus), `setOrderFormId` (storage)
+- **Checkout**: `extractCookieValues` (síncrono), `payV2` (delega para `VtexPaymentService.executePayment`), `executePayment` (delega), `getGiftCartPaymentMethod` (síncrono), `payBankInvoice` (orquestrador — sub-chamadas já instrumentadas), `payInstantPayment` (orquestrador), `payWithCard` (orquestrador), `payPromissory` (orquestrador), `payStoreCart` (orquestrador), `payExternalProvider` (orquestrador), `payGiftCard` (vazio)
+- **Customer**: `getCustomerToken` (storage), `getStorageCustomerToken` (storage), `setCustomerToken` (storage), `isLoggedIn` (storage), `setCustomerData` (storage), `getCustomerData` (storage), `retrieveCustomerData` (storage), `clearCustomerData` (storage), `getStoredRegionData` (storage), `newsletterSubscribe` (vazio), `saveUtmParams` (storage + EventBus, já tem WARNING), `getUtmParams` (storage, já tem WARNING)
 - **Catalog**: `getSearchOptions` (síncrono), `filterAvailableProductsOnly` (síncrono)
 - **Session**: `getSessionToken` (storage local), `removeSession` (storage local)
 - **Subscription**: `getCustomerEmail` (utilitário interno), `compact` (síncrono)
 - **Search GraphQL**: `toGraphQLArgs` (síncrono)
 - **Intelligent Search**: `_buildQueryString`, `_normalizeFacets`, `_getRegionParams`, `_getUtmParams`, `_getBaseDefaults`, `_getSimulationDefaults`, `_appendQuery` (helpers internos)
 - **App**: `setStatusBarColor` (síncrono), `setAppName` (síncrono)
+
+### Métodos com chamadas HTTP pendentes de instrumentação
+
+Métodos que fazem chamadas HTTP mas ainda não possuem `sendLogError`:
+
+- **Cart**: `removeAllItems`, `removeClientData`, `resolvePostalCode`, `getClientProfileByEmail`, `addClientPreferences`, `addMarketingData`, `listPickPoints`, `clearOrderFormMessages`, `addOpenTextFieldToCart`, `simulateCart`, `updateItem`, `addAttachmentToItem`
+- **Checkout**: `addPromoCode`, `removeAccount`, `getPixStatus`, `resolveZipCode`
+- **Customer**: `_startLogin`, `loginWithEmailAndPassword`, `sendAccessKeyByEmail`, `loginWithEmailAndAccessKey`, `loginWithGoogle`, `loginWithFacebook`, `setPassword`, `listOrders`, `getOrderById`, `cancelOrder`, `logout` (chama APIs via session), `isSessionLoggedIn` (chama session), `getCustomerProfile`, `updateCustomerProfile`, `_processPostLogin` (orquestrador com HTTP), `_processPostSocialLogin` (orquestrador com HTTP), `getAddresses`, `createAddress`, `updateAddress`, `deleteAddress`, `setRegion` (chama resolveZipCode + session), `removeRegion` (chama session), `addNewCard`, `getSavedCards`, `deleteSavedCard`, `executeRefreshToken` (já tem INFO, sem ERROR)
 
 ### Infraestrutura — VtexCaller — NÃO INSTRUMENTAR
 

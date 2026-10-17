@@ -1,6 +1,5 @@
 import VtexCaller from '../_helpers/_vtexCaller'
 import Vtex from '../../Vtex'
-import { sendLogError } from '@/services/Datadog'
 
 export default class VtexStockAlertService {
 
@@ -41,7 +40,6 @@ export default class VtexStockAlertService {
 
 			return response.data
 		} catch (e) {
-			sendLogError(e, 'subscribeAvailability', { skuId: skuId ?? null, email: email ?? null })
 			throw e
 		}
 	}
