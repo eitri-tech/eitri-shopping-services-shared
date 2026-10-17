@@ -318,3 +318,11 @@ Inclui dados adicionais de diagnóstico:
 - `email` — email do cliente (do carrinho)
 - `cartId` — ID do orderForm
 - `error` — objeto com message, stack, name e headers sanitizados
+
+## Sanitização de Dados Sensíveis
+
+`sanitizeError` (`Datadog.js`) faz `{ ...error }` (cópia rasa de todas as propriedades enumeráveis) e limpa apenas `request.headers` e `response.headers` (JWT e cookies de autenticação).
+
+**Investigação (outubro 2026):** verificou-se no Datadog que o objeto de erro lançado por `Eitri.http` **não** expõe `config.data` (padrão do axios que conteria o body da requisição original). Portanto, dados de cartão (`cardNumber`, `validationCode`, `holderName`) enviados no `setPaymentMethod` **não** aparecem nos logs de erro atuais.
+
+**Risco residual:** a abordagem é blocklist (limpa campos conhecidos) e não allowlist (extrai só campos seguros). Se uma atualização futura do `eitri-bifrost` passar a expor `config` ou outro campo com o body da requisição no objeto de erro, dados sensíveis poderiam ser enviados ao Datadog sem que nenhum código deste projeto mude. Recomenda-se re-verificar após upgrades significativos do bifrost.
