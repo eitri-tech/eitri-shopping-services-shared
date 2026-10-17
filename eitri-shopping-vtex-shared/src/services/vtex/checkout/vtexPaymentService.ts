@@ -6,6 +6,7 @@ import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
+import VtexCartService from '../cart/VtexCartService'
 import RemoteConfig from '../../RemoteConfig'
 import { PaymentResult } from '../../../models/Payment'
 
@@ -106,9 +107,9 @@ export default class VtexPaymentService {
 			const errorCode = e.response?.data?.error?.code
 
 			if (NOT_COMPLETE_ERRORS.includes(errorCode)) {
-				sendOrderNotComplete(e, 'executePayment')
+				sendOrderNotComplete(e, 'executePayment', { orderFormId: cart?.orderFormId ?? null }, cart)
 			} else {
-				sendLogError(e, 'executePayment')
+				sendLogError(e, 'executePayment', { orderFormId: cart?.orderFormId ?? null }, cart)
 			}
 
 			throw e
@@ -170,6 +171,7 @@ export default class VtexPaymentService {
 			return dataReturn
 		} catch (e) {
 			console.log('Erro no startPayment', e)
+			sendLogError(e, 'VtexPaymentService.startTransaction', { orderFormId: cart?.orderFormId ?? null, value: cart?.value ?? null, paymentCount: cart?.paymentData?.payments?.length ?? null }, cart)
 			throw e
 		}
 	}
@@ -263,6 +265,7 @@ export default class VtexPaymentService {
 			console.log('====> Método de pagamento definido para o transactionId', startTransactionReturn.id)
 		} catch (e) {
 			console.log('erro no setPaymentMethod', e)
+			sendLogError(e, 'VtexPaymentService.setPaymentMethod', { orderFormId: cart?.orderFormId ?? null, transactionId: startTransactionReturn?.id ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, paymentCount: startTransactionReturn?.payments?.length ?? null }, cart)
 			throw e
 		}
 	}
@@ -308,6 +311,7 @@ export default class VtexPaymentService {
 				}
 			} else {
 				console.log('erro no processPayment', e)
+				sendLogError(e, 'VtexPaymentService.processPayment', { orderFormId: VtexCartService?._CACHED_CART?.orderFormId ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, transactionId: startTransactionReturn?.id ?? null, responseStatus: e?.response?.status ?? null })
 				throw e
 			}
 		}

@@ -68,6 +68,7 @@ export default class VtexCartService {
 			return res.data
 		} catch (e) {
 			console.error('Erro ao adicionar marketing data', e)
+			sendLogError(e, 'assertMarketingData', { marketingData: cart?.marketingData }, cart)
 			return cart
 		}
 	}
@@ -86,6 +87,7 @@ export default class VtexCartService {
 			return updatedCart
 		} catch (e) {
 			console.error('Erro ao obter carrinho', orderFormId, e)
+			sendLogError(e, 'getCartById', { orderFormId: orderFormId ?? null, hasCachedCart: !!VtexCartService?._CACHED_CART })
 			throw e
 		}
 	}
@@ -109,6 +111,7 @@ export default class VtexCartService {
 			return updatedCart
 		} catch (e) {
 			console.error('Erro ao gerar novo carrinho', e)
+			sendLogError(e, 'generateNewCart')
 			throw e
 		}
 	}
@@ -391,6 +394,7 @@ export default class VtexCartService {
 			return updateCart.data
 		} catch (e) {
 			console.error('Erro ao modificar a quantidade no carrinho', e)
+			sendLogError(e, 'changeItemQuantity', { index: index ?? null, newQuantity: newQuantity ?? null, itemCount: VtexCartService?._CACHED_CART?.items?.length })
 		}
 	}
 
@@ -525,6 +529,7 @@ export default class VtexCartService {
 			return response.data
 		} catch (error) {
 			console.error('Erro ao adicionar ofertas ao carrinho:', error)
+			sendLogError(error, 'addOfferingsItems', { itemIndex: itemIndex ?? null, offeringItemId: offeringItemId ?? null, orderFormId: orderFormId ?? null })
 			throw error
 		}
 	}
@@ -547,6 +552,7 @@ export default class VtexCartService {
 			return response.data
 		} catch (error) {
 			console.error('Erro ao remover ofertas do carrinho:', error)
+			sendLogError(error, 'removeOfferingsItems', { itemIndex: itemIndex ?? null, offeringItemId: offeringItemId ?? null, orderFormId: orderFormId ?? null })
 			throw error
 		}
 	}
@@ -625,6 +631,7 @@ export default class VtexCartService {
 			return addGiftToCartRes.data
 		} catch (e) {
 			console.error('[SHARED] [addGift] Erro ao adicionar gifts carrinho', e)
+			sendLogError(e, 'addGift', { selectableGiftId: selectableGiftId ?? null, selectedGifts: selectedGifts ?? null, orderFormId: orderFormId ?? null })
 			throw e
 		}
 	}
@@ -651,7 +658,8 @@ export default class VtexCartService {
 
 			return removeGiftToCartRes.data
 		} catch (e) {
-			console.error('[SHARED] [addGift] Erro ao remover gifts carrinho', e)
+			console.error('[SHARED] [removeGift] Erro ao remover gifts carrinho', e)
+			sendLogError(e, 'removeGift', { selectableGiftId: selectableGiftId ?? null, orderFormId: orderFormId ?? null })
 			throw e
 		}
 	}

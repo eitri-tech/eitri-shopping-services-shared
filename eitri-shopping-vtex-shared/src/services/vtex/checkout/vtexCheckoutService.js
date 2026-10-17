@@ -192,6 +192,7 @@ export default class VtexCheckoutService {
 			}
 		} catch (e) {
 			console.log('erro no startPayment', e)
+			sendLogError(e, 'startTransaction', { orderFormId: orderFormId ?? null, value: payload?.value, referenceValue: payload?.referenceValue })
 			throw e
 		}
 	}
@@ -228,6 +229,7 @@ export default class VtexCheckoutService {
 		} catch (e) {
 			//TODO: se der erro aqui, será necessário matar e recriar o carrinho
 			console.log('erro no setPaymentMethod', e)
+			sendLogError(e, 'setPaymentMethod', { orderFormId: VtexCartService?._CACHED_CART?.orderFormId, transactionId: transactionId ?? null, paymentSystemCount: payload?.length })
 			throw e
 		}
 	}
@@ -265,6 +267,7 @@ export default class VtexCheckoutService {
 				}
 			} else {
 				console.log('erro no processPayment', e.response)
+				sendLogError(e, 'processPayment', { orderFormId: VtexCartService?._CACHED_CART?.orderFormId, orderGroup: orderGroup ?? null, transactionId: transactionId ?? null, responseStatus: e?.response?.status })
 				throw e
 			}
 		}
@@ -360,7 +363,7 @@ export default class VtexCheckoutService {
 
 			throw Error('Método de pagamento não suportado')
 		} catch (e) {
-			sendLogError(e, 'pay')
+			sendLogError(e, 'pay', { orderFormId: cart?.orderFormId }, cart)
 			throw e
 		}
 	}
