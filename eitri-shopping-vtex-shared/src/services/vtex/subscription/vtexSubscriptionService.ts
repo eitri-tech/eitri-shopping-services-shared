@@ -1,6 +1,7 @@
 import VtexCaller from '../_helpers/_vtexCaller'
 import VtexCustomerService from '../customer/vtexCustomerService'
 import objectToQueryString from '../_helpers/objectToQueryString'
+import { sendLogError } from '@/services/Datadog'
 import type {
 	Subscription,
 	SubscriptionConversationMessage,
@@ -19,83 +20,148 @@ const CYCLES_PATH = 'api/rns/pub/cycles'
 
 export default class VtexSubscriptionService {
 	static async listSubscriptions(filters: SubscriptionListFilters = {}): Promise<Subscription[]> {
-		const customerEmail = await VtexSubscriptionService.getCustomerEmail()
-		const query = objectToQueryString(VtexSubscriptionService.compact({ customerEmail, ...filters }))
-		const response = await VtexCaller.get(`${SUBSCRIPTIONS_PATH}?${query}`)
-		return response.data
+		try {
+			const customerEmail = await VtexSubscriptionService.getCustomerEmail()
+			const query = objectToQueryString(VtexSubscriptionService.compact({ customerEmail, ...filters }))
+			const response = await VtexCaller.get(`${SUBSCRIPTIONS_PATH}?${query}`)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'listSubscriptions')
+			throw e
+		}
 	}
 
 	static async getSubscription(id: string): Promise<Subscription> {
-		const response = await VtexCaller.get(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}`)
-		return response.data
+		try {
+			const response = await VtexCaller.get(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}`)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'getSubscription', { subscriptionId: id ?? null })
+			throw e
+		}
 	}
 
 	static async createSubscription(payload: SubscriptionCreateRequest): Promise<Subscription> {
-		const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
-		const response = await VtexCaller.post(SUBSCRIPTIONS_PATH, { ...payload, customerEmail })
-		return response.data
+		try {
+			const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
+			const response = await VtexCaller.post(SUBSCRIPTIONS_PATH, { ...payload, customerEmail })
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'createSubscription')
+			throw e
+		}
 	}
 
 	static async updateSubscription(id: string, payload: SubscriptionUpdateRequest): Promise<Subscription> {
-		const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
-		const response = await VtexCaller.patch(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}`, {
-			...payload,
-			customerEmail
-		})
-		return response.data
+		try {
+			const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
+			const response = await VtexCaller.patch(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}`, {
+				...payload,
+				customerEmail
+			})
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'updateSubscription', { subscriptionId: id ?? null })
+			throw e
+		}
 	}
 
 	static async addItem(id: string, item: SubscriptionItemRequest): Promise<Subscription> {
-		const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items`, item)
-		return response.data
+		try {
+			const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items`, item)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'addSubscriptionItem', { subscriptionId: id ?? null })
+			throw e
+		}
 	}
 
 	static async updateItem(id: string, itemId: string, payload: SubscriptionItemUpdateRequest): Promise<Subscription> {
-		const response = await VtexCaller.patch(
-			`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items/${encodeURIComponent(itemId)}`,
-			payload
-		)
-		return response.data
+		try {
+			const response = await VtexCaller.patch(
+				`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items/${encodeURIComponent(itemId)}`,
+				payload
+			)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'updateSubscriptionItem', { subscriptionId: id ?? null, itemId: itemId ?? null })
+			throw e
+		}
 	}
 
 	static async removeItem(id: string, itemId: string): Promise<void> {
-		await VtexCaller.delete(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items/${encodeURIComponent(itemId)}`)
+		try {
+			await VtexCaller.delete(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items/${encodeURIComponent(itemId)}`)
+		} catch (e) {
+			sendLogError(e, 'removeSubscriptionItem', { subscriptionId: id ?? null, itemId: itemId ?? null })
+			throw e
+		}
 	}
 
 	static async simulateSubscription(id: string): Promise<SubscriptionSimulation> {
-		const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/simulate`, {})
-		return response.data
+		try {
+			const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/simulate`, {})
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'simulateSubscription', { subscriptionId: id ?? null })
+			throw e
+		}
 	}
 
 	static async simulate(payload: SubscriptionCreateRequest): Promise<SubscriptionSimulation> {
-		const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
-		const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/simulate`, { ...payload, customerEmail })
-		return response.data
+		try {
+			const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
+			const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/simulate`, { ...payload, customerEmail })
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'simulateNewSubscription')
+			throw e
+		}
 	}
 
 	static async getConversationMessages(subscriptionId: string): Promise<SubscriptionConversationMessage[]> {
-		const response = await VtexCaller.get(
-			`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(subscriptionId)}/conversation-message`
-		)
-		return response.data
+		try {
+			const response = await VtexCaller.get(
+				`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(subscriptionId)}/conversation-message`
+			)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'getConversationMessages', { subscriptionId: subscriptionId ?? null })
+			throw e
+		}
 	}
 
 	static async listCycles(filters: SubscriptionCycleListFilters = {}): Promise<SubscriptionCycle[]> {
-		const customerEmail =
-			filters.customerEmail ??
-			(filters.subscriptionId ? undefined : await VtexSubscriptionService.getCustomerEmail())
-		const query = objectToQueryString(VtexSubscriptionService.compact({ ...filters, customerEmail }))
-		const response = await VtexCaller.get(`${CYCLES_PATH}?${query}`)
-		return response.data
+		try {
+			const customerEmail =
+				filters.customerEmail ??
+				(filters.subscriptionId ? undefined : await VtexSubscriptionService.getCustomerEmail())
+			const query = objectToQueryString(VtexSubscriptionService.compact({ ...filters, customerEmail }))
+			const response = await VtexCaller.get(`${CYCLES_PATH}?${query}`)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'listCycles', { subscriptionId: filters?.subscriptionId ?? null })
+			throw e
+		}
 	}
 
 	static async getCycle(cycleId: string): Promise<SubscriptionCycle> {
-		const response = await VtexCaller.get(`${CYCLES_PATH}/${encodeURIComponent(cycleId)}`)
-		return response.data
+		try {
+			const response = await VtexCaller.get(`${CYCLES_PATH}/${encodeURIComponent(cycleId)}`)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'getCycle', { cycleId: cycleId ?? null })
+			throw e
+		}
 	}
 
 	static async retryCycle(cycleId: string): Promise<void> {
-		await VtexCaller.post(`${CYCLES_PATH}/${encodeURIComponent(cycleId)}/retry`, {})
+		try {
+			await VtexCaller.post(`${CYCLES_PATH}/${encodeURIComponent(cycleId)}/retry`, {})
+		} catch (e) {
+			sendLogError(e, 'retryCycle', { cycleId: cycleId ?? null })
+			throw e
+		}
 	}
 
 	static async getCustomerEmail(): Promise<string> {

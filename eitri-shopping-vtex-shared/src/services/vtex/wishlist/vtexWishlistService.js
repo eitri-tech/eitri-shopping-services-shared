@@ -5,175 +5,196 @@ import decodeJwt from '../_helpers/decodeJWT'
 import EventBusChannels from "./../../EventBusChannels";
 import EventBus from '@/services/EventBus'
 import RemoteConfig from '../../RemoteConfig'
+import { sendLogError } from '@/services/Datadog'
 
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
 
 	static async listItems(from = 1, to = 50) {
-		const tokenData = await VtexCustomerService.getCustomerToken()
+		try {
+			const tokenData = await VtexCustomerService.getCustomerToken()
 
-		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
+			const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
-		if (!tokenData || !tokenData.token) {
-			throw new Error('User not logged')
-		}
+			if (!tokenData || !tokenData.token) {
+				throw new Error('User not logged')
+			}
 
-		const decoded = decodeJwt(tokenData.token)
+			const decoded = decodeJwt(tokenData.token)
 
-		if (!decoded || !decoded?.sub) {
-			throw new Error('User not found')
-		}
+			if (!decoded || !decoded?.sub) {
+				throw new Error('User not found')
+			}
 
-		const shopperId = decoded?.sub
+			const shopperId = decoded?.sub
 
-		const body = {
-			query: `
-			query ViewLists($shopperId: String!, $from: Int, $to: Int) { 
-				viewLists(shopperId: $shopperId, from: $from, to: $to) 
+			const body = {
+				query: `
+			query ViewLists($shopperId: String!, $from: Int, $to: Int) {
+				viewLists(shopperId: $shopperId, from: $from, to: $to)
 				${ context ? `@context(provider: "${context}")` : ''}
-				{ 
-					data { productId sku title id } 
-					name public 
+				{
+					data { productId sku title id }
+					name public
 				}
 			}`,
-			variables: {
-				shopperId: shopperId,
-				from: from,
-				to: to
+				variables: {
+					shopperId: shopperId,
+					from: from,
+					to: to
+				}
 			}
-		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, Vtex.configs.host)
-		return response.data
+			const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, Vtex.configs.host)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'listItems', { from: from ?? null, to: to ?? null })
+			throw e
+		}
 	}
 
 	static async removeItem(id, name = 'Wishlist') {
-		const tokenData = await VtexCustomerService.getCustomerToken()
+		try {
+			const tokenData = await VtexCustomerService.getCustomerToken()
 
-		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
+			const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
-		if (!tokenData || !tokenData.token) {
-			throw new Error('User not logged')
-		}
+			if (!tokenData || !tokenData.token) {
+				throw new Error('User not logged')
+			}
 
-		const decoded = decodeJwt(tokenData.token)
+			const decoded = decodeJwt(tokenData.token)
 
-		if (!decoded || !decoded?.sub) {
-			throw new Error('User not found')
-		}
+			if (!decoded || !decoded?.sub) {
+				throw new Error('User not found')
+			}
 
-		const shopperId = decoded?.sub
+			const shopperId = decoded?.sub
 
 
-		const body = {
-			query: `
-			mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) { 
-				removeFromList(shopperId: $shopperId, id: $id, name: $name) 
+			const body = {
+				query: `
+			mutation RemoveFromList ($shopperId: String!, $id: ID!, $name: String!) {
+				removeFromList(shopperId: $shopperId, id: $id, name: $name)
 				${ context ? `@context(provider: "${context}")` : ''}
 			}`,
-			variables: {
-				id: id,
-				shopperId: shopperId,
-				name: name
+				variables: {
+					id: id,
+					shopperId: shopperId,
+					name: name
+				}
 			}
+
+			const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+
+			EventBus.publish({
+				channel: EventBusChannels.REMOVE_FROM_WISHLIST,
+				broadcast: true,
+				data: {
+					id,
+					response: response.data
+				}
+			})
+
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'removeItem', { id: id ?? null, name: name ?? null })
+			throw e
 		}
-
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
-
-		EventBus.publish({
-			channel: EventBusChannels.REMOVE_FROM_WISHLIST,
-			broadcast: true,
-			data: {
-				id,
-				response: response.data
-			}
-		})
-
-		return response.data
 	}
 
 	static async addItem(productId, title, sku, listName = 'Wishlist') {
-		const tokenData = await VtexCustomerService.getCustomerToken()
+		try {
+			const tokenData = await VtexCustomerService.getCustomerToken()
 
-		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
+			const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
-		if (!tokenData || !tokenData.token) {
-			throw new Error('User not logged')
-		}
+			if (!tokenData || !tokenData.token) {
+				throw new Error('User not logged')
+			}
 
-		const decoded = decodeJwt(tokenData.token)
+			const decoded = decodeJwt(tokenData.token)
 
-		if (!decoded || !decoded?.sub) {
-			throw new Error('User not found')
-		}
+			if (!decoded || !decoded?.sub) {
+				throw new Error('User not found')
+			}
 
-		const shopperId = decoded?.sub
+			const shopperId = decoded?.sub
 
-		const body = {
-			query: `
-			mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) { 
-				addToList(shopperId: $shopperId, listItem: $listItem, name: $name) 
+			const body = {
+				query: `
+			mutation AddToList ($shopperId: String!, $listItem: ListItemInputType!, $name: String!) {
+				addToList(shopperId: $shopperId, listItem: $listItem, name: $name)
 				${ context ? `@context(provider: "${context}")` : ''}
 			}`,
-			variables: {
-				listItem: {
-					productId: productId,
-					title: title,
-					sku: sku
-				},
-				shopperId: shopperId,
-				name: listName
+				variables: {
+					listItem: {
+						productId: productId,
+						title: title,
+						sku: sku
+					},
+					shopperId: shopperId,
+					name: listName
+				}
 			}
+
+			const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+
+			EventBus.publish({
+				channel: EventBusChannels.ADD_TO_WISHLIST,
+				broadcast: true,
+				data: {
+					productId,
+					sku,
+					response: response.data
+				}
+			});
+
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'addItem', { productId: productId ?? null, sku: sku ?? null, listName: listName ?? null })
+			throw e
 		}
-
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
-
-		EventBus.publish({
-			channel: EventBusChannels.ADD_TO_WISHLIST,
-			broadcast: true,
-			data: {
-				productId,
-				sku,
-				response: response.data
-			}
-		});
-
-		return response.data
 	}
 
 	static async checkItem(productId) {
-		const tokenData = await VtexCustomerService.getCustomerToken()
+		try {
+			const tokenData = await VtexCustomerService.getCustomerToken()
 
-		const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
+			const context = RemoteConfig.getContent('appConfigs.graphQl.wishlistContextProvider')
 
-		if (!tokenData || !tokenData.token) {
-			throw new Error('User not logged')
-		}
+			if (!tokenData || !tokenData.token) {
+				throw new Error('User not logged')
+			}
 
-		const decoded = decodeJwt(tokenData.token)
+			const decoded = decodeJwt(tokenData.token)
 
-		if (!decoded || !decoded?.sub) {
-			throw new Error('User not found')
-		}
+			if (!decoded || !decoded?.sub) {
+				throw new Error('User not found')
+			}
 
-		const shopperId = decoded?.sub
+			const shopperId = decoded?.sub
 
-		const body = {
-			query: `
-			query CheckItem ($shopperId: String!, $productId: String!) { 
-				checkList(shopperId: $shopperId, productId: $productId) 
+			const body = {
+				query: `
+			query CheckItem ($shopperId: String!, $productId: String!) {
+				checkList(shopperId: $shopperId, productId: $productId)
 				${context ? `@context(provider: "${context}")` : ''}
-				{ 
-					inList listNames listIds message 
+				{
+					inList listNames listIds message
 				}
 			}`,
-			variables: {
-				shopperId: shopperId,
-				productId: productId
+				variables: {
+					shopperId: shopperId,
+					productId: productId
+				}
 			}
-		}
 
-		const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
-		return response.data
+			const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'checkItem', { productId: productId ?? null })
+			throw e
+		}
 	}
 }
