@@ -198,7 +198,7 @@ export default class VtexCatalogService {
 			const result = await VtexCaller.get(url)
 			return result?.data
 		} catch (e) {
-			sendLogError(e, 'getProductBySlug', { slug: slug ?? null })
+			sendLogError(e, 'getProductBySlug', { productSlug: slug ?? null })
 			throw e
 		}
 	}
