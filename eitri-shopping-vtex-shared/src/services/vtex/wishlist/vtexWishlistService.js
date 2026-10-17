@@ -5,7 +5,6 @@ import decodeJwt from '../_helpers/decodeJWT'
 import EventBusChannels from "./../../EventBusChannels";
 import EventBus from '@/services/EventBus'
 import RemoteConfig from '../../RemoteConfig'
-import { sendLogError } from '@/services/Datadog'
 
 export default class VtexWishlistService {
 	// TODO: Tratar o nome da lista
@@ -48,7 +47,6 @@ export default class VtexWishlistService {
 			const response = await VtexCaller.post(`_v/private/graphql/v1`, body, {}, Vtex.configs.host)
 			return response.data
 		} catch (e) {
-			sendLogError(e, 'listItems', { from: from ?? null, to: to ?? null })
 			throw e
 		}
 	}
@@ -98,7 +96,6 @@ export default class VtexWishlistService {
 
 			return response.data
 		} catch (e) {
-			sendLogError(e, 'removeItem', { id: id ?? null, name: name ?? null })
 			throw e
 		}
 	}
@@ -152,7 +149,6 @@ export default class VtexWishlistService {
 
 			return response.data
 		} catch (e) {
-			sendLogError(e, 'addItem', { productId: productId ?? null, sku: sku ?? null, listName: listName ?? null })
 			throw e
 		}
 	}
@@ -193,7 +189,6 @@ export default class VtexWishlistService {
 			const response = await VtexCaller.post(`_v/private/graphql/v1?locale=pt-BR`, body, {}, Vtex.configs.host)
 			return response.data
 		} catch (e) {
-			sendLogError(e, 'checkItem', { productId: productId ?? null })
 			throw e
 		}
 	}

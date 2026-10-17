@@ -13,7 +13,7 @@ export default class VtexSessionService {
 			const response = await VtexCaller.post(`api/sessions`, payload)
 			await StorageService.setStorageJSON('sessionToken', response.data)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'createSession')
 			throw e
 		}
@@ -23,7 +23,7 @@ export default class VtexSessionService {
 		try {
 			const response = await VtexCaller.get(`api/sessions?items=${items}`)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'getSession', { items: items ?? null })
 			throw e
 		}
@@ -34,7 +34,7 @@ export default class VtexSessionService {
 			const response = await VtexCaller.patch(`api/sessions`, payload ?? {})
 			await StorageService.setStorageJSON('sessionToken', response.data)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'updateSession')
 			throw e
 		}
@@ -44,7 +44,7 @@ export default class VtexSessionService {
 		try {
 			const response = await VtexCaller.get(`api/segments`)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'getSegments')
 			throw e
 		}

@@ -114,7 +114,7 @@ export default class VtexIntelligentSearchService {
 			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/top-searches`, queryString)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.topSearches', { locale: locale ?? null })
 			throw e
 		}
@@ -133,7 +133,7 @@ export default class VtexIntelligentSearchService {
 			)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.autocompleteSuggestions', { query: query ?? null })
 			throw e
 		}
@@ -149,7 +149,7 @@ export default class VtexIntelligentSearchService {
 			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/search-suggestions`, queryString)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.searchSuggestions', { query: query ?? null })
 			throw e
 		}
@@ -167,7 +167,7 @@ export default class VtexIntelligentSearchService {
 			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/correction-search`, queryString)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.correctionSearch', { query: query ?? null })
 			throw e
 		}
@@ -184,7 +184,7 @@ export default class VtexIntelligentSearchService {
 			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/banners/${path}`, queryString)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.banners')
 			throw e
 		}
@@ -206,7 +206,7 @@ export default class VtexIntelligentSearchService {
 			)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.productSearch', { query: options?.query ?? null })
 			throw e
 		}
@@ -225,7 +225,7 @@ export default class VtexIntelligentSearchService {
 			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/facets/${path}`, queryString)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.facets', { query: options?.query ?? null })
 			throw e
 		}
@@ -251,7 +251,7 @@ export default class VtexIntelligentSearchService {
 			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/products`, queryString)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.getProduct', { value: value ?? null, field: field ?? null })
 			throw e
 		}
@@ -275,7 +275,7 @@ export default class VtexIntelligentSearchService {
 			)
 			const result = await VtexCaller.get(url)
 			return result?.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'intelligentSearch.pickupPointAvailability')
 			throw e
 		}

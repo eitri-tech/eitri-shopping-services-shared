@@ -21,12 +21,12 @@ interface PaymentPayload<BillingAddress = any> {
 
 export class VtexGooglePayServices {
 	static async loadPaymentData(env: 'PRODUCTION' | 'TEST' = 'PRODUCTION'): Promise<PaymentPayload> {
-		try {
-			const googlePayAvailable = await Eitri.googlePay.isAvailable()
-			if (!googlePayAvailable) {
-				throw new Error('google.pay.not.available')
-			}
+		const googlePayAvailable = await Eitri.googlePay.isAvailable()
+		if (!googlePayAvailable) {
+			throw new Error('google.pay.not.available')
+		}
 
+		try {
 			const remoteConfig = await Eitri.environment.getRemoteConfigs()
 
 			const account = remoteConfig?.providerInfo?.account
@@ -37,10 +37,10 @@ export class VtexGooglePayServices {
 
 			const cart = await VtexCartService.getCartIfExists()
 			const paymentSystems = cart?.paymentData?.paymentSystems
-			const allowedCards = paymentSystems.filter(ps => ps.groupName === 'creditCardPaymentGroup')
+			const allowedCards = paymentSystems.filter((ps: any) => ps.groupName === 'creditCardPaymentGroup')
 
 			const allowedGooglePayCards = ['MASTERCARD', 'AMEX', 'ELO', 'VISA']
-			const allowedCardNetworks = allowedCards.map(c => c.name.toUpperCase())
+			const allowedCardNetworks = allowedCards.map((c: any) => c.name.toUpperCase())
 
 			const paymentDataRequest = {
 				apiVersion: 2,
@@ -50,7 +50,7 @@ export class VtexGooglePayServices {
 						type: 'CARD',
 						parameters: {
 							allowedAuthMethods: walletHub.allowedAuthMethods,
-							allowedCardNetworks: allowedCardNetworks.filter(card => allowedGooglePayCards.includes(card)),
+							allowedCardNetworks: allowedCardNetworks.filter((card: any) => allowedGooglePayCards.includes(card)),
 							assuranceDetailsRequired: true,
 							billingAddressRequired: true,
 							billingAddressParameters: {
@@ -84,8 +84,8 @@ export class VtexGooglePayServices {
 
 			const paymentsClient = await Eitri.googlePay.init(env)
 			return await paymentsClient.loadPaymentData(paymentDataRequest)
-		} catch (e) {
-			sendLogError(e, 'loadPaymentData', { env: env ?? null, orderFormId: VtexCartService?._CACHED_CART?.orderFormId ?? null })
+		} catch (e: any) {
+			sendLogError(e, 'loadPaymentData', { env: env ?? null, orderFormId: (VtexCartService._CACHED_CART as any)?.orderFormId ?? null })
 			throw e
 		}
 	}
@@ -96,7 +96,7 @@ export class VtexGooglePayServices {
 				return false;
 			}
 			return await Eitri.googlePay.isAvailable()
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'googlePay.isAvailable')
 			throw e
 		}

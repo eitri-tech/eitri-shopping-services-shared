@@ -25,7 +25,7 @@ export default class VtexSubscriptionService {
 			const query = objectToQueryString(VtexSubscriptionService.compact({ customerEmail, ...filters }))
 			const response = await VtexCaller.get(`${SUBSCRIPTIONS_PATH}?${query}`)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'listSubscriptions')
 			throw e
 		}
@@ -35,7 +35,7 @@ export default class VtexSubscriptionService {
 		try {
 			const response = await VtexCaller.get(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}`)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'getSubscription', { subscriptionId: id ?? null })
 			throw e
 		}
@@ -46,7 +46,7 @@ export default class VtexSubscriptionService {
 			const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
 			const response = await VtexCaller.post(SUBSCRIPTIONS_PATH, { ...payload, customerEmail })
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'createSubscription')
 			throw e
 		}
@@ -60,7 +60,7 @@ export default class VtexSubscriptionService {
 				customerEmail
 			})
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'updateSubscription', { subscriptionId: id ?? null })
 			throw e
 		}
@@ -70,7 +70,7 @@ export default class VtexSubscriptionService {
 		try {
 			const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items`, item)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'addSubscriptionItem', { subscriptionId: id ?? null })
 			throw e
 		}
@@ -83,7 +83,7 @@ export default class VtexSubscriptionService {
 				payload
 			)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'updateSubscriptionItem', { subscriptionId: id ?? null, itemId: itemId ?? null })
 			throw e
 		}
@@ -92,7 +92,7 @@ export default class VtexSubscriptionService {
 	static async removeItem(id: string, itemId: string): Promise<void> {
 		try {
 			await VtexCaller.delete(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/items/${encodeURIComponent(itemId)}`)
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'removeSubscriptionItem', { subscriptionId: id ?? null, itemId: itemId ?? null })
 			throw e
 		}
@@ -102,7 +102,7 @@ export default class VtexSubscriptionService {
 		try {
 			const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(id)}/simulate`, {})
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'simulateSubscription', { subscriptionId: id ?? null })
 			throw e
 		}
@@ -113,7 +113,7 @@ export default class VtexSubscriptionService {
 			const customerEmail = payload.customerEmail ?? (await VtexSubscriptionService.getCustomerEmail())
 			const response = await VtexCaller.post(`${SUBSCRIPTIONS_PATH}/simulate`, { ...payload, customerEmail })
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'simulateNewSubscription')
 			throw e
 		}
@@ -125,7 +125,7 @@ export default class VtexSubscriptionService {
 				`${SUBSCRIPTIONS_PATH}/${encodeURIComponent(subscriptionId)}/conversation-message`
 			)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'getConversationMessages', { subscriptionId: subscriptionId ?? null })
 			throw e
 		}
@@ -139,7 +139,7 @@ export default class VtexSubscriptionService {
 			const query = objectToQueryString(VtexSubscriptionService.compact({ ...filters, customerEmail }))
 			const response = await VtexCaller.get(`${CYCLES_PATH}?${query}`)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'listCycles', { subscriptionId: filters?.subscriptionId ?? null })
 			throw e
 		}
@@ -149,7 +149,7 @@ export default class VtexSubscriptionService {
 		try {
 			const response = await VtexCaller.get(`${CYCLES_PATH}/${encodeURIComponent(cycleId)}`)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'getCycle', { cycleId: cycleId ?? null })
 			throw e
 		}
@@ -158,7 +158,7 @@ export default class VtexSubscriptionService {
 	static async retryCycle(cycleId: string): Promise<void> {
 		try {
 			await VtexCaller.post(`${CYCLES_PATH}/${encodeURIComponent(cycleId)}/retry`, {})
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'retryCycle', { cycleId: cycleId ?? null })
 			throw e
 		}

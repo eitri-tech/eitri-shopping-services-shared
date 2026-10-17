@@ -62,7 +62,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.productSearch
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.productSearch', { query: searchInput?.query ?? null })
 			throw e
 		}
@@ -79,7 +79,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.facets
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.facets')
 			throw e
 		}
@@ -110,7 +110,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.product
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.product', { identifier: input?.identifier ?? null, field: input?.field ?? null })
 			throw e
 		}
@@ -127,7 +127,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.searchSuggestions
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.searchSuggestions')
 			throw e
 		}
@@ -159,7 +159,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.productRecommendations
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.productRecommendations', { identifier: input?.identifier ?? null })
 			throw e
 		}
@@ -176,7 +176,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.autocomplete
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.autocomplete')
 			throw e
 		}
@@ -196,7 +196,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.autocompleteSearchSuggestions
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.autocompleteSearchSuggestions')
 			throw e
 		}
@@ -212,7 +212,7 @@ export default class VtexSearchGraphql {
 
 			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
 			return response?.data?.data?.topSearches
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'graphql.topSearches')
 			throw e
 		}

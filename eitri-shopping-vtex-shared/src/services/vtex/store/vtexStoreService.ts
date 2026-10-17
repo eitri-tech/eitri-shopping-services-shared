@@ -24,7 +24,7 @@ export default class VtexStoreService {
 				`api/vtexid/pub/authentication/providers?scope=${scope || account}&accountName=${accountName || account}`
 			)
 			return response.data
-		} catch (e) {
+		} catch (e: any) {
 			sendLogError(e, 'getLoginProviders', { account: Vtex?.configs?.account ?? null })
 			throw e
 		}
