@@ -1,5 +1,6 @@
 import VtexCaller from '../_helpers/_vtexCaller'
 import Vtex from '../../Vtex'
+import { sendLogError } from '@/services/Datadog'
 
 type AuthConfig = {
 	passwordAuthentication: boolean
@@ -17,10 +18,15 @@ type AuthConfig = {
 
 export default class VtexStoreService {
 	static async getLoginProviders(scope?: String, accountName?: String): Promise<AuthConfig> {
-		const { account } = Vtex.configs
-		const response = await VtexCaller.get(
-			`api/vtexid/pub/authentication/providers?scope=${scope || account}&accountName=${accountName || account}`
-		)
-		return response.data
+		try {
+			const { account } = Vtex.configs
+			const response = await VtexCaller.get(
+				`api/vtexid/pub/authentication/providers?scope=${scope || account}&accountName=${accountName || account}`
+			)
+			return response.data
+		} catch (e) {
+			sendLogError(e, 'getLoginProviders', { account: Vtex?.configs?.account ?? null })
+			throw e
+		}
 	}
 }
