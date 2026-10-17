@@ -535,8 +535,9 @@ export default class VtexCartService {
 	}
 
 	static async removeOfferingsItems(itemIndex, offeringItemId) {
+		let orderFormId
 		try {
-			let orderFormId = await VtexCartService.getStoredOrderFormId()
+			orderFormId = await VtexCartService.getStoredOrderFormId()
 			if (!orderFormId) {
 				throw new Error('OrderFormId não encontrado')
 			}
@@ -609,8 +610,9 @@ export default class VtexCartService {
 	}
 
 	static async addGift(selectableGiftId, selectedGifts) {
+		let orderFormId
 		try {
-			let orderFormId = await VtexCartService.getStoredOrderFormId()
+			orderFormId = await VtexCartService.getStoredOrderFormId()
 			if (!orderFormId) {
 				const cart = await VtexCartService.generateNewCart()
 				orderFormId = cart.orderFormId
@@ -637,8 +639,9 @@ export default class VtexCartService {
 	}
 
 	static async removeGift(selectableGiftId) {
+		let orderFormId
 		try {
-			let orderFormId = await VtexCartService.getStoredOrderFormId()
+			orderFormId = await VtexCartService.getStoredOrderFormId()
 			if (!orderFormId) {
 				const cart = await VtexCartService.generateNewCart()
 				orderFormId = cart.orderFormId
