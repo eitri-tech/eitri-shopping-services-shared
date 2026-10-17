@@ -12,6 +12,7 @@ import { ProductRecommendationsInput } from './types/ProductRecommendationsInput
 import { suggestionReturn } from './graphqlReturn/SuggestionReturn'
 import { AutoCompleteSearchSuggestionInput } from './types/AutoCompleteSearchSuggestionInput'
 import getSalesChannel from '../_helpers/getSalesChannel'
+import { sendLogError } from '@/services/Datadog'
 
 export default class VtexSearchGraphql {
 	static toGraphQLArgs(obj: any) {
@@ -45,135 +46,175 @@ export default class VtexSearchGraphql {
 	}
 
 	static async productSearch(searchInput: ProductSearchInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		try {
+			const { host } = Vtex.configs
 
-		const salesChannel = await getSalesChannel()
-		if (salesChannel) {
-			searchInput.salesChannel = salesChannel
+			const salesChannel = await getSalesChannel()
+			if (salesChannel) {
+				searchInput.salesChannel = salesChannel
+			}
+
+			const query = this.toGraphQLArgs(searchInput)
+
+			const body = {
+				query: `{ productSearch(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productSearchReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.productSearch
+		} catch (e) {
+			sendLogError(e, 'graphql.productSearch', { query: searchInput?.query ?? null })
+			throw e
 		}
-
-		const query = this.toGraphQLArgs(searchInput)
-
-		const body = {
-			query: `{ productSearch(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productSearchReturn}  }`
-		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.productSearch
 	}
 
 	static async facets(searchInput: Facets, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
-		const query = this.toGraphQLArgs(searchInput)
+		try {
+			const { host } = Vtex.configs
+			const query = this.toGraphQLArgs(searchInput)
 
-		const body = {
-			query: `{ facets(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || facetsReturn}  }`
+			const body = {
+				query: `{ facets(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || facetsReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.facets
+		} catch (e) {
+			sendLogError(e, 'graphql.facets')
+			throw e
 		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.facets
 	}
 
 	static async product(input: ProductInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		try {
+			const { host } = Vtex.configs
 
-		const salesChannel = await getSalesChannel()
-		if (salesChannel) {
-			input.salesChannel = Number(salesChannel)
+			const salesChannel = await getSalesChannel()
+			if (salesChannel) {
+				input.salesChannel = Number(salesChannel)
+			}
+
+			const query = this.toGraphQLArgs(input)
+
+			const _query = query
+				.replace('"id"', 'id')
+				.replace('"slug"', 'slug')
+				.replace('"reference"', 'reference')
+				.replace('"ean"', 'ean')
+				.replace('"sku"', 'sku')
+				.replace('"buy"', 'buy')
+
+			const body = {
+				query: `{ product(${_query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.product
+		} catch (e) {
+			sendLogError(e, 'graphql.product', { identifier: input?.identifier ?? null, field: input?.field ?? null })
+			throw e
 		}
-
-		const query = this.toGraphQLArgs(input)
-
-		const _query = query
-			.replace('"id"', 'id')
-			.replace('"slug"', 'slug')
-			.replace('"reference"', 'reference')
-			.replace('"ean"', 'ean')
-			.replace('"sku"', 'sku')
-			.replace('"buy"', 'buy')
-
-		const body = {
-			query: `{ product(${_query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
-		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.product
 	}
 
 	static async searchSuggestions(input: SearchSuggestionInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
-		const query = this.toGraphQLArgs(input)
+		try {
+			const { host } = Vtex.configs
+			const query = this.toGraphQLArgs(input)
 
-		const body = {
-			query: `{ searchSuggestions(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`
+			const body = {
+				query: `{ searchSuggestions(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.searchSuggestions
+		} catch (e) {
+			sendLogError(e, 'graphql.searchSuggestions')
+			throw e
 		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.searchSuggestions
 	}
 
 	static async productRecommendations(input: ProductRecommendationsInput, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
-		const query = this.toGraphQLArgs(input)
+		try {
+			const { host } = Vtex.configs
+			const query = this.toGraphQLArgs(input)
 
-		const _query = query
-			.replace('"id"', 'id')
-			.replace('"slug"', 'slug')
-			.replace('"reference"', 'reference')
-			.replace('"ean"', 'ean')
-			.replace('"sku"', 'sku')
-			.replace('"buy"', 'buy')
-			.replace('"similars"', 'similars')
-			.replace('"view"', 'view')
-			.replace('"viewAndBought"', 'viewAndBought')
-			.replace('"accessories"', 'accessories')
-			.replace('"suggestions"', 'suggestions')
-			.replace('"PRODUCT"', 'PRODUCT')
-			.replace('"NONE"', 'NONE')
+			const _query = query
+				.replace('"id"', 'id')
+				.replace('"slug"', 'slug')
+				.replace('"reference"', 'reference')
+				.replace('"ean"', 'ean')
+				.replace('"sku"', 'sku')
+				.replace('"buy"', 'buy')
+				.replace('"similars"', 'similars')
+				.replace('"view"', 'view')
+				.replace('"viewAndBought"', 'viewAndBought')
+				.replace('"accessories"', 'accessories')
+				.replace('"suggestions"', 'suggestions')
+				.replace('"PRODUCT"', 'PRODUCT')
+				.replace('"NONE"', 'NONE')
 
-		const body = {
-			query: `{ productRecommendations(${_query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
+			const body = {
+				query: `{ productRecommendations(${_query}) @context(provider: "vtex.search-graphql")  ${returnProperties || productReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.productRecommendations
+		} catch (e) {
+			sendLogError(e, 'graphql.productRecommendations', { identifier: input?.identifier ?? null })
+			throw e
 		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.productRecommendations
 	}
 
 	static async autocomplete(input: AutoFillContactField, returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
-		const query = this.toGraphQLArgs(input)
+		try {
+			const { host } = Vtex.configs
+			const query = this.toGraphQLArgs(input)
 
-		const body = {
-			query: `{ autocomplete(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || suggestionReturn}  }`
+			const body = {
+				query: `{ autocomplete(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || suggestionReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.autocomplete
+		} catch (e) {
+			sendLogError(e, 'graphql.autocomplete')
+			throw e
 		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.autocomplete
 	}
 
 	static async autocompleteSearchSuggestions(
 		input: AutoCompleteSearchSuggestionInput,
 		returnProperties?: any
 	): Promise<any> {
-		const { host } = Vtex.configs
-		const query = this.toGraphQLArgs(input)
+		try {
+			const { host } = Vtex.configs
+			const query = this.toGraphQLArgs(input)
 
-		const body = {
-			query: `{ autocompleteSearchSuggestions(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`
+			const body = {
+				query: `{ autocompleteSearchSuggestions(${query}) @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.autocompleteSearchSuggestions
+		} catch (e) {
+			sendLogError(e, 'graphql.autocompleteSearchSuggestions')
+			throw e
 		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.autocompleteSearchSuggestions
 	}
 
 	static async topSearches(returnProperties?: any): Promise<any> {
-		const { host } = Vtex.configs
+		try {
+			const { host } = Vtex.configs
 
-		const body = {
-			query: `{ topSearches @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`
+			const body = {
+				query: `{ topSearches @context(provider: "vtex.search-graphql")  ${returnProperties || searchSuggestionReturn}  }`
+			}
+
+			const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
+			return response?.data?.data?.topSearches
+		} catch (e) {
+			sendLogError(e, 'graphql.topSearches')
+			throw e
 		}
-
-		const response = await VtexCaller.post(`api/io/_v/private/graphql/v1`, body, null, host)
-		return response?.data?.data?.topSearches
 	}
 }
