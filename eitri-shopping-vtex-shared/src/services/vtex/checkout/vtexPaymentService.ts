@@ -105,13 +105,15 @@ export default class VtexPaymentService {
 		} catch (e) {
 			const NOT_COMPLETE_ERRORS = ['CHK0328', 'CHK003', 'CHK0087', 'ORD062', 'CHK0223']
 			const errorCode = e.response?.data?.error?.code
+			const logData = { orderFormId: cart?.orderFormId ?? null, step: e.step ?? null, ...e.stepContext }
 
 			if (NOT_COMPLETE_ERRORS.includes(errorCode)) {
-				sendOrderNotComplete(e, 'executePayment', { orderFormId: cart?.orderFormId ?? null }, cart)
+				sendOrderNotComplete(e, 'executePayment', logData, cart)
 			} else {
-				sendLogError(e, 'executePayment', { orderFormId: cart?.orderFormId ?? null }, cart)
+				sendLogError(e, 'executePayment', logData, cart)
 			}
 
+			e._datadogLogged = true
 			throw e
 		}
 	}
@@ -171,7 +173,8 @@ export default class VtexPaymentService {
 			return dataReturn
 		} catch (e) {
 			console.log('Erro no startPayment', e)
-			sendLogError(e, 'VtexPaymentService.startTransaction', { orderFormId: cart?.orderFormId ?? null, value: cart?.value ?? null, paymentCount: cart?.paymentData?.payments?.length ?? null }, cart)
+			e.step = 'startTransaction'
+			e.stepContext = { orderFormId: cart?.orderFormId ?? null, value: cart?.value ?? null, paymentCount: cart?.paymentData?.payments?.length ?? null }
 			throw e
 		}
 	}
@@ -265,7 +268,8 @@ export default class VtexPaymentService {
 			console.log('====> Método de pagamento definido para o transactionId', startTransactionReturn.id)
 		} catch (e) {
 			console.log('erro no setPaymentMethod', e)
-			sendLogError(e, 'VtexPaymentService.setPaymentMethod', { orderFormId: cart?.orderFormId ?? null, transactionId: startTransactionReturn?.id ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, paymentCount: startTransactionReturn?.payments?.length ?? null }, cart)
+			e.step = 'setPaymentMethod'
+			e.stepContext = { orderFormId: cart?.orderFormId ?? null, transactionId: startTransactionReturn?.id ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, paymentCount: startTransactionReturn?.payments?.length ?? null }
 			throw e
 		}
 	}
@@ -311,7 +315,8 @@ export default class VtexPaymentService {
 				}
 			} else {
 				console.log('erro no processPayment', e)
-				sendLogError(e, 'VtexPaymentService.processPayment', { orderFormId: VtexCartService?._CACHED_CART?.orderFormId ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, transactionId: startTransactionReturn?.id ?? null, responseStatus: e?.response?.status ?? null })
+				e.step = 'processPayment'
+				e.stepContext = { orderFormId: VtexCartService?._CACHED_CART?.orderFormId ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, transactionId: startTransactionReturn?.id ?? null, responseStatus: e?.response?.status ?? null }
 				throw e
 			}
 		}
