@@ -90,25 +90,9 @@ Nota: `startTransaction`, `setPaymentMethod` e `processPayment` não logam diret
 | INFO | `executeRefreshToken` | `message`, `responseHeaders` | Erro ao executar refresh token (login) |
 | INFO | `executeRefreshToken` | `message`, `email` | Erro ao executar refresh token (geral) |
 
-### Catalog (`catalog/vtexCatalogService.js`) — 15 logs
+### Catalog (`catalog/vtexCatalogService.js`) — 0 logs
 
-| Evento | Método | Dados de contexto | Descrição |
-|--------|--------|-------------------|-----------|
-| ERROR | `getProductById` | `productId` | Falha ao buscar produto por ID |
-| ERROR | `getSkuById` | `skuId` | Falha ao buscar produto por SKU |
-| ERROR | `searchProduct` | `text` | Falha na busca inteligente de produtos |
-| ERROR | `autoCompleteSuggestions` | `searchTerm` | Falha nas sugestões de autocomplete |
-| ERROR | `getProductsByFacets` | `facet` | Falha ao buscar produtos por facetas |
-| ERROR | `getPossibleFacets` | `facets` | Falha ao obter facetas disponíveis |
-| ERROR | `getSimilarProducts` | `productId` | Falha ao buscar produtos similares |
-| ERROR | `legacySearch` | `search` | Falha na busca legada |
-| ERROR | `legacyParamsSearch` | — | Falha na busca legada por parâmetros |
-| ERROR | `getWhoSawAlsoSaw` | `productId` | Falha ao buscar "quem viu também viu" |
-| ERROR | `getCategoryTree` | `categoryLevels` | Falha ao obter árvore de categorias |
-| ERROR | `getProductBySlug` | `slug` | Falha ao buscar produto por slug |
-| ERROR | `topSearches` | `locale` | Falha ao obter termos mais buscados |
-| ERROR | `searchSuggestions` | `query`, `locale` | Falha ao obter sugestões de busca |
-| ERROR | `showTogether` | `productId` | Falha ao buscar "compre junto" |
+Logs removidos: métodos de catálogo e busca são chamados com alta frequência (autocomplete a cada tecla, listagem a cada página). Logar erros HTTP aqui geraria volume excessivo durante instabilidades da VTEX, inflando custos de ingestão e escondendo erros reais. A instrumentação foi revertida para evitar ruído.
 
 ### Session (`session/vtexSessionService.ts`) — 4 logs
 
@@ -155,11 +139,9 @@ Logs removidos: os métodos lançam `Error('User not logged')` para visitantes a
 |--------|--------|-------------------|-----------|
 | ERROR | `getLoginProviders` | `account` | Falha ao obter provedores de login |
 
-### Stock Alert (`stockAlert/vtexStockAlertService.js`) — 1 log
+### Stock Alert (`stockAlert/vtexStockAlertService.js`) — 0 logs
 
-| Evento | Método | Dados de contexto | Descrição |
-|--------|--------|-------------------|-----------|
-| ERROR | `subscribeAvailability` | `skuId`, `email` | Falha ao inscrever alerta de disponibilidade |
+Log removido: o payload original enviava o e-mail do usuário ao Datadog (`{ skuId, email }`), sobrescrevendo o campo `email` do carrinho e expondo dado pessoal desnecessário. A instrumentação foi revertida.
 
 ### Google Pay (`googlePay/vtexGooglePayServices.ts`) — 2 logs
 
@@ -178,43 +160,26 @@ Logs removidos: os métodos lançam `Error('User not logged')` para visitantes a
 | ERROR | `persistDeviceAndSession` | — | Falha ao persistir device/session ID |
 | ERROR | `clearSale` | `appKey` | Falha ao inicializar ClearSale (antifraude) |
 
-### Search GraphQL (`search/vtexSearchGraphql.ts`) — 8 logs
+### Search GraphQL (`search/vtexSearchGraphql.ts`) — 0 logs
 
-| Evento | Método | Dados de contexto | Descrição |
-|--------|--------|-------------------|-----------|
-| ERROR | `graphql.productSearch` | `query` | Falha na busca de produtos via GraphQL |
-| ERROR | `graphql.facets` | — | Falha ao obter facetas via GraphQL |
-| ERROR | `graphql.product` | `identifier`, `field` | Falha ao obter produto via GraphQL |
-| ERROR | `graphql.searchSuggestions` | — | Falha ao obter sugestões de busca via GraphQL |
-| ERROR | `graphql.productRecommendations` | `identifier` | Falha ao obter recomendações de produto |
-| ERROR | `graphql.autocomplete` | — | Falha no autocomplete via GraphQL |
-| ERROR | `graphql.autocompleteSearchSuggestions` | — | Falha nas sugestões de autocomplete via GraphQL |
-| ERROR | `graphql.topSearches` | — | Falha ao obter termos mais buscados via GraphQL |
+Logs removidos: mesmo motivo do catálogo — alta frequência de chamadas e risco de ruído excessivo.
 
-### Intelligent Search (`intelligentSearch/vtexIntelligentSearchService.ts`) — 9 logs
+### Intelligent Search (`intelligentSearch/vtexIntelligentSearchService.ts`) — 0 logs
 
-| Evento | Método | Dados de contexto | Descrição |
-|--------|--------|-------------------|-----------|
-| ERROR | `intelligentSearch.topSearches` | `locale` | Falha ao obter termos mais buscados |
-| ERROR | `intelligentSearch.autocompleteSuggestions` | `query` | Falha nas sugestões de autocomplete |
-| ERROR | `intelligentSearch.searchSuggestions` | `query` | Falha nas sugestões de busca |
-| ERROR | `intelligentSearch.correctionSearch` | `query` | Falha na correção de busca |
-| ERROR | `intelligentSearch.banners` | — | Falha ao obter banners de busca |
-| ERROR | `intelligentSearch.productSearch` | `query` | Falha na busca de produtos |
-| ERROR | `intelligentSearch.facets` | `query` | Falha ao obter facetas |
-| ERROR | `intelligentSearch.getProduct` | `value`, `field` | Falha ao obter produto por identificador |
-| ERROR | `intelligentSearch.pickupPointAvailability` | — | Falha ao obter pontos de retirada |
+Logs removidos: mesmo motivo do catálogo — alta frequência de chamadas e risco de ruído excessivo.
 
 ## Resumo
 
 | Nível | Quantidade |
 |-------|-----------|
-| ERROR | 79 |
+| ERROR | 46 |
+| ERROR / ORDER-NOT-COMPLETED | 2 |
 | WARNING | 6 |
 | INFO | 3 |
 | ORDER-ACCEPTED | 6 |
-| ORDER-NOT-COMPLETED | 2 |
-| **Total** | **96** |
+| **Total** | **63** |
+
+Nota: `executePayment` e `pay` emitem ERROR ou ORDER-NOT-COMPLETED dependendo do código de erro (CHK0328, CHK003, etc.), contados como 2 pontos de log com origem variável.
 
 ## Correlação de Logs na Cadeia de Pagamento
 
@@ -248,19 +213,19 @@ pay ← único ponto de log (ERROR ou ORDER-NOT-COMPLETED)
 | **Checkout** | 23 | 10 | 43% |
 | **Payment** | 4 | 3 | 75% |
 | **Customer** | 43 | 9 | 21% |
-| **Catalog** | 17 | 15 | 88% |
+| **Catalog** | 17 | 0 | 0% (removido — alta frequência) |
 | **Session** | 6 | 4 | 67% |
 | **Wishlist** | 4 | 0 | 0% (removido — condição de negócio) |
 | **Subscription** | 15 | 13 | 87% |
 | **CMS** | 3 | 3 | 100% |
 | **Store** | 1 | 1 | 100% |
-| **Stock Alert** | 1 | 1 | 100% |
+| **Stock Alert** | 1 | 0 | 0% (removido — dado pessoal) |
 | **Google Pay** | 2 | 2 | 100% |
 | **App** | 6 | 5 | 83% |
-| **Search (GraphQL)** | 9 | 8 | 89% |
-| **Search (Intelligent)** | 16 | 9 | 56% |
+| **Search (GraphQL)** | 9 | 0 | 0% (removido — alta frequência) |
+| **Search (Intelligent)** | 16 | 0 | 0% (removido — alta frequência) |
 | **VtexCaller** | 7 | 0 | N/A (não instrumentar) |
-| **Total** | **184** | **92** | **50%** |
+| **Total** | **184** | **59** | **32%** |
 
 ## Exclusões
 

@@ -2,7 +2,6 @@ import VtexCaller from '../_helpers/_vtexCaller'
 import objectToQueryString from '../_helpers/objectToQueryString'
 import getSalesChannel from '../_helpers/getSalesChannel'
 import VtexCustomerService from '../customer/vtexCustomerService'
-import { sendLogError } from '@/services/Datadog'
 import {
 	FacetsOptions,
 	FacetsPath,
@@ -109,15 +108,10 @@ export default class VtexIntelligentSearchService {
 
 	// Lists the 10 most searched terms in the past 14 days.
 	static async topSearches(locale?: IntelligentSearchLocale): Promise<IntelligentSearchSuggestions> {
-		try {
-			const queryString = VtexIntelligentSearchService._buildQueryString({ locale })
-			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/top-searches`, queryString)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.topSearches', { locale: locale ?? null })
-			throw e
-		}
+		const queryString = VtexIntelligentSearchService._buildQueryString({ locale })
+		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/top-searches`, queryString)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// Lists suggested terms and attributes similar to the search term.
@@ -125,18 +119,13 @@ export default class VtexIntelligentSearchService {
 		query: string,
 		locale?: IntelligentSearchLocale
 	): Promise<IntelligentSearchSuggestions> {
-		try {
-			const queryString = VtexIntelligentSearchService._buildQueryString({ query, locale })
-			const url = VtexIntelligentSearchService._appendQuery(
-				`${BASE_PATH}/autocomplete-suggestions`,
-				queryString
-			)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.autocompleteSuggestions', { query: query ?? null })
-			throw e
-		}
+		const queryString = VtexIntelligentSearchService._buildQueryString({ query, locale })
+		const url = VtexIntelligentSearchService._appendQuery(
+			`${BASE_PATH}/autocomplete-suggestions`,
+			queryString
+		)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// Lists suggested terms similar to the search term.
@@ -144,15 +133,10 @@ export default class VtexIntelligentSearchService {
 		query: string,
 		locale?: IntelligentSearchLocale
 	): Promise<IntelligentSearchSuggestions> {
-		try {
-			const queryString = VtexIntelligentSearchService._buildQueryString({ query, locale })
-			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/search-suggestions`, queryString)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.searchSuggestions', { query: query ?? null })
-			throw e
-		}
+		const queryString = VtexIntelligentSearchService._buildQueryString({ query, locale })
+		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/search-suggestions`, queryString)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// ===== Product list page =====
@@ -162,15 +146,10 @@ export default class VtexIntelligentSearchService {
 		query: string,
 		locale?: IntelligentSearchLocale
 	): Promise<IntelligentSearchCorrection> {
-		try {
-			const queryString = VtexIntelligentSearchService._buildQueryString({ query, locale })
-			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/correction-search`, queryString)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.correctionSearch', { query: query ?? null })
-			throw e
-		}
+		const queryString = VtexIntelligentSearchService._buildQueryString({ query, locale })
+		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/correction-search`, queryString)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// Lists the banners registered for a given query/facets.
@@ -178,16 +157,11 @@ export default class VtexIntelligentSearchService {
 		facets: FacetsPath = '',
 		options: ProductSearchOptions = {}
 	): Promise<IntelligentSearchBanners> {
-		try {
-			const path = VtexIntelligentSearchService._normalizeFacets(facets)
-			const queryString = VtexIntelligentSearchService._buildQueryString(options)
-			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/banners/${path}`, queryString)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.banners')
-			throw e
-		}
+		const path = VtexIntelligentSearchService._normalizeFacets(facets)
+		const queryString = VtexIntelligentSearchService._buildQueryString(options)
+		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/banners/${path}`, queryString)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// Lists the active products for a given query/facets.
@@ -196,20 +170,15 @@ export default class VtexIntelligentSearchService {
 		options: ProductSearchOptions = {},
 		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchProductSearchResult> {
-		try {
-			const defaults = await VtexIntelligentSearchService._getSimulationDefaults(config)
-			const path = VtexIntelligentSearchService._normalizeFacets(facets)
-			const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
-			const url = VtexIntelligentSearchService._appendQuery(
-				`${BASE_PATH}/product-search/${path}`,
-				queryString
-			)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.productSearch', { query: options?.query ?? null })
-			throw e
-		}
+		const defaults = await VtexIntelligentSearchService._getSimulationDefaults(config)
+		const path = VtexIntelligentSearchService._normalizeFacets(facets)
+		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
+		const url = VtexIntelligentSearchService._appendQuery(
+			`${BASE_PATH}/product-search/${path}`,
+			queryString
+		)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// Lists the possible facets (filters) for a given query/facets.
@@ -218,17 +187,12 @@ export default class VtexIntelligentSearchService {
 		options: FacetsOptions = {},
 		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchFacetsResult> {
-		try {
-			const defaults = await VtexIntelligentSearchService._getBaseDefaults(config)
-			const path = VtexIntelligentSearchService._normalizeFacets(facets)
-			const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
-			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/facets/${path}`, queryString)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.facets', { query: options?.query ?? null })
-			throw e
-		}
+		const defaults = await VtexIntelligentSearchService._getBaseDefaults(config)
+		const path = VtexIntelligentSearchService._normalizeFacets(facets)
+		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
+		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/facets/${path}`, queryString)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// ===== Product details page (PDP) =====
@@ -240,21 +204,16 @@ export default class VtexIntelligentSearchService {
 		options: GetProductOptions = {},
 		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchProduct> {
-		try {
-			const defaults = await VtexIntelligentSearchService._getSimulationDefaults(config)
-			const queryString = VtexIntelligentSearchService._buildQueryString({
-				...defaults,
-				value,
-				field,
-				...options
-			})
-			const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/products`, queryString)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.getProduct', { value: value ?? null, field: field ?? null })
-			throw e
-		}
+		const defaults = await VtexIntelligentSearchService._getSimulationDefaults(config)
+		const queryString = VtexIntelligentSearchService._buildQueryString({
+			...defaults,
+			value,
+			field,
+			...options
+		})
+		const url = VtexIntelligentSearchService._appendQuery(`${BASE_PATH}/products`, queryString)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 
 	// ===== Delivery Promise =====
@@ -265,19 +224,14 @@ export default class VtexIntelligentSearchService {
 		options: PickupPointAvailabilityOptions = {},
 		config: IntelligentSearchRequestConfig = {}
 	): Promise<IntelligentSearchPickupPointAvailability> {
-		try {
-			const defaults = await VtexIntelligentSearchService._getBaseDefaults(config)
-			const path = VtexIntelligentSearchService._normalizeFacets(facets)
-			const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
-			const url = VtexIntelligentSearchService._appendQuery(
-				`api/intelligent-search/v0/pickup-point-availability/${path}`,
-				queryString
-			)
-			const result = await VtexCaller.get(url)
-			return result?.data
-		} catch (e: any) {
-			sendLogError(e, 'intelligentSearch.pickupPointAvailability')
-			throw e
-		}
+		const defaults = await VtexIntelligentSearchService._getBaseDefaults(config)
+		const path = VtexIntelligentSearchService._normalizeFacets(facets)
+		const queryString = VtexIntelligentSearchService._buildQueryString({ ...defaults, ...options })
+		const url = VtexIntelligentSearchService._appendQuery(
+			`api/intelligent-search/v0/pickup-point-availability/${path}`,
+			queryString
+		)
+		const result = await VtexCaller.get(url)
+		return result?.data
 	}
 }
