@@ -6,6 +6,7 @@ import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
+import { NOT_COMPLETE_ERRORS } from './notCompleteErrors'
 import VtexCartService from '../cart/VtexCartService'
 import RemoteConfig from '../../RemoteConfig'
 import { PaymentResult } from '../../../models/Payment'
@@ -103,7 +104,6 @@ export default class VtexPaymentService {
 
 			return paymentProcessed
 		} catch (e: any) {
-			const NOT_COMPLETE_ERRORS = ['CHK0016', 'CHK003', 'CHK0080', 'CHK0081', 'CHK0085', 'CHK0087', 'CHK0109', 'CHK0131', 'CHK0209', 'CHK0223', 'CHK0246', 'CHK0328', 'ORD007', 'ORD023', 'ORD062']
 			const errorCode = e.response?.data?.error?.code
 			const logData = { orderFormId: cart?.orderFormId ?? null, step: e.step ?? null, ...e.stepContext }
 

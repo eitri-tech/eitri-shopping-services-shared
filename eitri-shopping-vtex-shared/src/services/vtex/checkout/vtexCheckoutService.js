@@ -10,6 +10,7 @@ import VtexPaymentService from './vtexPaymentService'
 import StorageService from '../../StorageService'
 import extractCookies from '../_helpers/extractCookies'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '@/services/Datadog'
+import { NOT_COMPLETE_ERRORS } from './notCompleteErrors'
 import withRetry from '@/services/vtex/_helpers/withRetry'
 
 export default class VtexCheckoutService {
@@ -367,7 +368,6 @@ export default class VtexCheckoutService {
 			throw Error('Método de pagamento não suportado')
 		} catch (e) {
 			if (!e._datadogLogged) {
-				const NOT_COMPLETE_ERRORS = ['CHK0016', 'CHK003', 'CHK0080', 'CHK0081', 'CHK0085', 'CHK0087', 'CHK0109', 'CHK0131', 'CHK0209', 'CHK0223', 'CHK0246', 'CHK0328', 'ORD007', 'ORD023', 'ORD062']
 				const errorCode = e.response?.data?.error?.code
 				const logData = { orderFormId: cart?.orderFormId ?? null, step: e.step ?? null, ...e.stepContext }
 

@@ -19,6 +19,8 @@ interface PaymentPayload<BillingAddress = any> {
 	paymentData: PaymentData<BillingAddress>;
 }
 
+const EITRI_CAPABILITY_GOOGLE_PAY = 31
+
 export class VtexGooglePayServices {
 	static async loadPaymentData(env: 'PRODUCTION' | 'TEST' = 'PRODUCTION'): Promise<PaymentPayload> {
 		const googlePayAvailable = await Eitri.googlePay.isAvailable()
@@ -92,7 +94,7 @@ export class VtexGooglePayServices {
 
 	static async isAvailable (): Promise<Boolean> {
 		try {
-			if (!Eitri.canIUse(31)) {
+			if (!Eitri.canIUse(EITRI_CAPABILITY_GOOGLE_PAY)) {
 				return false;
 			}
 			return await Eitri.googlePay.isAvailable()
