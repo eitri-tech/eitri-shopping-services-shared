@@ -21,6 +21,17 @@ export default class VtexCustomerService {
 	static STORAGE_UTM_PARAMS_KEY = 'utm_params_key'
 	static TIME_EXPIRES_UTM_PARAMS_IN_MINUTES = 43200
 
+	static getTokenExpirationTimeSec() {
+		try {
+			const value = Number(RemoteConfig.getContent('appConfigs.tokenExpirationTimeSec'))
+			if (Number.isFinite(value) && value > 0) {
+				return value
+			}
+		} catch (e) {}
+
+		return VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC
+	}
+
 	static async _startLogin(email) {
 		const { account } = Vtex.configs
 
@@ -397,7 +408,7 @@ export default class VtexCustomerService {
 		}
 
 		if (
-			savedToken.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC <
+			savedToken.creationTimeStamp + VtexCustomerService.getTokenExpirationTimeSec() <
 			Math.floor(Date.now() / 1000)
 		) {
 			return null
@@ -428,7 +439,7 @@ export default class VtexCustomerService {
 			return false
 		}
 		return (
-			savedToken.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >=
+			savedToken.creationTimeStamp + VtexCustomerService.getTokenExpirationTimeSec() >=
 			Math.floor(Date.now() / 1000)
 		)
 	}
@@ -658,7 +669,7 @@ export default class VtexCustomerService {
 			}
 
 			if (
-				res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >
+				res?.creationTimeStamp + VtexCustomerService.getTokenExpirationTimeSec() >
 				Math.floor(Date.now() / 1000)
 			) {
 				Logger.log('executeRefreshToken: token ainda válido, refresh ignorado', {
