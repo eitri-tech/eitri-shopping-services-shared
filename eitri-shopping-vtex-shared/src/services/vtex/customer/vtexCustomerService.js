@@ -23,9 +23,13 @@ export default class VtexCustomerService {
 
 	static getTokenExpirationTimeSec() {
 		try {
-			const value = Number(RemoteConfig.getContent('appConfigs.tokenExpirationTimeSec'))
-			if (Number.isFinite(value) && value > 0) {
-				return value
+			const raw = RemoteConfig.getContent('appConfigs.tokenExpirationTimeSec')
+			// Number(true) === 1 e Number([5]) === 5: so aceita numero ou texto numerico
+			if (typeof raw === 'number' || (typeof raw === 'string' && raw.trim() !== '')) {
+				const value = Number(raw)
+				if (Number.isFinite(value) && value > 0) {
+					return value
+				}
 			}
 		} catch (e) {}
 
