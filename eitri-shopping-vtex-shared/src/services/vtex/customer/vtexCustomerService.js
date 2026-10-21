@@ -199,6 +199,7 @@ export default class VtexCustomerService {
 			await VtexCustomerService._processPostSocialLogin(returnUrl?.authUrl)
 		} catch (error) {
 			console.error('Error in vtexOAuth:', error)
+			sendLogError(error, 'vtexOAuth', { oAuthProvider: oAuthProvider ?? null, account: Vtex?.configs?.account ?? null })
 			throw error
 		}
 	}
@@ -584,6 +585,7 @@ export default class VtexCustomerService {
 				}
 			} catch (e) {
 				console.error('Erro ao salvar parâmetros UTM', e)
+				sendDatadogWarningLog({ message: 'Erro ao salvar parâmetros UTM', utmKeys: Object.keys(queryParams ?? {}) }, 'saveUtmParams')
 				return null
 			}
 
@@ -641,6 +643,7 @@ export default class VtexCustomerService {
 			return rest
 		} catch (e) {
 			console.error('Erro ao obter parâmetros UTM', e)
+			sendDatadogWarningLog({ message: 'Erro ao obter parâmetros UTM' }, 'getUtmParams')
 		}
 
 		return {}

@@ -3,6 +3,7 @@ import Vtex from './Vtex'
 import EventBus from '@/services/EventBus'
 import RemoteConfig from './RemoteConfig'
 import StorageService from './StorageService'
+import { sendLogError } from '@/services/Datadog'
 
 let loaded = false
 
@@ -40,6 +41,7 @@ export default class App {
 			await Vtex.configure(remoteConfig)
 		} catch (error) {
 			console.error('[SHARED] Error autoConfigure ', error)
+			sendLogError(error, 'tryAutoConfigure')
 			throw error
 		}
 
@@ -70,6 +72,7 @@ export default class App {
 			return App.configs
 		} catch (error) {
 			console.error('[SHARED] Error App configure ', error)
+			sendLogError(error, 'tryAutoConfigure.appConfig')
 			throw error
 		}
 	}
@@ -88,6 +91,7 @@ export default class App {
 			}
 		} catch (error) {
 			console.error('[SHARED] Error ao inicializar Clarity', error)
+			sendLogError(error, 'startClarity', { clarityId: clarityId ?? null })
 		}
 	}
 
@@ -119,6 +123,7 @@ export default class App {
 			console.log('[SHARED] Device/Session persisted', { deviceId, sessionId })
 		} catch (error) {
 			console.error('[SHARED] Error persisting device/session info', error)
+			sendLogError(error, 'persistDeviceAndSession')
 		}
 	}
 
@@ -153,6 +158,7 @@ export default class App {
 			console.log('[SHARED] ClearSale inicializado com sessionId', sessionId)
 		} catch (error) {
 			console.error('[SHARED] Error ao inicializar ClearSale', error)
+			sendLogError(error, 'clearSale', { appKey: appKey ?? null })
 		}
 	}
 }
