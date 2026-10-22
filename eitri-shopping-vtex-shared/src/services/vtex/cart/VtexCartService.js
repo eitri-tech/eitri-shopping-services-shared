@@ -74,6 +74,9 @@ export default class VtexCartService {
 	}
 
 	static async getCartById(orderFormId) {
+		if (!Vtex.configs.api) {
+			throw new Error('[VtexCartService] getCartById called before Vtex.configure()')
+		}
 		try {
 			console.log('Obtendo dados do carrinho por id', orderFormId)
 			const path = `api/checkout/pub/orderForm/${orderFormId}`
@@ -93,6 +96,9 @@ export default class VtexCartService {
 	}
 
 	static async generateNewCart() {
+		if (!Vtex.configs.api) {
+			throw new Error('[VtexCartService] generateNewCart called before Vtex.configure()')
+		}
 		try {
 			console.log('Gerando novo carrinho')
 			const path = 'api/checkout/pub/orderForm'
