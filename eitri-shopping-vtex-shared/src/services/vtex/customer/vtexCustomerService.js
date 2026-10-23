@@ -15,7 +15,7 @@ export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
 	static STORAGE_USER_DATA = 'user_data'
 	static STORAGE_REGION = 'user_region'
-	static TOKEN_EXPIRATION_TIME_SEC = 86200
+	static TOKEN_EXPIRATION_TIME_SEC = 86400
 
 	static CHANNEL_UTM_PARAMS_KEY = 'ChanellUTMParams'
 	static STORAGE_UTM_PARAMS_KEY = 'utm_params_key'
@@ -253,7 +253,7 @@ export default class VtexCustomerService {
 	 */
 	static async notifyLoginToExposedApis(origin, params = {}) {
 		try {
-			const profile = await VtexCustomerService.getCustomerProfile()
+			const profile = await VtexCustomerService.getCustomerProfile(params?.userToken)
 			const profileData = profile?.data?.profile
 
 			let _customerId = params?.customerId || profileData?.userId
@@ -653,7 +653,7 @@ export default class VtexCustomerService {
 		const res = await VtexCustomerService.getStorageCustomerToken()
 
 		try {
-			const { account } = Vtex.configs
+			const account = await Vtex.getAccount()
 
 			if (!res || !res.accountAuthCookieId) {
 				Logger.log('executeRefreshToken: sem token armazenado, refresh ignorado')
@@ -708,7 +708,7 @@ export default class VtexCustomerService {
 					)
 					await VtexSessionService.updateSession()
 					Logger.log('executeRefreshToken: tokens renovados e sessão atualizada')
-					VtexCustomerService.notifyLoginToExposedApis('executeRefreshToken')
+					VtexCustomerService.notifyLoginToExposedApis('executeRefreshToken', { userToken: newToken })
 					EventBus.publish({
 						channel: EventBusChannels.USER_LOGGED_IN,
 						broadcast: true,

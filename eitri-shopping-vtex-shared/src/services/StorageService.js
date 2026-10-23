@@ -1,23 +1,23 @@
 import Eitri from 'eitri-bifrost'
 import Logger from './Logger'
-import RemoteConfig from './RemoteConfig'
+import Vtex from './Vtex'
 
 export default class StorageService {
 	static async setStorageItem(key, item) {
-		const account = RemoteConfig.getContent('providerInfo.account')
+		const account = await Vtex.getAccount()
 		const _key = `${account}_${key}`
 		return Eitri.sharedStorage.setItem(_key, item)
 	}
 
 	static async getStorageItem(key) {
-		const account = RemoteConfig.getContent('providerInfo.account')
+		const account = await Vtex.getAccount()
 		const _key = `${account}_${key}`
 		return Eitri.sharedStorage.getItem(_key)
 	}
 
 	static async setStorageJSON(key, item) {
 		try {
-			const account = RemoteConfig.getContent('providerInfo.account')
+			const account = await Vtex.getAccount()
 			const _key = `${account}_${key}`
 			// Logger.info("StorageService", "setStorageJSON", "Setting storage item", {
 			//   key: _key,
@@ -30,7 +30,7 @@ export default class StorageService {
 	}
 
 	static async getStorageJSON(key) {
-		const account = RemoteConfig.getContent('providerInfo.account')
+		const account = await Vtex.getAccount()
 		const _key = `${account}_${key}`
 		const data = await Eitri.sharedStorage.getItem(_key)
 		// Logger.info(
@@ -53,7 +53,7 @@ export default class StorageService {
 	}
 
 	static async removeItem(key) {
-		const account = RemoteConfig.getContent('providerInfo.account')
+		const account = await Vtex.getAccount()
 		const _key = `${account}_${key}`
 		return await Eitri.sharedStorage.removeItem(_key)
 	}
