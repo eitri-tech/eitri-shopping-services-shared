@@ -25,8 +25,7 @@ export default class VtexCaller {
 		const tokenData = await vtexCustomerService.getCustomerToken()
 
 		if (tokenData) {
-			const account = Vtex.configs.account
-			// headers[`VtexIdclientAutCookie`] = tokenData.token
+			const account = await Vtex.getAccount()
 			headers['Cookie'] = `VtexIdclientAutCookie_${account}=${tokenData.token}`
 		}
 
@@ -55,8 +54,14 @@ export default class VtexCaller {
 		return headers
 	}
 
+	static _getApiEndpoint = async () => {
+		const account = await Vtex.getAccount()
+		if (!account) throw new Error('[SHARED] VtexCaller: account não disponível — configure() ainda não executou')
+		return `https://${account}.vtexcommercestable.com.br`
+	}
+
 	static async get(path, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || await VtexCaller._getApiEndpoint()
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -83,7 +88,7 @@ export default class VtexCaller {
 	}
 
 	static async post(path, data, options = {}, baseUrl, overrideHeaders) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || (await VtexCaller._getApiEndpoint())
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = overrideHeaders || (await VtexCaller._getHeaders())
 
@@ -109,7 +114,7 @@ export default class VtexCaller {
 	}
 
 	static async patch(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || (await VtexCaller._getApiEndpoint())
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -133,7 +138,7 @@ export default class VtexCaller {
 	}
 
 	static async put(path, data, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || (await VtexCaller._getApiEndpoint())
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
@@ -157,7 +162,7 @@ export default class VtexCaller {
 	}
 
 	static async delete(path, options = {}, baseUrl) {
-		const _baseUrl = baseUrl || Vtex.configs.api
+		const _baseUrl = baseUrl || (await VtexCaller._getApiEndpoint())
 		const url = VtexCaller._mountUrl(_baseUrl, path)
 		const headers = await VtexCaller._getHeaders()
 
