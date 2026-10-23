@@ -161,4 +161,5 @@ export default class App {
 			sendLogError(error, 'clearSale', { appKey: appKey ?? null })
 		}
 	}
+
 }

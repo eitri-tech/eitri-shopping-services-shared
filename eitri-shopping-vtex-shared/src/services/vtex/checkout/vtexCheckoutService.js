@@ -214,7 +214,7 @@ export default class VtexCheckoutService {
 
 		try {
 			const result = await Eitri.http.post(
-				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
+				`https://${await Vtex.getAccount()}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
 				payload,
 				{
 					headers: {
@@ -386,7 +386,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async getPixStatus(transactionId, paymentId, hostStore) {
-		const host = hostStore || Vtex.configs.account
+		const host = hostStore || (await Vtex.getAccount())
 		const result = await Eitri.http.get(
 			`https://${host}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
 			{

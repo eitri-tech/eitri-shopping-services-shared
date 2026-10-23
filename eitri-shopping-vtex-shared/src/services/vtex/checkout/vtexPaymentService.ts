@@ -253,9 +253,10 @@ export default class VtexPaymentService {
 			const useNewVtexVaultApi = RemoteConfig.getContent('appConfigs.checkout.useVaultApi')
 
 			// Testar e tornar padrao https://developers.vtex.com/updates/release-notes/2025-10-28-mandatory-migration-to-vtexvault-com-for-send-payments-request
+			const account = await Vtex.getAccount()
 			const url = useNewVtexVaultApi
-				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${Vtex.configs.account}&orderId=${startTransactionReturn.orderGroup}`
-				: `https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
+				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${account}&orderId=${startTransactionReturn.orderGroup}`
+				: `https://${account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
 
 			await Eitri.http.post(url, paymentsMethods, {
 				headers: {

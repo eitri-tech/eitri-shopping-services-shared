@@ -490,7 +490,7 @@ export default class VtexCustomerService {
 		}
 
 		const overrideHeaders = _token
-			? { Cookie: `VtexIdclientAutCookie_${Vtex.configs.account}=${_token}` }
+			? { Cookie: `VtexIdclientAutCookie_${await Vtex.getAccount()}=${_token}` }
 			: undefined
 
 		const result = await VtexCaller.post(
@@ -1069,7 +1069,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			`https://${Vtex.configs.account}.vtexpayments.com.br`
+			`https://${await Vtex.getAccount()}.vtexpayments.com.br`
 		)
 
 		const tokenData = tokenCreateResult?.data?.[0]
