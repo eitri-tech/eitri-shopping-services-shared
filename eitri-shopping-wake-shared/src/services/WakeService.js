@@ -7,6 +7,7 @@ import CustomerService from './CustomerService'
 import CheckoutService from './CheckoutService'
 import ClarityService from './tracking/ClarityService'
 import StoreService from './StoreService'
+import StorageService from './StorageService'
 
 export default class WakeService {
 	static graphQl = GraphqlService
@@ -55,6 +56,26 @@ export default class WakeService {
 		}
 	}
 
+	static persistDeviceAndSession = async () => {
+		try {
+			const startParams = await Eitri.getInitializationInfos().catch(() => null)
+			if (String(startParams?.tabIndex) !== '0') return
+
+			let deviceId = await StorageService.getStorageItem('device_id')
+			if (!deviceId) {
+				deviceId = crypto.randomUUID()
+				await StorageService.setStorageItem('device_id', deviceId)
+			}
+
+			const sessionId = crypto.randomUUID()
+			await StorageService.setStorageItem('session_id', sessionId)
+
+			console.log('[SHARED] Device/Session persisted', { deviceId, sessionId })
+		} catch (error) {
+			console.error('[SHARED] Error persisting device/session info', error)
+		}
+	}
+
 	static tryAutoConfigure = async overwrites => {
 		let remoteConfig
 		try {
@@ -74,6 +95,8 @@ export default class WakeService {
 			console.log('[SHARED] Error autoConfigure ', remoteConfig.ecommerceProvider, error)
 			throw error
 		}
+
+		await WakeService.persistDeviceAndSession()
 
 		try {
 			console.log('[SHARED] ********* Verificando Clarity *******')

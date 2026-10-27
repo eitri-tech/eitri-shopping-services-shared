@@ -25,7 +25,7 @@ import objectToQueryString from '../utils/objectToQueryString'
 import StorageService from './StorageService'
 import GAWakeInternalService from './tracking/GAWakeInternalService'
 import StoreService from './StoreService'
-import { sendLogError, sendLogOrderAccepted } from '@/services/Datadog'
+import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '@/services/Datadog'
 
 export default class CheckoutService {
 	static PAYMENT_METHODS = null
@@ -264,7 +264,7 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
-			sendLogError(e, 'checkoutComplete')
+			sendOrderNotComplete(e, 'checkoutComplete')
 			throw e
 		}
 	}
@@ -296,7 +296,7 @@ export default class CheckoutService {
 			return response
 		} catch (e) {
 			console.error('[SHARED] [checkoutComplete] Erro ao completar pagamento', e)
-			sendLogError(e, 'checkoutComplete')
+			sendOrderNotComplete(e, 'checkoutMultiPaymentsComplete')
 			throw e
 		}
 	}
