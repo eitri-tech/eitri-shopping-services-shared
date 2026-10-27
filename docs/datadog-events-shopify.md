@@ -14,21 +14,21 @@ Utilitários compartilhados (`JWT_PATTERN`, `sanitizeHeaders`, `sanitizeError`) 
 | Capacidade | VTEX | Wake | Shopify |
 |-----------|------|------|---------|
 | `sendLogError` (ERROR) | 10 chamadas | 16 chamadas | 15 chamadas |
-| `sendDatadogWarningLog` (WARNING) | 4 chamadas | 0 chamadas | 0 chamadas |
-| `sendDatadogInfoLog` (INFO) | 3 chamadas | 0 chamadas | 0 chamadas |
+| `sendDatadogWarningLog` (WARNING) | 4 chamadas | 0 chamadas | 3 chamadas |
+| `sendDatadogInfoLog` (INFO) | 3 chamadas | 0 chamadas | 2 chamadas |
 | `sendLogOrderAccepted` (ORDER-ACCEPTED) | 6 chamadas | 2 chamadas | consumer app |
 | `sendOrderNotComplete` (ORDER-NOT-COMPLETED) | 1 chamada | — | consumer app |
 | Sanitização de dados sensíveis | Sim | Não | Sim |
 | deviceId / sessionId no payload | Sim | Não | Sim |
-| **Total de eventos rastreados** | **24** | **18** | **15** |
+| **Total de eventos rastreados** | **24** | **18** | **20** |
 
 ## Cobertura por Domínio
 
 | Domínio | Serviço | Eventos Shopify | Equivalente VTEX | Equivalente Wake |
 |---------|---------|-----------------|-------------------|------------------|
-| Cart | `CartService.ts` | 4 eventos ERROR | 2 eventos ERROR | 1 evento ERROR |
+| Cart | `CartService.ts` | 4 eventos ERROR + 1 WARNING | 2 eventos ERROR | 1 evento ERROR |
 | Checkout | consumer app | ORDER-ACCEPTED + ORDER-NOT-COMPLETED | 10 eventos (ERROR + ORDER-ACCEPTED) | 12 eventos (ERROR + ORDER-ACCEPTED) |
-| Customer | `CustomerService.ts` + `CustomerAuth.ts` | 8 eventos ERROR | 5 eventos (ERROR + WARNING + INFO) | 7 eventos ERROR |
+| Customer | `CustomerService.ts` + `CustomerAuth.ts` | 5 ERROR + 2 WARNING + 2 INFO | 5 eventos (ERROR + WARNING + INFO) | 7 eventos ERROR |
 | Catalog / Search | `CatalogService.ts` | 3 eventos ERROR | — | — |
 
 ## Eventos Implementados
@@ -54,11 +54,15 @@ Utilitários compartilhados (`JWT_PATTERN`, `sanitizeHeaders`, `sanitizeError`) 
 
 ### AuthService (`src/services/customer/CustomerAuth.ts`)
 
-| Método | Função Datadog | Comportamento após log |
-|--------|---------------|------------------------|
-| `login` | `sendLogError` | Re-throw |
-| `refresh` | `sendLogError` | Retorna `{ success: false }` |
-| `logout` | `sendLogError` | Re-throw (falha no `endWebSession`) |
+| Método | Função Datadog | Condição |
+|--------|---------------|----------|
+| `login` | `sendDatadogInfoLog` | Login concluído com sucesso |
+| `login` | `sendLogError` | Exceção no fluxo OAuth |
+| `notifyLogin` | `sendDatadogWarningLog` | Customer não encontrado após login |
+| `notifyLogin` | `sendDatadogWarningLog` | Formato de customerId inválido |
+| `refresh` | `sendDatadogInfoLog` | Refresh token bem-sucedido |
+| `refresh` | `sendLogError` | Exceção no refresh |
+| `logout` | `sendLogError` | Falha no `endWebSession` |
 
 ## Módulo Datadog (`src/services/Datadog.ts`)
 

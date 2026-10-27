@@ -29,7 +29,7 @@ import StorageService from '../StorageService'
 import Logger from '../_helpers/Logger'
 import Eitri from 'eitri-bifrost'
 import Shopify from '../Shopify'
-import { sendLogError } from '../Datadog'
+import { sendLogError, sendDatadogWarningLog } from '../Datadog'
 
 export class CartService {
 	static SHOPIFY_CART_KEY = 'shopify_cart_key'
@@ -79,6 +79,7 @@ export class CartService {
 		const cart = data?.cart
 
 		if (!cart) {
+			sendDatadogWarningLog({ message: 'Cart não encontrado, criando novo', cartId }, 'CartService.getCartById')
 			return await CartService.generateNewCart()
 		}
 

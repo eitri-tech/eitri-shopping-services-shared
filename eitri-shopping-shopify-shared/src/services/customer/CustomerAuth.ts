@@ -9,7 +9,7 @@ import {
 import Logger from '../_helpers/Logger'
 import RemoteConfig from '../RemoteConfig'
 import { CustomerService } from './CustomerService'
-import { sendLogError } from '../Datadog'
+import { sendLogError, sendDatadogWarningLog, sendDatadogInfoLog } from '../Datadog'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -129,6 +129,7 @@ export class AuthService {
 
 		if (!customer) {
 			Logger.error('No customer found to notify login')
+			sendDatadogWarningLog({ message: 'notifyLogin não executado, customer não encontrado' }, 'AuthService.notifyLogin')
 			return
 		}
 
@@ -137,6 +138,7 @@ export class AuthService {
 		const customerIdMatch = customer.id.match(regex)
 		if (!customerIdMatch || customerIdMatch.length < 2) {
 			Logger.error('Invalid customer ID format:', customer.id)
+			sendDatadogWarningLog({ message: 'notifyLogin não executado, formato de customerId inválido', customerId: customer.id }, 'AuthService.notifyLogin')
 			return
 		}
 
@@ -282,6 +284,8 @@ export class AuthService {
 
 			const customer = await this.notifyLogin()
 
+			sendDatadogInfoLog({ message: 'Login realizado com sucesso', email: customer?.emailAddress?.emailAddress }, 'AuthService.login')
+
 			return {
 				success: true,
 				data: tokenResponse,
@@ -324,6 +328,8 @@ export class AuthService {
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 
 			Logger.log('[AuthService] Token de acesso atualizado com sucesso')
+
+			sendDatadogInfoLog({ message: 'Refresh token executado com sucesso' }, 'AuthService.refresh')
 
 			return { success: true, data: tokenResponse }
 		} catch (e) {
