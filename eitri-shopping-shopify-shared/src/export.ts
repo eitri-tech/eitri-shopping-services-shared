@@ -28,3 +28,10 @@ export type {
 export { CustomerApiError } from './errors/CustomerApiError'
 export { default as App } from './services/App'
 export { default as Shopify } from './services/Shopify'
+export {
+	sendLogError,
+	sendLogOrderAccepted,
+	sendOrderNotComplete,
+	sendDatadogWarningLog,
+	sendDatadogInfoLog
+} from './services/Datadog'

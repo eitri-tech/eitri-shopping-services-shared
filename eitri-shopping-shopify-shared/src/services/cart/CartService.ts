@@ -29,6 +29,7 @@ import StorageService from '../StorageService'
 import Logger from '../_helpers/Logger'
 import Eitri from 'eitri-bifrost'
 import Shopify from '../Shopify'
+import { sendLogError } from '../Datadog'
 
 export class CartService {
 	static SHOPIFY_CART_KEY = 'shopify_cart_key'
@@ -116,17 +117,22 @@ export class CartService {
 			}
 		}
 
-		const res = await ShopifyCaller.post(body)
+		try {
+			const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Novo carrinho criado')
+			Logger.log('[CartService] Novo carrinho criado')
 
-		const { data } = res.data as { data: { cartCreate: CartResponse } }
+			const { data } = res.data as { data: { cartCreate: CartResponse } }
 
-		const cart = data.cartCreate.cart
+			const cart = data.cartCreate.cart
 
-		await CartService.saveCartIdOnStorage(cart.id)
+			await CartService.saveCartIdOnStorage(cart.id)
 
-		return cart
+			return cart
+		} catch (error) {
+			sendLogError(error, 'CartService.generateNewCart')
+			throw error
+		}
 	}
 
 	private static async buildBuyerIdentity(): Promise<CartBuyerIdentityInput | null> {
@@ -138,7 +144,7 @@ export class CartService {
 		const buyerIdentity: CartBuyerIdentityInput = {
 			email: customer.emailAddress?.emailAddress,
 			phone: customer.phoneNumber?.phoneNumber,
-			customerAccessToken: accessToken
+			customerAccessToken: accessToken ?? undefined
 		}
 
 		const deliveryAddress = CartService.buildDeliveryAddressFromCustomer(customer)
@@ -176,13 +182,18 @@ export class CartService {
 
 		Logger.log('[CartService] Adicionando item ao carrinho:', item.merchandiseId)
 
-		const res = await ShopifyCaller.post(body)
+		try {
+			const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Item adicionado com sucesso')
+			Logger.log('[CartService] Item adicionado com sucesso')
 
-		const { data } = res.data
+			const { data } = res.data
 
-		return data.cartLinesAdd
+			return data.cartLinesAdd
+		} catch (error) {
+			sendLogError(error, 'CartService.addItemToCart', { cartId, merchandiseId: item.merchandiseId })
+			throw error
+		}
 	}
 
 	static async updateCartLines(lines: CartLineUpdateInput[]): Promise<{ cart: Cart; userErrors: any[] }> {
@@ -198,13 +209,18 @@ export class CartService {
 
 		Logger.log('[CartService] Atualizando linhas do carrinho:', lines.length, 'item(s)')
 
-		const res = await ShopifyCaller.post(body)
+		try {
+			const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Linhas atualizadas com sucesso')
+			Logger.log('[CartService] Linhas atualizadas com sucesso')
 
-		const { data } = res.data
+			const { data } = res.data
 
-		return data.cartLinesUpdate
+			return data.cartLinesUpdate
+		} catch (error) {
+			sendLogError(error, 'CartService.updateCartLines', { cartId })
+			throw error
+		}
 	}
 
 	static async removeItemFromCart(lineIds: string[]): Promise<{ cart: Cart; userErrors: any[] }> {
@@ -220,13 +236,18 @@ export class CartService {
 
 		Logger.log('[CartService] Removendo itens do carrinho:', lineIds.length, 'item(s)')
 
-		const res = await ShopifyCaller.post(body)
+		try {
+			const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Itens removidos com sucesso')
+			Logger.log('[CartService] Itens removidos com sucesso')
 
-		const { data } = res.data
+			const { data } = res.data
 
-		return data.cartLinesRemove
+			return data.cartLinesRemove
+		} catch (error) {
+			sendLogError(error, 'CartService.removeItemFromCart', { cartId })
+			throw error
+		}
 	}
 
 	static async addGiftCardCode(cartId: string, giftCardCodes: string[]) {

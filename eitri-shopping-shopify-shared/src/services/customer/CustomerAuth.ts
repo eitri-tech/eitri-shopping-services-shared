@@ -9,6 +9,7 @@ import {
 import Logger from '../_helpers/Logger'
 import RemoteConfig from '../RemoteConfig'
 import { CustomerService } from './CustomerService'
+import { sendLogError } from '../Datadog'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -289,6 +290,7 @@ export class AuthService {
 		} catch (e) {
 			Logger.error('Login error:', e)
 			console.error(e)
+			sendLogError(e, 'AuthService.login')
 			throw e
 		}
 	}
@@ -326,6 +328,7 @@ export class AuthService {
 			return { success: true, data: tokenResponse }
 		} catch (e) {
 			Logger.error('Refresh error:', e)
+			sendLogError(e, 'AuthService.refresh')
 			return { success: false, error: String(e) }
 		}
 	}
@@ -444,7 +447,12 @@ export class AuthService {
 	 * Logs the customer out: ends the Shopify web session and clears all stored tokens/config.
 	 */
 	static async logout(): Promise<void> {
-		await this.endWebSession()
+		try {
+			await this.endWebSession()
+		} catch (error) {
+			sendLogError(error, 'AuthService.logout')
+			throw error
+		}
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)

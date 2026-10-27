@@ -2,7 +2,6 @@ import Eitri from 'eitri-bifrost'
 import CartService from '@/services/CartService'
 import Logger from '@/services/Logger'
 import StorageService from '@/services/StorageService'
-
 const JWT_PATTERN = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*/g
 
 const sanitizeError = error => {

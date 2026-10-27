@@ -2,7 +2,6 @@ import Eitri from 'eitri-bifrost'
 import VtexCartService from '@/services/vtex/cart/VtexCartService'
 import Logger from '@/services/Logger'
 import StorageService from '@/services/StorageService'
-
 const AUTH_COOKIES = ['VtexIdclientAutCookie', 'CheckoutDataAccess', 'Vtex_CHKO_Auth', 'vtex_session']
 const JWT_PATTERN = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*/g
 
