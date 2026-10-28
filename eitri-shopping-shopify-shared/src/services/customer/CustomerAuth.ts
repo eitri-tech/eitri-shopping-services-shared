@@ -9,6 +9,7 @@ import {
 import Logger from '../_helpers/Logger'
 import RemoteConfig from '../RemoteConfig'
 import { CustomerService } from './CustomerService'
+import { sendLogError, sendDatadogWarningLog, sendDatadogInfoLog } from '../Datadog'
 
 const STORAGE_KEYS = {
 	CODE_VERIFIER: 'SHOPIFY_CODE_VERIFIER',
@@ -128,6 +129,7 @@ export class AuthService {
 
 		if (!customer) {
 			Logger.error('No customer found to notify login')
+			sendDatadogWarningLog({ message: 'notifyLogin não executado, customer não encontrado' }, 'AuthService.notifyLogin')
 			return
 		}
 
@@ -136,6 +138,7 @@ export class AuthService {
 		const customerIdMatch = customer.id.match(regex)
 		if (!customerIdMatch || customerIdMatch.length < 2) {
 			Logger.error('Invalid customer ID format:', customer.id)
+			sendDatadogWarningLog({ message: 'notifyLogin não executado, formato de customerId inválido', customerId: customer.id }, 'AuthService.notifyLogin')
 			return
 		}
 
@@ -281,6 +284,8 @@ export class AuthService {
 
 			const customer = await this.notifyLogin()
 
+			sendDatadogInfoLog({ message: 'Login realizado com sucesso', email: customer?.emailAddress?.emailAddress }, 'AuthService.login')
+
 			return {
 				success: true,
 				data: tokenResponse,
@@ -289,6 +294,7 @@ export class AuthService {
 		} catch (e) {
 			Logger.error('Login error:', e)
 			console.error(e)
+			sendLogError(e, 'AuthService.login')
 			throw e
 		}
 	}
@@ -323,9 +329,12 @@ export class AuthService {
 
 			Logger.log('[AuthService] Token de acesso atualizado com sucesso')
 
+			sendDatadogInfoLog({ message: 'Refresh token executado com sucesso' }, 'AuthService.refresh')
+
 			return { success: true, data: tokenResponse }
 		} catch (e) {
 			Logger.error('Refresh error:', e)
+			sendLogError(e, 'AuthService.refresh')
 			return { success: false, error: String(e) }
 		}
 	}
@@ -444,7 +453,12 @@ export class AuthService {
 	 * Logs the customer out: ends the Shopify web session and clears all stored tokens/config.
 	 */
 	static async logout(): Promise<void> {
-		await this.endWebSession()
+		try {
+			await this.endWebSession()
+		} catch (error) {
+			sendLogError(error, 'AuthService.logout')
+			throw error
+		}
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)
