@@ -547,6 +547,8 @@ export class AuthService {
 	/**
 	 * Logs the customer out: ends the Shopify web session and clears all stored tokens/config.
 	 * Waits for an in-flight refresh, which would otherwise write the tokens back after they are cleared.
+	 * Tokens are cleared even when the web flow fails: Shopify may have already revoked them before the
+	 * post-logout redirect hits a domain the flow does not allow, and keeping them leaves a dead session.
 	 */
 	static async logout(): Promise<void> {
 		await this.refreshing?.catch(() => null)
@@ -554,8 +556,13 @@ export class AuthService {
 			await this.endWebSession()
 		} catch (error) {
 			sendLogError(error, 'AuthService.logout')
+			await this.clearSession()
 			throw error
 		}
+		await this.clearSession()
+	}
+
+	private static async clearSession(): Promise<void> {
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)
