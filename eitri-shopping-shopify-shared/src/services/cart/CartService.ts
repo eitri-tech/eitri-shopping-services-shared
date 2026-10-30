@@ -317,11 +317,6 @@ export class CartService {
 	static async associateCustomerToCart(): Promise<Cart | null> {
 		const cartId = await StorageService.getStorageItem(CartService.SHOPIFY_CART_KEY)
 		if (!cartId) return null
-
-		// Sem short-circuit: `buyerIdentity.email` é gravado mesmo quando o carrinho NÃO foi
-		// autenticado, então usá-lo como sinal de "já associado" prendia o carrinho para
-		// sempre e o crédito do cliente nunca aparecia no checkout. O token da Customer
-		// Account API também expira, então a associação precisa ser reaplicada a cada vez.
 		const buyerIdentity = await CartService.buildBuyerIdentity()
 		if (!buyerIdentity) return CartService.getCartById(cartId)
 
