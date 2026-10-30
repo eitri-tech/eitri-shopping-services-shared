@@ -532,7 +532,13 @@ export class AuthService {
 		await Eitri.webFlow.start({
 			startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${logoutRedirectUri}`,
 			stopPattern: 'eitri-logout-done|callback',
-			allowedDomains: ['shopify.com', 'www.shopify.com', 'callback', new URL(logoutRedirectUri).hostname],
+			allowedDomains: [
+				'shopify.com',
+				'www.shopify.com',
+				'callback',
+				new URL(end_session_endpoint).hostname,
+				new URL(logoutRedirectUri).hostname
+			],
 			maxNavigationLimit: 5,
 			onLoadJsScript: `window.location.href = 'https://www.shopify.com/eitri-logout-done';`
 		})

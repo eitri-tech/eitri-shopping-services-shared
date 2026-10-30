@@ -10,7 +10,7 @@ Em `eitri-app.conf.js` de cada Eitri-App que usa o SDK:
 
 ```js
 'eitri-app-dependencies': {
-	'eitri-shopping-shopify-shared': { isEitriAppShared: true, version: '1.4.1' }
+	'eitri-shopping-shopify-shared': { isEitriAppShared: true, version: '1.4.2' }
 }
 ```
 
