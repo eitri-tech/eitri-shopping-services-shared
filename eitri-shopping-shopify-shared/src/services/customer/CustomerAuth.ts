@@ -16,7 +16,26 @@ const STORAGE_KEYS = {
 	ACCESS_TOKEN: 'SHOPIFY_ACCESS_TOKEN',
 	REFRESH_TOKEN: 'SHOPIFY_REFRESH_TOKEN',
 	ID_TOKEN: 'SHOPIFY_ID_TOKEN',
-	OPENID_CONFIG: 'SHOPIFY_OPENID_CONFIG'
+	OPENID_CONFIG: 'SHOPIFY_OPENID_CONFIG',
+	OPENID_DISCOVERY: 'SHOPIFY_OPENID_DISCOVERY',
+	LOGIN_CONFIG: 'SHOPIFY_LOGIN_CONFIG'
+}
+
+/** What the last successful login used; refresh and logout must talk to the same client and issuer. */
+interface StoredLoginConfig {
+	clientId: string
+	configUrl: string
+	callbackUrl: string
+}
+
+const isValidUrl = (value: unknown): value is string => {
+	if (typeof value !== 'string' || !value) return false
+	try {
+		new URL(value)
+		return true
+	} catch {
+		return false
+	}
 }
 
 export class AuthService {
@@ -59,15 +78,57 @@ export class AuthService {
 		return this.base64UrlEncode(hash)
 	}
 
+	private static configUrlFromHost(host: string): string {
+		const fixedHost = host.replace('https://', '').replace('www.', '').replace(/\/+$/, '')
+		return `https://${fixedHost}/.well-known/openid-configuration`
+	}
+
+	/**
+	 * Resolves the OpenID configuration URL, in order: `options.openIdConfigUrl`, `options.host`,
+	 * Remote Config `providerInfo.openIdConfigUrl`, and finally Remote Config `providerInfo.host`.
+	 * The explicit URL exists for stores whose Customer Account domain differs from the storefront host.
+	 */
+	private static resolveConfigUrl(options?: { openIdConfigUrl?: string; host?: string }): string | null {
+		if (options?.openIdConfigUrl) return options.openIdConfigUrl
+		if (options?.host) return this.configUrlFromHost(options.host)
+		const configured = RemoteConfig.getContent('providerInfo.openIdConfigUrl')
+		if (configured) return configured
+		const host = RemoteConfig.getContent('providerInfo.host')
+		return host ? this.configUrlFromHost(host) : null
+	}
+
+	/**
+	 * The cache lives under `OPENID_DISCOVERY`, keyed by URL: `OPENID_CONFIG` is read by older SDK versions
+	 * running in other eitri-apps of the same super app, which expect the raw discovery document there.
+	 */
 	private static async discoverEndpoints(configUrl: string) {
-		const cached = await Eitri.sharedStorage.getItem(STORAGE_KEYS.OPENID_CONFIG)
+		const cached = await Eitri.sharedStorage.getItem(STORAGE_KEYS.OPENID_DISCOVERY)
 		if (cached) {
-			return JSON.parse(cached)
+			try {
+				const parsed = JSON.parse(cached)
+				if (parsed?.configUrl === configUrl && parsed?.data?.token_endpoint) return parsed.data
+			} catch {
+				Logger.warn('[AuthService] Cache do openid-configuration inválido, buscando de novo')
+			}
 		}
 
 		const response = await Eitri.http.get(configUrl)
-		await Eitri.sharedStorage.setItem(STORAGE_KEYS.OPENID_CONFIG, JSON.stringify(response.data))
-		return response.data
+		const data = response?.data
+		if (!data?.token_endpoint || !data?.authorization_endpoint) {
+			throw new Error(`openid-configuration inválido em ${configUrl}`)
+		}
+		await Eitri.sharedStorage.setItem(STORAGE_KEYS.OPENID_DISCOVERY, JSON.stringify({ configUrl, data }))
+		return data
+	}
+
+	private static async getStoredLoginConfig(): Promise<StoredLoginConfig | null> {
+		try {
+			const parsed = JSON.parse((await Eitri.sharedStorage.getItem(STORAGE_KEYS.LOGIN_CONFIG)) || 'null')
+			if (parsed?.clientId && parsed?.configUrl) return parsed
+		} catch {
+			Logger.warn('[AuthService] Configuração do login salva inválida')
+		}
+		return null
 	}
 
 	private static async exchangeToken(
@@ -108,7 +169,7 @@ export class AuthService {
 
 		const url = `${tokenEndpoint}?${params.toString()}`
 
-		Logger.log('[AuthService] Atualizando token de acesso:', url)
+		Logger.log('[AuthService] Atualizando token de acesso:', tokenEndpoint)
 
 		const response = await Eitri.http.post(
 			url,
@@ -169,6 +230,10 @@ export class AuthService {
 	 * @param options.host - Shopify store URL (e.g. `https://my-store.myshopify.com`).
 	 * @param options.clientId - Shopify Customer Account API Client ID.
 	 * @param options.callbackUrl - URL to redirect the user back to after authentication.
+	 * @param options.openIdConfigUrl - Full URL of the store's `/.well-known/openid-configuration`. Falls back to
+	 *   Remote Config `providerInfo.openIdConfigUrl`, then to one built from `host`.
+	 *
+	 * The client, configuration URL and callback used here are saved so `refresh` and `logout` use the same ones.
 	 *
 	 * @returns A `LoginResponse` object with `success: true` and tokens in `data`,
 	 *          or `success: false` with the error description in `error`.
@@ -177,17 +242,17 @@ export class AuthService {
 		host?: string
 		callbackUrl?: string
 		clientId?: string
+		openIdConfigUrl?: string
 		allowedDomains?: string[]
 	}): Promise<LoginResponse> {
-		const remoteConfig = RemoteConfig.getRemoteConfig()
+		const providerInfo = RemoteConfig.getRemoteConfig()?.providerInfo ?? {}
 
-		// const { host, callbackUrl } = options ?? remoteConfig.providerInfo
+		const clientId = options?.clientId || providerInfo.clientId
+		const host = options?.host || providerInfo.host
+		const callbackUrl = options?.callbackUrl || providerInfo.callbackUrl
+		const configUrl = this.resolveConfigUrl(options)
 
-		const clientId = options?.clientId || remoteConfig.providerInfo.clientId
-		const host = options?.host || remoteConfig.providerInfo.host
-		const callbackUrl = options?.callbackUrl || remoteConfig.providerInfo.callbackUrl
-
-		if (!host) {
+		if (!configUrl) {
 			throw new Error('Missing required remote config variables')
 		}
 
@@ -199,10 +264,6 @@ export class AuthService {
 			throw new Error('Missing required remote config variable: callbackUrl')
 		}
 
-		const fixedHost = host.replace('https://', '').replace('www.', '')
-
-		const configUrl = `https://${fixedHost}/.well-known/openid-configuration`
-
 		try {
 			const discoveryData = await this.discoverEndpoints(configUrl)
 			const { authorization_endpoint, token_endpoint } = discoveryData
@@ -210,7 +271,7 @@ export class AuthService {
 			const authorizeUrl = new URL(authorization_endpoint)
 
 			const allowedDomains = [
-				host,
+				...(host ? [host] : []),
 				'shopify.com',
 				authorizeUrl.hostname,
 				'facebook.com',
@@ -281,6 +342,8 @@ export class AuthService {
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ID_TOKEN, tokenResponse.id_token)
+			const loginConfig: StoredLoginConfig = { clientId, configUrl, callbackUrl }
+			await Eitri.sharedStorage.setItem(STORAGE_KEYS.LOGIN_CONFIG, JSON.stringify(loginConfig))
 
 			const customer = await this.notifyLogin()
 
@@ -323,9 +386,14 @@ export class AuthService {
 			const { token_endpoint } = discoveryData
 
 			const tokenResponse = await this.exchangeRefreshToken(storedRefreshToken, token_endpoint, clientId)
+			if (!tokenResponse?.access_token) {
+				throw new Error('Resposta do refresh sem access_token')
+			}
 
 			await Eitri.sharedStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.access_token)
-			await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+			if (tokenResponse.refresh_token) {
+				await Eitri.sharedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refresh_token)
+			}
 
 			Logger.log('[AuthService] Token de acesso atualizado com sucesso')
 
@@ -333,7 +401,7 @@ export class AuthService {
 
 			return { success: true, data: tokenResponse }
 		} catch (e) {
-			Logger.error('Refresh error:', e)
+			Logger.error('[AuthService] Falha ao atualizar o token da Shopify', e)
 			sendLogError(e, 'AuthService.refresh')
 			return { success: false, error: String(e) }
 		}
@@ -350,23 +418,36 @@ export class AuthService {
 		}
 	}
 
-	private static async getRemoteConfigParams(): Promise<{ clientId: string; configUrl: string } | null> {
-		const remoteConfig = await RemoteConfig.getRemoteConfig()
-		const { host, clientId } = remoteConfig?.providerInfo || {}
+	/** Logins made before `LOGIN_CONFIG` existed fall back to Remote Config. */
+	private static async getRefreshParams(): Promise<{ clientId: string; configUrl: string } | null> {
+		const stored = await this.getStoredLoginConfig()
+		if (stored) return { clientId: stored.clientId, configUrl: stored.configUrl }
 
-		if (!host || !clientId) {
-			return null
-		}
+		const clientId = RemoteConfig.getContent('providerInfo.clientId')
+		const configUrl = this.resolveConfigUrl()
+		return clientId && configUrl ? { clientId, configUrl } : null
+	}
 
-		const fixedHost = host.replace('https://', '').replace('www.', '')
-		return { clientId, configUrl: `https://${fixedHost}/.well-known/openid-configuration` }
+	private static refreshing: Promise<string | null> | null = null
+
+	/** Re-reads the token first: another eitri-app may have refreshed it while this one waited. */
+	private static async refreshAccessToken(): Promise<string | null> {
+		const current = await Eitri.sharedStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+		if (current && !this.isAccessTokenExpired(current)) return current
+
+		const params = await this.getRefreshParams()
+		if (!params) return null
+
+		const result = await this.refresh(params)
+		return result.success ? result.data.access_token : null
 	}
 
 	/**
 	 * Retrieves a valid Shopify Customer Account API access token.
 	 *
 	 * Returns the stored token if it is still valid. If the token is expired,
-	 * it automatically attempts to refresh it using the stored refresh token.
+	 * it automatically attempts to refresh it using the stored refresh token. Concurrent callers share the
+	 * same refresh: with refresh-token rotation, parallel refreshes would race and could store a revoked token.
 	 *
 	 * @returns The access token string, or `null` if no token is stored or the refresh fails.
 	 */
@@ -381,17 +462,12 @@ export class AuthService {
 			return token
 		}
 
-		const params = await this.getRemoteConfigParams()
-		if (!params) {
-			return null
+		if (!this.refreshing) {
+			this.refreshing = this.refreshAccessToken().finally(() => {
+				this.refreshing = null
+			})
 		}
-
-		const result = await this.refresh(params)
-		if (result.success) {
-			return result.data.access_token
-		}
-
-		return null
+		return this.refreshing
 	}
 
 	/**
@@ -430,15 +506,17 @@ export class AuthService {
 		const idToken = await this.getIdToken()
 		if (!idToken) throw new Error('no.id.token')
 
-		const host = RemoteConfig.getContent('providerInfo.host')
-		if (!host) throw new Error('no.provider.host')
+		const stored = await this.getStoredLoginConfig()
+		const configUrl = stored?.configUrl ?? this.resolveConfigUrl()
+		if (!configUrl) throw new Error('no.openid.config.url')
 
-		const configUrl = `https://${host.replace('https://', '').replace('www.', '')}/.well-known/openid-configuration`
 		const { end_session_endpoint } = await this.discoverEndpoints(configUrl)
 		if (!end_session_endpoint) throw new Error('no.end_session_endpoint')
 
 		const shopId = end_session_endpoint.match(/authentication\/(\d+)/)?.[1]
-		const logoutRedirectUri = RemoteConfig.getContent('providerInfo.callbackUrl') ?? `shop.${shopId}.app://callback`
+		const logoutRedirectUri =
+			[stored?.callbackUrl, RemoteConfig.getContent('providerInfo.callbackUrl')].find(isValidUrl) ??
+			`shop.${shopId}.app://callback`
 
 		await Eitri.webFlow.start({
 			startUrl: `${end_session_endpoint}?id_token_hint=${idToken}&post_logout_redirect_uri=${logoutRedirectUri}`,
@@ -464,6 +542,8 @@ export class AuthService {
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.ID_TOKEN)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER)
 		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.OPENID_CONFIG)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.OPENID_DISCOVERY)
+		await Eitri.sharedStorage.removeItem(STORAGE_KEYS.LOGIN_CONFIG)
 		await Eitri.sharedStorage.removeItem('SHOPIFY_CUSTOMER_API_URL')
 	}
 
