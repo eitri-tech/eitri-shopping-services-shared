@@ -430,7 +430,10 @@ export class AuthService {
 
 	private static refreshing: Promise<string | null> | null = null
 
-	/** Re-reads the token first: another eitri-app may have refreshed it while this one waited. */
+	/**
+	 * Each eitri-app has its own SDK instance, so `refreshing` does not stop another app from refreshing with the
+	 * same refresh token. When this one loses that race, the winner's tokens are already in storage: use them.
+	 */
 	private static async refreshAccessToken(): Promise<string | null> {
 		const current = await Eitri.sharedStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
 		if (current && !this.isAccessTokenExpired(current)) return current
@@ -438,8 +441,16 @@ export class AuthService {
 		const params = await this.getRefreshParams()
 		if (!params) return null
 
+		const usedRefreshToken = await Eitri.sharedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
 		const result = await this.refresh(params)
-		return result.success ? result.data.access_token : null
+		if (result.success) return result.data.access_token
+
+		const latestRefreshToken = await Eitri.sharedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+		if (!latestRefreshToken || latestRefreshToken === usedRefreshToken) return null
+		const latest = await Eitri.sharedStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+		if (!latest || this.isAccessTokenExpired(latest)) return null
+		Logger.log('[AuthService] Token já atualizado por outro eitri-app')
+		return latest
 	}
 
 	/**
@@ -529,8 +540,10 @@ export class AuthService {
 
 	/**
 	 * Logs the customer out: ends the Shopify web session and clears all stored tokens/config.
+	 * Waits for an in-flight refresh, which would otherwise write the tokens back after they are cleared.
 	 */
 	static async logout(): Promise<void> {
+		await this.refreshing?.catch(() => null)
 		try {
 			await this.endWebSession()
 		} catch (error) {
