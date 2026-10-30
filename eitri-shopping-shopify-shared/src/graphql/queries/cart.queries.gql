@@ -189,6 +189,9 @@ mutation CART_BUYER_IDENTITY_UPDATE($cartId: ID!, $buyerIdentity: CartBuyerIdent
 				email
 				phone
 				countryCode
+				customer {
+					id
+				}
 				deliveryAddressPreferences {
 					... on MailingAddress {
 						address1
