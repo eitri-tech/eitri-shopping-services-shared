@@ -233,8 +233,8 @@ curl https://conta.minha-loja.com.br/.well-known/openid-configuration
 
 **Refresh:** `getAccessToken()` renova o token quando faltam menos de 60 s para
 expirar. Chamadas simultâneas esperam o mesmo refresh. Se o refresh falhar, o
-método devolve `null` e o console mostra
-`[SHARED] Falha ao atualizar o token da Shopify`.
+método devolve `null`; com `verbose: true`, o console mostra
+`[SHARED] [AuthService] Falha ao atualizar o token da Shopify`.
 
 **Logout:** além de apagar os tokens, abre o `end_session_endpoint` no
 `webFlow`. Sem isso, o cookie da Shopify continua no `webFlow` e o próximo login
@@ -274,8 +274,7 @@ const res = await Shopify.http.post({ query: MINHA_QUERY, variables: { handle } 
 
 ## Logs e eventos
 
-- `verbose: true` mostra os logs do SDK com prefixo `[SHARED]`. Falhas de
-  refresh aparecem sempre.
+- `verbose: true` mostra os logs do SDK com prefixo `[SHARED]`.
 - Erros de catálogo, carrinho, conta e login vão para
   `https://api.eitri.tech/analytics/event` (exceto no ambiente `dev`, onde só são
   logados). Headers com JWT são mascarados. Cobertura completa em

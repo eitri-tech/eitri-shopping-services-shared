@@ -401,7 +401,7 @@ export class AuthService {
 
 			return { success: true, data: tokenResponse }
 		} catch (e) {
-			console.warn('[SHARED] Falha ao atualizar o token da Shopify', e)
+			Logger.error('[AuthService] Falha ao atualizar o token da Shopify', e)
 			sendLogError(e, 'AuthService.refresh')
 			return { success: false, error: String(e) }
 		}
