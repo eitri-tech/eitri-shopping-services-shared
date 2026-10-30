@@ -84,7 +84,13 @@ export class CustomerService {
 
 	private static readonly CUSTOMER_API_URL_KEY = 'SHOPIFY_CUSTOMER_API_URL'
 
+	/** Remote Config `providerInfo.customerAccountApiUrl` wins over discovery, for stores whose Customer Account domain is not the storefront host. */
 	private static async discoverCustomerApiUrl(): Promise<string> {
+		const configured = RemoteConfig.getContent('providerInfo.customerAccountApiUrl')
+		if (configured) {
+			return configured
+		}
+
 		const cached = await Eitri.sharedStorage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
 		if (cached) {
 			return cached
