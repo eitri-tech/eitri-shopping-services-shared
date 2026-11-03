@@ -48,6 +48,7 @@ export interface BuyerIdentity {
 	countryCode: string
 	preferences: Preferences
 	deliveryAddressPreferences?: DeliveryAddress[]
+	customer?: { id: string } | null
 }
 
 export interface Preferences {

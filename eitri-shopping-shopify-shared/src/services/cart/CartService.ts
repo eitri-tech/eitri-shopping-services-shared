@@ -317,20 +317,13 @@ export class CartService {
 	static async associateCustomerToCart(): Promise<Cart | null> {
 		const cartId = await StorageService.getStorageItem(CartService.SHOPIFY_CART_KEY)
 		if (!cartId) return null
-
-		const cart = await CartService.getCartById(cartId)
-		if (cart.buyerIdentity?.email) {
-			Logger.log('[CartService] Comprador já associado ao carrinho')
-			return cart
-		}
-
 		const buyerIdentity = await CartService.buildBuyerIdentity()
-		if (!buyerIdentity) return cart
+		if (!buyerIdentity) return CartService.getCartById(cartId)
 
 		Logger.log('[CartService] Associando comprador logado ao carrinho:', cartId)
 
 		const result = await CartService.updateBuyerIdentity(cartId, buyerIdentity)
-		return (result as any)?.cartBuyerIdentityUpdate?.cart ?? cart
+		return (result as any)?.cartBuyerIdentityUpdate?.cart ?? (await CartService.getCartById(cartId))
 	}
 
 	static async updateBuyerIdentity(cartId: string, buyerIdentity: CartBuyerIdentityInput) {
@@ -346,9 +339,25 @@ export class CartService {
 
 		const res = await ShopifyCaller.post(body)
 
-		Logger.log('[CartService] Identidade do comprador atualizada com sucesso')
+		const { data } = res.data as {
+			data: {
+				cartBuyerIdentityUpdate?: {
+					cart?: { buyerIdentity?: { customer?: { id: string } | null } }
+					userErrors?: { field?: string[]; message?: string }[]
+				}
+			}
+		}
 
-		const { data } = res.data as { data: unknown }
+		const userErrors = data?.cartBuyerIdentityUpdate?.userErrors
+		const customerId = data?.cartBuyerIdentityUpdate?.cart?.buyerIdentity?.customer?.id
+
+		if (userErrors?.length) {
+			Logger.log('[CartService] Falha ao atualizar identidade do comprador:', userErrors)
+		} else if (!customerId) {
+			Logger.log('[CartService] Identidade atualizada, mas o carrinho não ficou associado ao customer')
+		} else {
+			Logger.log('[CartService] Identidade do comprador atualizada com sucesso', { customerId })
+		}
 
 		return data
 	}
