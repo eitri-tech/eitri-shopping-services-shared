@@ -175,10 +175,23 @@ export default class GAWakeInternalService {
 				}
 			})
 
+			const orderId = cart?.orders?.[0]?.orderId
+
+			// Sem orderId, o fallback antigo era o checkoutId (um UUID). Um UUID em
+			// transaction_id quebra a conciliacao com a Wake e nao e corrigivel depois,
+			// porque o GA4 nao permite reenviar a compra com outro id.
+			if (!orderId) {
+				GAService.logError(
+					'Error on purchase',
+					new Error(`purchase sem orderId; evento nao enviado. checkoutId: ${cart?.checkoutId}`)
+				)
+				return
+			}
+
 			const params = {
 				currency: 'BRL',
 				value: cart?.total,
-				transaction_id: cart?.orders?.[0]?.orderId || cart?.checkoutId,
+				transaction_id: String(orderId),
 				items: items
 			}
 
