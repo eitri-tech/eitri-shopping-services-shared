@@ -192,7 +192,9 @@ export default class GAWakeInternalService {
 				currency: 'BRL',
 				value: cart?.total,
 				transaction_id: String(orderId),
-				items: items
+				shipping: cart?.shippingFee ?? cart?.selectedShipping?.value ?? 0,
+				items: items,
+				...(cart?.coupon && { coupon: cart.coupon })
 			}
 
 			GAService.logEvent('purchase', params)
