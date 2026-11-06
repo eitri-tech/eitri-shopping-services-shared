@@ -15,7 +15,7 @@ export default class VtexCustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_token_key'
 	static STORAGE_USER_DATA = 'user_data'
 	static STORAGE_REGION = 'user_region'
-	static TOKEN_EXPIRATION_TIME_SEC = 86200
+	static TOKEN_EXPIRATION_TIME_SEC = 86400
 
 	static CHANNEL_UTM_PARAMS_KEY = 'ChanellUTMParams'
 	static STORAGE_UTM_PARAMS_KEY = 'utm_params_key'
@@ -199,6 +199,7 @@ export default class VtexCustomerService {
 			await VtexCustomerService._processPostSocialLogin(returnUrl?.authUrl)
 		} catch (error) {
 			console.error('Error in vtexOAuth:', error)
+			sendLogError(error, 'vtexOAuth', { oAuthProvider: oAuthProvider ?? null, account: Vtex?.configs?.account ?? null })
 			throw error
 		}
 	}
@@ -252,7 +253,7 @@ export default class VtexCustomerService {
 	 */
 	static async notifyLoginToExposedApis(origin, params = {}) {
 		try {
-			const profile = await VtexCustomerService.getCustomerProfile()
+			const profile = await VtexCustomerService.getCustomerProfile(params?.userToken)
 			const profileData = profile?.data?.profile
 
 			let _customerId = params?.customerId || profileData?.userId
@@ -489,7 +490,7 @@ export default class VtexCustomerService {
 		}
 
 		const overrideHeaders = _token
-			? { Cookie: `VtexIdclientAutCookie_${Vtex.configs.account}=${_token}` }
+			? { Cookie: `VtexIdclientAutCookie_${await Vtex.getAccount()}=${_token}` }
 			: undefined
 
 		const result = await VtexCaller.post(
@@ -584,6 +585,7 @@ export default class VtexCustomerService {
 				}
 			} catch (e) {
 				console.error('Erro ao salvar parâmetros UTM', e)
+				sendDatadogWarningLog({ message: 'Erro ao salvar parâmetros UTM', utmKeys: Object.keys(queryParams ?? {}) }, 'saveUtmParams')
 				return null
 			}
 
@@ -641,6 +643,7 @@ export default class VtexCustomerService {
 			return rest
 		} catch (e) {
 			console.error('Erro ao obter parâmetros UTM', e)
+			sendDatadogWarningLog({ message: 'Erro ao obter parâmetros UTM' }, 'getUtmParams')
 		}
 
 		return {}
@@ -650,7 +653,7 @@ export default class VtexCustomerService {
 		const res = await VtexCustomerService.getStorageCustomerToken()
 
 		try {
-			const { account } = Vtex.configs
+			const account = await Vtex.getAccount()
 
 			if (!res || !res.accountAuthCookieId) {
 				Logger.log('executeRefreshToken: sem token armazenado, refresh ignorado')
@@ -705,7 +708,7 @@ export default class VtexCustomerService {
 					)
 					await VtexSessionService.updateSession()
 					Logger.log('executeRefreshToken: tokens renovados e sessão atualizada')
-					VtexCustomerService.notifyLoginToExposedApis('executeRefreshToken')
+					VtexCustomerService.notifyLoginToExposedApis('executeRefreshToken', { userToken: newToken })
 					EventBus.publish({
 						channel: EventBusChannels.USER_LOGGED_IN,
 						broadcast: true,
@@ -1066,7 +1069,7 @@ export default class VtexCustomerService {
 					'accept': '*/*'
 				}
 			},
-			`https://${Vtex.configs.account}.vtexpayments.com.br`
+			`https://${await Vtex.getAccount()}.vtexpayments.com.br`
 		)
 
 		const tokenData = tokenCreateResult?.data?.[0]

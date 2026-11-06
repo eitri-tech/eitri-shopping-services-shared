@@ -6,29 +6,34 @@ import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
+import { NOT_COMPLETE_ERRORS } from './notCompleteErrors'
+import VtexCartService from '../cart/VtexCartService'
 import RemoteConfig from '../../RemoteConfig'
 import { PaymentResult } from '../../../models/Payment'
 
-type PaymentOptions = {
-	fields: {
-		accountId: string
-		holderName: string
-		cardNumber: string
-		validationCode: string
-		dueDate: string
-		bin: string
-		address: {
-			street: string
-			complement: string
-			number: string
-			city: string
-			reference: string
-			neighborhood: string
-			state: string
-			country: string
-			postalCode: string
-		}
+type PaymentFields = {
+	accountId: string
+	holderName: string
+	cardNumber: string
+	validationCode: string
+	dueDate: string
+	bin: string
+	address: {
+		street: string
+		complement: string
+		number: string
+		city: string
+		reference: string
+		neighborhood: string
+		state: string
+		country: string
+		postalCode: string
 	}
+}
+
+type PaymentOptions = {
+	/** Objeto único para todos os pagamentos, ou lista com um item por pagamento na ordem de `cart.paymentData.payments` (ex.: pagamento com 2 cartões). */
+	fields: PaymentFields | PaymentFields[]
 	captchaToken: string
 	captchaSiteKey: string
 	savePersonalData: boolean
@@ -38,8 +43,8 @@ type PaymentOptions = {
 type StartTransactionReturn = {
 	id: string
 	orderGroup: string
-	Vtex_CHKO_Auth: string
-	CheckoutDataAccess: string
+	Vtex_CHKO_Auth: string | null
+	CheckoutDataAccess: string | null
 	merchantTransactions: {
 		id: string
 		merchantName: string
@@ -77,6 +82,13 @@ type StartTransactionReturn = {
 export default class VtexPaymentService {
 	static async executePayment(cart: any, options?: PaymentOptions) {
 		try {
+			const cartPayments = cart?.paymentData?.payments ?? []
+			if (Array.isArray(options?.fields) && options.fields.length < cartPayments.length) {
+				throw new Error(
+					`options.fields tem ${options.fields.length} item(s), mas o carrinho tem ${cartPayments.length} pagamento(s)`
+				)
+			}
+
 			const startTransactionReturn: StartTransactionReturn = await VtexPaymentService.startTransaction(
 				cart,
 				options
@@ -91,23 +103,24 @@ export default class VtexPaymentService {
 			sendLogOrderAccepted(cart)
 
 			return paymentProcessed
-		} catch (e) {
-			const NOT_COMPLETE_ERRORS = ['CHK0328', 'CHK003', 'CHK0087', 'ORD062', 'CHK0223']
+		} catch (e: any) {
 			const errorCode = e.response?.data?.error?.code
+			const logData = { orderFormId: cart?.orderFormId ?? null, step: e.step ?? null, ...e.stepContext }
 
 			if (NOT_COMPLETE_ERRORS.includes(errorCode)) {
-				sendOrderNotComplete(e, 'executePayment')
+				sendOrderNotComplete(e, 'executePayment', logData, cart)
 			} else {
-				sendLogError(e, 'executePayment')
+				sendLogError(e, 'executePayment', logData, cart)
 			}
 
+			e._datadogLogged = true
 			throw e
 		}
 	}
 
 	static async startTransaction(cart: any, options?: PaymentOptions): Promise<StartTransactionReturn> {
-		const valuePayments = cart?.paymentData?.payments?.reduce((acc, payment) => payment.value + acc, 0)
-		const giftValuePayments = cart?.paymentData?.giftCards?.reduce((acc, giftCard) => giftCard.value + acc, 0)
+		const valuePayments = cart?.paymentData?.payments?.reduce((acc: number, payment: any) => payment.value + acc, 0)
+		const giftValuePayments = cart?.paymentData?.giftCards?.reduce((acc: number, giftCard: any) => giftCard.value + acc, 0)
 		const value = valuePayments + giftValuePayments
 
 		try {
@@ -158,8 +171,10 @@ export default class VtexPaymentService {
 			Logger.log('====> Transaçao finalizada com sucesso', dataReturn)
 
 			return dataReturn
-		} catch (e) {
+		} catch (e: any) {
 			console.log('Erro no startPayment', e)
+			e.step = 'startTransaction'
+			e.stepContext = { orderFormId: cart?.orderFormId ?? null, value: cart?.value ?? null, paymentCount: cart?.paymentData?.payments?.length ?? null }
 			throw e
 		}
 	}
@@ -167,21 +182,23 @@ export default class VtexPaymentService {
 	static async setPaymentMethod(cart: any, startTransactionReturn: StartTransactionReturn, options?: PaymentOptions) {
 		console.log('====> Setando o método de pagamento', startTransactionReturn.id)
 		try {
-			let paymentsMethods = []
+			let paymentsMethods: any[] = []
 
-			startTransactionReturn?.payments?.forEach(payment => {
+			startTransactionReturn?.payments?.forEach((payment, paymentIndex) => {
+				const paymentFields = Array.isArray(options?.fields) ? options.fields[paymentIndex] : options?.fields
+
 				payment.merchantSellerPayments.map(msp => {
 					const merchant = startTransactionReturn?.merchantTransactions?.find(mt => mt.id === msp.id)
 
 					paymentsMethods.push({
 						paymentSystem: payment?.paymentSystem,
 						installments: msp?.installments,
-						currencyCode: App.configs?.storePreferences?.currencyCode || 'BRL',
+						currencyCode: (App.configs as any)?.storePreferences?.currencyCode || 'BRL',
 						installmentsInterestRate: msp?.interestRate ?? 0,
 						value: msp?.value,
 						installmentsValue: msp?.installmentValue,
 						referenceValue: msp?.referenceValue,
-						fields: options?.fields,
+						fields: paymentFields,
 						transaction: {
 							id: merchant?.transactionId,
 							merchantName: merchant?.merchantName
@@ -191,11 +208,11 @@ export default class VtexPaymentService {
 			})
 
 			const giftCardPaymentSystem = cart?.paymentData?.paymentSystems?.find(
-				system => system.groupName === 'giftCardPaymentGroup'
+				(system: any) => system.groupName === 'giftCardPaymentGroup'
 			)
 
 			if (giftCardPaymentSystem) {
-				cart?.paymentData?.giftCards?.forEach(giftCard => {
+				cart?.paymentData?.giftCards?.forEach((giftCard: any) => {
 					if (!giftCard.inUse || giftCard.value === 0) {
 						return
 					}
@@ -236,9 +253,10 @@ export default class VtexPaymentService {
 			const useNewVtexVaultApi = RemoteConfig.getContent('appConfigs.checkout.useVaultApi')
 
 			// Testar e tornar padrao https://developers.vtex.com/updates/release-notes/2025-10-28-mandatory-migration-to-vtexvault-com-for-send-payments-request
+			const account = await Vtex.getAccount()
 			const url = useNewVtexVaultApi
-				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${Vtex.configs.account}&orderId=${startTransactionReturn.orderGroup}`
-				: `https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
+				? `https://api.vtexvault.com/api/payments/transactions/${startTransactionReturn.id}/payments?an=${account}&orderId=${startTransactionReturn.orderGroup}`
+				: `https://${account}.vtexpayments.com.br/api/pub/transactions/${startTransactionReturn.id}/payments`
 
 			await Eitri.http.post(url, paymentsMethods, {
 				headers: {
@@ -249,8 +267,10 @@ export default class VtexPaymentService {
 
 			console.timeEnd('setPaymentMethod')
 			console.log('====> Método de pagamento definido para o transactionId', startTransactionReturn.id)
-		} catch (e) {
+		} catch (e: any) {
 			console.log('erro no setPaymentMethod', e)
+			e.step = 'setPaymentMethod'
+			e.stepContext = { orderFormId: cart?.orderFormId ?? null, transactionId: startTransactionReturn?.id ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, paymentCount: startTransactionReturn?.payments?.length ?? null }
 			throw e
 		}
 	}
@@ -278,7 +298,7 @@ export default class VtexPaymentService {
 				status: 'completed',
 				gatewayCallbackResult: result?.data ?? null
 			}
-		} catch (e) {
+		} catch (e: any) {
 			console.timeEnd('processPayment')
 
 			if (e?.response?.status === 428) {
@@ -296,6 +316,8 @@ export default class VtexPaymentService {
 				}
 			} else {
 				console.log('erro no processPayment', e)
+				e.step = 'processPayment'
+				e.stepContext = { orderFormId: (VtexCartService._CACHED_CART as any)?.orderFormId ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, transactionId: startTransactionReturn?.id ?? null, responseStatus: e?.response?.status ?? null }
 				throw e
 			}
 		}

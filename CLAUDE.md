@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This repo is a monorepo of independent Eitri "shared" apps — reusable service layers consumed by other Eitri mini-apps. Each subdirectory is a self-contained Eitri app published separately:
 
 - `eitri-shopping-vtex-shared/` — VTEX ecommerce integration (JS)
-- `eitri-shopping-shopify-shared/` — Shopify integration (TS, GraphQL)
+- `eitri-shopping-shopify-shared/` — Shopify integration (TS, GraphQL). Remote Config, login and features are in its README.
 - `eitri-shopping-wake-shared/` — Wake ecommerce integration (JS, GraphQL)
 - `eitri-shopping-integrations-shared/` — cross-integration shared views/components
 - `eitri-shopping-vtex-cx-ai-shared/` — Weni + AI customer-service chat (VTEX CX), brand-agnostic; per-store values (channelUuid, VTEX account, accent color, avatar) come from config, never from code. See its README.

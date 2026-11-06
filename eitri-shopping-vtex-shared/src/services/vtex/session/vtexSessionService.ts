@@ -1,5 +1,6 @@
 import VtexCaller from '../_helpers/_vtexCaller'
 import StorageService from './../../StorageService'
+import { sendLogError } from '@/services/Datadog'
 
 type Session = {
 	sessionToken: string
@@ -8,25 +9,45 @@ type Session = {
 
 export default class VtexSessionService {
 	static async createSession(payload: any = {}): Promise<Session> {
-		const response = await VtexCaller.post(`api/sessions`, payload)
-		await StorageService.setStorageJSON('sessionToken', response.data)
-		return response.data
+		try {
+			const response = await VtexCaller.post(`api/sessions`, payload)
+			await StorageService.setStorageJSON('sessionToken', response.data)
+			return response.data
+		} catch (e: any) {
+			sendLogError(e, 'createSession')
+			throw e
+		}
 	}
 
 	static async getSession(items: string = '*'): Promise<any> {
-		const response = await VtexCaller.get(`api/sessions?items=${items}`)
-		return response.data
+		try {
+			const response = await VtexCaller.get(`api/sessions?items=${items}`)
+			return response.data
+		} catch (e: any) {
+			sendLogError(e, 'getSession', { items: items ?? null })
+			throw e
+		}
 	}
 
 	static async updateSession(payload?: any): Promise<Session> {
-		const response = await VtexCaller.patch(`api/sessions`, payload ?? {})
-		await StorageService.setStorageJSON('sessionToken', response.data)
-		return response.data
+		try {
+			const response = await VtexCaller.patch(`api/sessions`, payload ?? {})
+			await StorageService.setStorageJSON('sessionToken', response.data)
+			return response.data
+		} catch (e: any) {
+			sendLogError(e, 'updateSession')
+			throw e
+		}
 	}
 
 	static async getSegments(): Promise<any> {
-		const response = await VtexCaller.get(`api/segments`)
-		return response.data
+		try {
+			const response = await VtexCaller.get(`api/segments`)
+			return response.data
+		} catch (e: any) {
+			sendLogError(e, 'getSegments')
+			throw e
+		}
 	}
 
 	static async getSessionToken(): Promise<Session> {

@@ -24,7 +24,7 @@ import {
 	queryCustomerCheckingAccount
 } from '../queries/Customer'
 import StoreService from './StoreService'
-import { sendLogError } from './Datadog'
+import { sendLogError, sendDatadogInfoLog, sendDatadogWarningLog } from './Datadog'
 import EventBus from './EventBus'
 
 
@@ -237,16 +237,19 @@ export default class CustomerService {
 
 				CustomerService.saveCustomerTokenOnStorage({ ...loginData, ...data })
 
+				sendDatadogInfoLog({ message: 'Refresh token executado com sucesso', email: loginData?.email }, 'refreshCustomerToken')
+
 				return response.data.token
 			} catch (e) {
-				
+
 				// isolando erros que são corrigidos no fluxo
 				if (typeof e?.message === 'string' && e.message.includes('"code":"TKN100"')) {
 					console.error('[SHARED] [refreshCustomerToken]', e)
+					sendDatadogWarningLog({ message: 'Token rejeitado pela API Wake (TKN100)', email: loginData?.email }, 'refreshCustomerToken')
 					return null
 				}
 
-				sendLogError(e, "refreshCustomerToken")
+				sendDatadogInfoLog({ message: 'Erro ao executar refresh token', email: loginData?.email, error: e }, 'refreshCustomerToken')
 				return null
 			}
 		} else {

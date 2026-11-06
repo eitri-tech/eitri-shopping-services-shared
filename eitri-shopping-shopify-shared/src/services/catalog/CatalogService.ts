@@ -11,6 +11,7 @@ import { CollectionParams } from '../../models/CollectionParams.types'
 import RemoteConfig from '../RemoteConfig'
 import { CollectionReturn } from '../../models/CollectionReturn.types'
 import { Product } from '../../models/Product'
+import { sendLogError } from '../Datadog'
 
 export interface ProductRecommendationsInput {
 	intent: string
@@ -31,8 +32,14 @@ export default class CatalogService {
 				..._params
 			}
 		}
-		const res = await ShopifyCaller.post(body)
-		return res?.data?.data?.search
+
+		try {
+			const res = await ShopifyCaller.post(body)
+			return res?.data?.data?.search
+		} catch (error) {
+			sendLogError(error, 'CatalogService.search', { query: params.query })
+			throw error
+		}
 	}
 
 	static async collection(params: CollectionParams, query: string = COLLECTION_QUERY): Promise<CollectionReturn> {
@@ -48,8 +55,13 @@ export default class CatalogService {
 			}
 		}
 
-		const res = await ShopifyCaller.post(body)
-		return res?.data?.data?.collection
+		try {
+			const res = await ShopifyCaller.post(body)
+			return res?.data?.data?.collection
+		} catch (error) {
+			sendLogError(error, 'CatalogService.collection', { handle: params.handle })
+			throw error
+		}
 	}
 
 	static async predictiveSearch(handle: string) {
@@ -71,9 +83,13 @@ export default class CatalogService {
 			}
 		}
 
-		const res = await ShopifyCaller.post(body)
-
-		return res?.data?.data?.productRecommendations
+		try {
+			const res = await ShopifyCaller.post(body)
+			return res?.data?.data?.productRecommendations
+		} catch (error) {
+			sendLogError(error, 'CatalogService.productRecommendations', { productId: params.productId })
+			throw error
+		}
 	}
 
 	static async product(params: { handle?: string; id?: string }, query: string = PRODUCT) {
@@ -83,7 +99,13 @@ export default class CatalogService {
 				...params
 			}
 		}
-		const res = await ShopifyCaller.post(body)
-		return res?.data?.data?.product
+
+		try {
+			const res = await ShopifyCaller.post(body)
+			return res?.data?.data?.product
+		} catch (error) {
+			sendLogError(error, 'CatalogService.product', { handle: params.handle, id: params.id })
+			throw error
+		}
 	}
 }

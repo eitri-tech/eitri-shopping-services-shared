@@ -9,7 +9,8 @@ import vtexCustomerService from '../customer/vtexCustomerService'
 import VtexPaymentService from './vtexPaymentService'
 import StorageService from '../../StorageService'
 import extractCookies from '../_helpers/extractCookies'
-import { sendLogError, sendLogOrderAccepted } from '@/services/Datadog'
+import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '@/services/Datadog'
+import { NOT_COMPLETE_ERRORS } from './notCompleteErrors'
 import withRetry from '@/services/vtex/_helpers/withRetry'
 
 export default class VtexCheckoutService {
@@ -192,6 +193,8 @@ export default class VtexCheckoutService {
 			}
 		} catch (e) {
 			console.log('erro no startPayment', e)
+			e.step = 'startTransaction'
+			e.stepContext = { orderFormId: orderFormId ?? null, value: payload?.value, referenceValue: payload?.referenceValue }
 			throw e
 		}
 	}
@@ -211,7 +214,7 @@ export default class VtexCheckoutService {
 
 		try {
 			const result = await Eitri.http.post(
-				`https://${Vtex.configs.account}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
+				`https://${await Vtex.getAccount()}.vtexpayments.com.br/api/pub/transactions/${transactionId}/payments`,
 				payload,
 				{
 					headers: {
@@ -228,6 +231,8 @@ export default class VtexCheckoutService {
 		} catch (e) {
 			//TODO: se der erro aqui, será necessário matar e recriar o carrinho
 			console.log('erro no setPaymentMethod', e)
+			e.step = 'setPaymentMethod'
+			e.stepContext = { orderFormId: VtexCartService?._CACHED_CART?.orderFormId, transactionId: transactionId ?? null, paymentSystemCount: payload?.length }
 			throw e
 		}
 	}
@@ -265,6 +270,8 @@ export default class VtexCheckoutService {
 				}
 			} else {
 				console.log('erro no processPayment', e.response)
+				e.step = 'processPayment'
+				e.stepContext = { orderFormId: VtexCartService?._CACHED_CART?.orderFormId, orderGroup: orderGroup ?? null, transactionId: transactionId ?? null, responseStatus: e?.response?.status }
 				throw e
 			}
 		}
@@ -360,7 +367,16 @@ export default class VtexCheckoutService {
 
 			throw Error('Método de pagamento não suportado')
 		} catch (e) {
-			sendLogError(e, 'pay')
+			if (!e._datadogLogged) {
+				const errorCode = e.response?.data?.error?.code
+				const logData = { orderFormId: cart?.orderFormId ?? null, step: e.step ?? null, ...e.stepContext }
+
+				if (NOT_COMPLETE_ERRORS.includes(errorCode)) {
+					sendOrderNotComplete(e, 'pay', logData, cart)
+				} else {
+					sendLogError(e, 'pay', logData, cart)
+				}
+			}
 			throw e
 		}
 	}
@@ -370,7 +386,7 @@ export default class VtexCheckoutService {
 	}
 
 	static async getPixStatus(transactionId, paymentId, hostStore) {
-		const host = hostStore || Vtex.configs.account
+		const host = hostStore || (await Vtex.getAccount())
 		const result = await Eitri.http.get(
 			`https://${host}.myvtex.com/_v/private/pix/status/${transactionId}/payments/${paymentId}`,
 			{

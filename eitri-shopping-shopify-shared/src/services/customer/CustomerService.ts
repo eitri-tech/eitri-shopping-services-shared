@@ -29,6 +29,7 @@ import Logger from '../_helpers/Logger'
 import { AuthService } from './CustomerAuth'
 import { CustomerApiError } from '../../errors/CustomerApiError'
 import { OrderDetail, OrderDetailResponse } from '../../models/Order'
+import { sendLogError } from '../Datadog'
 
 export class CustomerService {
 	static auth = AuthService
@@ -83,7 +84,13 @@ export class CustomerService {
 
 	private static readonly CUSTOMER_API_URL_KEY = 'SHOPIFY_CUSTOMER_API_URL'
 
+	/** Remote Config `providerInfo.customerAccountApiUrl` wins over discovery, for stores whose Customer Account domain is not the storefront host. */
 	private static async discoverCustomerApiUrl(): Promise<string> {
+		const configured = RemoteConfig.getContent('providerInfo.customerAccountApiUrl')
+		if (configured) {
+			return configured
+		}
+
 		const cached = await Eitri.sharedStorage.getItem(CustomerService.CUSTOMER_API_URL_KEY)
 		if (cached) {
 			return cached
@@ -131,26 +138,31 @@ export class CustomerService {
 
 		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const res = await ShopifyCaller.post(
-			body,
-			{
-				headers: {
-					Authorization: token
-				}
-			},
-			customerApiUrl
-		)
+		try {
+			const res = await ShopifyCaller.post(
+				body,
+				{
+					headers: {
+						Authorization: token
+					}
+				},
+				customerApiUrl
+			)
 
-		const parsed = CustomerService.handleResponse(res)
-		const { customer } = (parsed.data ?? parsed) as CustomerResponse
+			const parsed = CustomerService.handleResponse(res)
+			const { customer } = (parsed.data ?? parsed) as CustomerResponse
 
-		if (customer) {
-			Logger.log('[CustomerService] Dados do cliente carregados com sucesso')
-		} else {
-			Logger.log('[CustomerService] Cliente não encontrado ou token inválido')
+			if (customer) {
+				Logger.log('[CustomerService] Dados do cliente carregados com sucesso')
+			} else {
+				Logger.log('[CustomerService] Cliente não encontrado ou token inválido')
+			}
+
+			return customer
+		} catch (error) {
+			sendLogError(error, 'CustomerService.getCustomer')
+			throw error
 		}
-
-		return customer
 	}
 
 	/**
@@ -308,28 +320,33 @@ export class CustomerService {
 
 		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const res = await ShopifyCaller.post(
-			body,
-			{
-				headers: {
-					Authorization: token
-				}
-			},
-			customerApiUrl
-		)
+		try {
+			const res = await ShopifyCaller.post(
+				body,
+				{
+					headers: {
+						Authorization: token
+					}
+				},
+				customerApiUrl
+			)
 
-		const parsed = CustomerService.handleResponse(res)
-		const result = ((parsed.data ?? parsed) as CustomerUpdateResponse).customerUpdate
+			const parsed = CustomerService.handleResponse(res)
+			const result = ((parsed.data ?? parsed) as CustomerUpdateResponse).customerUpdate
 
-		if (result.userErrors.length > 0) {
-			Logger.log('[CustomerService] Falha ao atualizar dados:', result.userErrors)
-		} else {
-			Logger.log('[CustomerService] Dados atualizados com sucesso')
-		}
+			if (result.userErrors.length > 0) {
+				Logger.log('[CustomerService] Falha ao atualizar dados:', result.userErrors)
+			} else {
+				Logger.log('[CustomerService] Dados atualizados com sucesso')
+			}
 
-		return {
-			customer: result.customer,
-			userErrors: result.userErrors
+			return {
+				customer: result.customer,
+				userErrors: result.userErrors
+			}
+		} catch (error) {
+			sendLogError(error, 'CustomerService.updateCustomer')
+			throw error
 		}
 	}
 
@@ -363,28 +380,33 @@ export class CustomerService {
 
 		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const res = await ShopifyCaller.post(
-			body,
-			{
-				headers: {
-					Authorization: token
-				}
-			},
-			customerApiUrl
-		)
+		try {
+			const res = await ShopifyCaller.post(
+				body,
+				{
+					headers: {
+						Authorization: token
+					}
+				},
+				customerApiUrl
+			)
 
-		const parsed = CustomerService.handleResponse(res)
-		const result = ((parsed.data ?? parsed) as CustomerAddressCreateResponse).customerAddressCreate
+			const parsed = CustomerService.handleResponse(res)
+			const result = ((parsed.data ?? parsed) as CustomerAddressCreateResponse).customerAddressCreate
 
-		if (result.customerAddress) {
-			Logger.log('[CustomerService] Endereço criado com sucesso')
-		} else {
-			Logger.log('[CustomerService] Falha ao criar endereço:', result.userErrors)
-		}
+			if (result.customerAddress) {
+				Logger.log('[CustomerService] Endereço criado com sucesso')
+			} else {
+				Logger.log('[CustomerService] Falha ao criar endereço:', result.userErrors)
+			}
 
-		return {
-			address: result.customerAddress,
-			userErrors: result.userErrors
+			return {
+				address: result.customerAddress,
+				userErrors: result.userErrors
+			}
+		} catch (error) {
+			sendLogError(error, 'CustomerService.createAddress')
+			throw error
 		}
 	}
 
@@ -421,28 +443,33 @@ export class CustomerService {
 
 		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const res = await ShopifyCaller.post(
-			body,
-			{
-				headers: {
-					Authorization: token
-				}
-			},
-			customerApiUrl
-		)
+		try {
+			const res = await ShopifyCaller.post(
+				body,
+				{
+					headers: {
+						Authorization: token
+					}
+				},
+				customerApiUrl
+			)
 
-		const parsed = CustomerService.handleResponse(res)
-		const result = ((parsed.data ?? parsed) as CustomerAddressUpdateResponse).customerAddressUpdate
+			const parsed = CustomerService.handleResponse(res)
+			const result = ((parsed.data ?? parsed) as CustomerAddressUpdateResponse).customerAddressUpdate
 
-		if (result.customerAddress) {
-			Logger.log('[CustomerService] Endereço atualizado com sucesso')
-		} else {
-			Logger.log('[CustomerService] Falha ao atualizar endereço:', result.userErrors)
-		}
+			if (result.customerAddress) {
+				Logger.log('[CustomerService] Endereço atualizado com sucesso')
+			} else {
+				Logger.log('[CustomerService] Falha ao atualizar endereço:', result.userErrors)
+			}
 
-		return {
-			address: result.customerAddress,
-			userErrors: result.userErrors
+			return {
+				address: result.customerAddress,
+				userErrors: result.userErrors
+			}
+		} catch (error) {
+			sendLogError(error, 'CustomerService.updateAddress')
+			throw error
 		}
 	}
 
@@ -471,26 +498,31 @@ export class CustomerService {
 
 		const customerApiUrl = await CustomerService.discoverCustomerApiUrl()
 
-		const res = await ShopifyCaller.post(
-			body,
-			{
-				headers: {
-					Authorization: token
-				}
-			},
-			customerApiUrl
-		)
+		try {
+			const res = await ShopifyCaller.post(
+				body,
+				{
+					headers: {
+						Authorization: token
+					}
+				},
+				customerApiUrl
+			)
 
-		const parsed = CustomerService.handleResponse(res)
-		const result = ((parsed.data ?? parsed) as CustomerAddressDeleteResponse).customerAddressDelete
+			const parsed = CustomerService.handleResponse(res)
+			const result = ((parsed.data ?? parsed) as CustomerAddressDeleteResponse).customerAddressDelete
 
-		if (result.deletedAddressId) {
-			Logger.log('[CustomerService] Endereço removido com sucesso')
-			return { success: true, userErrors: [] }
+			if (result.deletedAddressId) {
+				Logger.log('[CustomerService] Endereço removido com sucesso')
+				return { success: true, userErrors: [] }
+			}
+
+			Logger.log('[CustomerService] Falha ao remover endereço:', result.userErrors)
+			return { success: false, userErrors: result.userErrors }
+		} catch (error) {
+			sendLogError(error, 'CustomerService.deleteAddress')
+			throw error
 		}
-
-		Logger.log('[CustomerService] Falha ao remover endereço:', result.userErrors)
-		return { success: false, userErrors: result.userErrors }
 	}
 
 	/**

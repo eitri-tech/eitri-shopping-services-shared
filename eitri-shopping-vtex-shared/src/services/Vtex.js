@@ -137,6 +137,13 @@ export default class Vtex {
 		Vtex.updateSegmentSession(utmParams)
 	}
 
+	static async getAccount() {
+		if (Vtex.configs.account) return Vtex.configs.account
+
+		const remoteConfig = await Eitri.environment.getRemoteConfigs()
+		return remoteConfig?.providerInfo?.account
+	}
+
 	static catalog = VtexCatalogService
 	static checkout = VtexCheckoutService
 	static customer = VtexCustomerService
