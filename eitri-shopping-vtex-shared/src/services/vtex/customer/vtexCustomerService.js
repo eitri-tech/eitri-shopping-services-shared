@@ -650,9 +650,10 @@ export default class VtexCustomerService {
 	}
 
 	static async executeRefreshToken() {
-		const res = await VtexCustomerService.getStorageCustomerToken()
+		let res
 
 		try {
+			res = await VtexCustomerService.getStorageCustomerToken()
 			const account = await Vtex.getAccount()
 
 			if (!res || !res.accountAuthCookieId) {
