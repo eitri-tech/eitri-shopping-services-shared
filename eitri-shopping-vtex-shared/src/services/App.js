@@ -188,6 +188,7 @@ export default class App {
 			console.log('[SHARED] Koin fingerprint inicializado', fingerprint)
 		} catch (error) {
 			console.error('[SHARED] Error ao inicializar Koin fingerprint', error)
+			sendLogError(error, 'koinFingerprint', { appKey: koinOrgId ?? null })
 		}
 	}
 }
