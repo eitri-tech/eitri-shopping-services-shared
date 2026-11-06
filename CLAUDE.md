@@ -29,6 +29,8 @@ There is no root `package.json`; commands run per-subproject via the `eitri` CLI
 
 `messageVersion` in `eitri-app.conf.js` is the publish message — update it to describe the change.
 
+**Changelog:** whenever a task finishes with a `version` bump in any `*/eitri-app.conf.js`, and before opening or updating a PR that contains one, invoke the `changelog` skill (`.claude/skills/changelog`) to create/update the root `CHANGELOG.md` (Keep a Changelog) in the same PR.
+
 ## Service architecture
 
 Each ecommerce shared app follows the same shape:
