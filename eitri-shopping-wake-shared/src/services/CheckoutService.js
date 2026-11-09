@@ -259,7 +259,8 @@ export default class CheckoutService {
 
 			sendLogOrderAccepted(response.checkoutComplete)
 
-			GAWakeInternalService.purchase(response.checkoutComplete)
+			// [GA4] o checkout lido antes de finalizar completa o purchase quando o checkoutComplete volta sem produtos (Pix)
+			GAWakeInternalService.purchase(response.checkoutComplete, CartService.CACHED_CART)
 
 			return response
 		} catch (e) {
@@ -291,7 +292,8 @@ export default class CheckoutService {
 
 			sendLogOrderAccepted(response.checkoutComplete)
 
-			GAWakeInternalService.purchase(response.checkoutComplete)
+			// [GA4] o checkout lido antes de finalizar completa o purchase quando o checkoutComplete volta sem produtos (Pix)
+			GAWakeInternalService.purchase(response.checkoutComplete, CartService.CACHED_CART)
 
 			return response
 		} catch (e) {
