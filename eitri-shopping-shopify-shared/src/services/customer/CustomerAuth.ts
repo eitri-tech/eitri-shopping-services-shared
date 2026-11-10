@@ -329,13 +329,8 @@ export class AuthService {
 				return { success: false, error: 'No code verifier found' }
 			}
 
-			const tokenResponse = await this.exchangeToken(
-				code,
-				codeVerifier,
-				token_endpoint,
-				clientId,
-				webFlowResCallbackUrl
-			)
+			// Must match the authorize redirect_uri exactly: the received URL carries code/state/iss/analytics_trace_id and gets invalid_grant.
+			const tokenResponse = await this.exchangeToken(code, codeVerifier, token_endpoint, clientId, callbackUrl)
 
 			Logger.log('Token generated with success')
 
