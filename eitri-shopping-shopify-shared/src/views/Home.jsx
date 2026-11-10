@@ -120,7 +120,9 @@ export default function Home(props) {
 					color='background-color'
 					onPress={() =>
 						run('Login', async () => {
-							Shopify.customer.auth.login()
+							Shopify.customer.auth.login({
+								allowedDomains: ['*']
+							})
 						})
 					}
 					label='Login'
