@@ -26,7 +26,39 @@ import {
 import StoreService from './StoreService'
 import { sendLogError, sendDatadogInfoLog, sendDatadogWarningLog } from './Datadog'
 import EventBus from './EventBus'
+import Logger from './Logger'
 
+const NOTIFY_GENDERS = {
+	male: 'male',
+	masculino: 'male',
+	female: 'female',
+	feminino: 'female'
+}
+
+const isFilled = value => value !== undefined && value !== null && value !== ''
+
+// A Wake devolve o nome inteiro em customerName; o nativo aceita o nome completo e as partes
+const splitCustomerName = fullName => {
+	const [firstName = '', ...lastNames] = (typeof fullName === 'string' ? fullName : '').trim().split(/\s+/)
+
+	return { firstName, lastName: lastNames.join(' ') }
+}
+
+const toNotifyPhone = customer => {
+	const phone = [customer?.mobilePhoneNumber, customer?.phoneNumber, customer?.businessPhoneNumber].find(
+		value => typeof value === 'string' && value.replace(/\D/g, '') !== ''
+	)
+
+	return phone ? phone.replace(/\D/g, '') : ''
+}
+
+const toNotifyBirthday = birthDate => {
+	const birthday = typeof birthDate === 'string' ? birthDate.split('T')[0] : ''
+
+	return /^\d{4}-\d{2}-\d{2}$/.test(birthday) ? birthday : ''
+}
+
+const toNotifyGender = gender => (typeof gender === 'string' ? NOTIFY_GENDERS[gender.trim().toLowerCase()] || '' : '')
 
 export default class CustomerService {
 	static STORAGE_USER_TOKEN_KEY = 'user_key'
@@ -334,6 +366,89 @@ export default class CustomerService {
 		await StorageService.removeItem(CustomerService.STORAGE_USER_TOKEN_KEY)
 		await StoreService.removeCustomerPartnerAccessToken()
 		return true
+	}
+
+	/**
+	 * Avisa o app nativo (módulo session) que há um cliente logado, com os dados do cadastro na Wake.
+	 * Chamar após login, cadastro e atualização de dados. Nunca lança erro.
+	 * @param {string} origin - de onde partiu a chamada (ex.: 'login', 'register', 'editProfile'), para os logs
+	 * @param {{customerId?: string|number, email?: string}} [params] - sobrescrevem o que vem do cadastro
+	 */
+	static async notifyLoginToExposedApis(origin, params = {}) {
+		try {
+			const response = await CustomerService.getCustomer()
+			const customer = response?.customer
+
+			const customerId = params?.customerId || customer?.customerId
+			const email = params?.email || customer?.email
+
+			if (!customerId) {
+				sendDatadogWarningLog(
+					{ message: 'notifyLogin não executado, customerId não encontrado', origin },
+					'notifyLoginToExposedApis'
+				)
+				return
+			}
+
+			const modules = await Eitri.modules()
+			const notifyLogin = modules?.session?.notifyLogin
+			if (typeof notifyLogin !== 'function') {
+				sendDatadogWarningLog(
+					{ message: 'notifyLogin não disponível no módulo session', origin },
+					'notifyLoginToExposedApis'
+				)
+				return
+			}
+
+			const name = customer?.customerName || customer?.companyName
+			const { firstName, lastName } = splitCustomerName(customer?.customerName)
+
+			const optionalFields = {
+				email,
+				phone: toNotifyPhone(customer),
+				birthday: toNotifyBirthday(customer?.birthDate),
+				gender: toNotifyGender(customer?.gender),
+				name: typeof name === 'string' ? name.trim() : '',
+				firstName,
+				lastName
+			}
+
+			const payload = { customerId: `${customerId}` }
+			for (const [key, value] of Object.entries(optionalFields)) {
+				if (isFilled(value)) {
+					payload[key] = value
+				}
+			}
+
+			Logger.log('notificando login', payload)
+
+			return await notifyLogin(payload)
+		} catch (e) {
+			console.error('[SHARED] [notifyLoginToExposedApis] Erro ao notificar login', e)
+			sendLogError(e, 'notifyLoginToExposedApis', { origin })
+		}
+	}
+
+	/**
+	 * Avisa o app nativo (módulo session) que o cliente saiu. Chamar junto com o logout. Nunca lança erro.
+	 */
+	static async notifyLogoutToExposedApis() {
+		try {
+			const modules = await Eitri.modules()
+			const notifyLogout = modules?.session?.notifyLogout
+			if (typeof notifyLogout !== 'function') {
+				sendDatadogWarningLog(
+					{ message: 'notifyLogout não disponível no módulo session' },
+					'notifyLogoutToExposedApis'
+				)
+				return
+			}
+
+			await notifyLogout()
+		} catch (e) {
+			console.error('[SHARED] [notifyLogoutToExposedApis] Erro ao notificar logout', e)
+			sendLogError(e, 'notifyLogoutToExposedApis')
+		}
 	}
 
 	static async getWishList() {
