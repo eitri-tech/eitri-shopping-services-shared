@@ -410,7 +410,7 @@ export default class VtexCustomerService {
 		return await StorageService.getStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY)
 	}
 
-	static async setCustomerToken(token, refreshToken, accountAuthCookieId, accountAuthCookieValue) {
+	static async setCustomerToken(token, refreshToken, accountAuthCookieId, accountAuthCookieValue, refreshAfter) {
 		const creationTimeStamp = Math.floor(Date.now() / 1000)
 		const email = await VtexCustomerService.getCustomerData('email')
 		return StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
@@ -419,7 +419,8 @@ export default class VtexCustomerService {
 			creationTimeStamp,
 			accountAuthCookieId,
 			accountAuthCookieValue,
-			email
+			email,
+			refreshAfter
 		})
 	}
 
@@ -650,9 +651,10 @@ export default class VtexCustomerService {
 	}
 
 	static async executeRefreshToken() {
-		const res = await VtexCustomerService.getStorageCustomerToken()
+		let res
 
 		try {
+			res = await VtexCustomerService.getStorageCustomerToken()
 			const account = await Vtex.getAccount()
 
 			if (!res || !res.accountAuthCookieId) {
@@ -660,12 +662,9 @@ export default class VtexCustomerService {
 				return
 			}
 
-			if (
-				res?.creationTimeStamp + VtexCustomerService.TOKEN_EXPIRATION_TIME_SEC >
-				Math.floor(Date.now() / 1000)
-			) {
-				Logger.log('executeRefreshToken: token ainda válido, refresh ignorado', {
-					creationTimeStamp: res.creationTimeStamp
+			if (res.refreshAfter > Math.floor(Date.now() / 1000)) {
+				Logger.log('executeRefreshToken: antes do refreshAfter, refresh ignorado', {
+					refreshAfter: res.refreshAfter
 				})
 				return null
 			}
@@ -691,6 +690,12 @@ export default class VtexCustomerService {
 
 				const refreshToken = extractCookies(loginRes, 'vid_rt')
 				const newToken = extractCookies(loginRes, `VtexIdclientAutCookie_${account}`)
+				const newAccountAuthCookieValue = extractCookies(
+					loginRes,
+					`VtexIdclientAutCookie_${res.accountAuthCookieId}`
+				)
+				const refreshAfterMs = Date.parse(loginRes?.data?.refreshAfter)
+				const refreshAfter = Number.isFinite(refreshAfterMs) ? Math.floor(refreshAfterMs / 1000) : undefined
 
 				Logger.log('executeRefreshToken: resposta recebida', {
 					status: loginRes?.status,
@@ -699,12 +704,25 @@ export default class VtexCustomerService {
 					data: loginRes?.data
 				})
 
+				// A VTEX só rotaciona os tokens depois do refreshAfter; antes disso responde Success sem Set-Cookie.
+				if (!newToken && !refreshToken && loginRes?.data?.status === 'Success') {
+					if (refreshAfter) {
+						await StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
+							...res,
+							refreshAfter
+						})
+					}
+					Logger.log('executeRefreshToken: tokens ainda não rotacionados', { refreshAfter })
+					return null
+				}
+
 				if (newToken && refreshToken) {
 					await VtexCustomerService.setCustomerToken(
 						newToken,
 						refreshToken,
 						res?.accountAuthCookieId,
-						newToken
+						newAccountAuthCookieValue || newToken,
+						refreshAfter
 					)
 					await VtexSessionService.updateSession()
 					Logger.log('executeRefreshToken: tokens renovados e sessão atualizada')
