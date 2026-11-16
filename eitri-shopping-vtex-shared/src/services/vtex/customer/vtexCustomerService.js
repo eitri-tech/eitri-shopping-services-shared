@@ -705,13 +705,16 @@ export default class VtexCustomerService {
 				})
 
 				// A VTEX só rotaciona os tokens depois do refreshAfter; antes disso responde Success sem Set-Cookie.
-				if (!newToken && !refreshToken && loginRes?.data?.status === 'Success') {
-					if (refreshAfter) {
-						await StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
-							...res,
-							refreshAfter
-						})
-					}
+				if (
+					!newToken &&
+					!refreshToken &&
+					loginRes?.data?.status === 'Success' &&
+					refreshAfter > Math.floor(Date.now() / 1000)
+				) {
+					await StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
+						...res,
+						refreshAfter
+					})
 					Logger.log('executeRefreshToken: tokens ainda não rotacionados', { refreshAfter })
 					return null
 				}
@@ -741,7 +744,11 @@ export default class VtexCustomerService {
 					)
 				} else {
 					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
-					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
+					if (
+						loginRes?.data?.status === 'InvalidSession' &&
+						!loggedInSession &&
+						!(await VtexCustomerService.isLoggedIn())
+					) {
 						VtexCustomerService.logout()
 					}
 					sendDatadogInfoLog(
