@@ -13,12 +13,12 @@ export default class AwinService {
 		return RemoteConfig.getContent('awin.enabled') === true
 	}
 
-	static async saveClickId(awc, source) {
+	static async saveClickId(awc) {
 		if (!awc || !AwinService.isEnabled()) return
 
 		try {
 			const sessionId = await StorageService.getStorageItem('session_id')
-			const click = { awc, source, sessionId: sessionId || null }
+			const click = { awc, sessionId: sessionId || null }
 			await StorageService.setStorageJSON(AwinService.STORAGE_AWC_KEY, click)
 		} catch (e) {
 			console.error('Erro ao salvar o click id da Awin', e)
@@ -72,7 +72,7 @@ export default class AwinService {
 				tv: '2',
 				merchant: merchantId,
 				amount: ((cart?.value || 0) / 100).toFixed(2),
-				ch: click.source || 'aw',
+				ch: 'aw', // canal padrão da Awin; o clique não carrega nada de UTM
 				parts: '', // grupo de comissão: sem uso por enquanto
 				vc: cart?.marketingData?.coupon || '',
 				cr: RemoteConfig.getContent('storePreferences.currencyCode') || 'BRL',
