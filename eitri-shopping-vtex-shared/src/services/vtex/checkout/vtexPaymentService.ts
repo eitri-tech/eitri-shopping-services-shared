@@ -5,6 +5,7 @@ import Eitri from 'eitri-bifrost'
 import App from '../../App'
 import Vtex from '../../Vtex'
 import GAVtexInternalService from '../../tracking/GAVtexInternalService'
+import AwinService from '../../AwinService'
 import { sendLogError, sendLogOrderAccepted, sendOrderNotComplete } from '../../Datadog'
 import { NOT_COMPLETE_ERRORS } from './notCompleteErrors'
 import VtexCartService from '../cart/VtexCartService'
@@ -101,6 +102,9 @@ export default class VtexPaymentService {
 			GAVtexInternalService.purchase(cart, paymentProcessed?.transactionId || paymentProcessed?.orderId)
 
 			sendLogOrderAccepted(cart)
+
+			// com await de propósito: é pixel de comissão, não pode ser cancelado pela navegação da tela de pedido
+			await AwinService.sendConversion(cart, paymentProcessed?.orderId)
 
 			return paymentProcessed
 		} catch (e: any) {

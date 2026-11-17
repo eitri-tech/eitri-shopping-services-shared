@@ -26,6 +26,11 @@ const remoteConfigTemplate = {
       buyGoesToPDP: true, // Indica se o botão "Comprar" irá direcionar para o PDP ao invés de adicionar ao carrinho.
     },
   },
+  awin: {
+    // Integração com a Awin (afiliados). Opcional - sem esta entrada o parâmetro awc dos links é ignorado.
+    enabled: true, // Liga a captura do awc no deeplink resolver e o registro da conversão no pagamento.
+    merchantId: "00000", //* Id do advertiser na Awin.
+  },
   storePreferences: {
     displayCompanyName: "StoreName", //* Nome da loja para exibição.
     currencyCode: "BRL", // Código da moeda.
