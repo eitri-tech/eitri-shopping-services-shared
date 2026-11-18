@@ -9,6 +9,7 @@ const AWIN_URL = 'https://www.awin1.com/sread.php'
 export default class AwinService {
 	static STORAGE_AWC_KEY = 'awin_awc'
 	static DEFAULT_EXPIRATION_HOURS = 6
+	static DEFAULT_CHANNEL = 'aw'
 
 	static isEnabled() {
 		return RemoteConfig.getContent('awin.enabled') === true
@@ -21,11 +22,12 @@ export default class AwinService {
 	}
 
 	// um clique novo sobrescreve o anterior e reinicia a contagem (último clique vence)
-	static async saveClickId(awc) {
+	// ch é o canal que a Awin espera na conversão: vem do utm_source do link de afiliado, sem ele vale o padrão da rede
+	static async saveClickId(awc, ch) {
 		if (!awc || !AwinService.isEnabled()) return
 
 		try {
-			const click = { awc, savedAt: Date.now() }
+			const click = { awc, ch: ch || AwinService.DEFAULT_CHANNEL, savedAt: Date.now() }
 			await StorageService.setStorageJSON(AwinService.STORAGE_AWC_KEY, click)
 		} catch (e) {
 			console.error('Erro ao salvar o click id da Awin', e)
@@ -67,11 +69,31 @@ export default class AwinService {
 
 	static async sendConversion(cart, orderId) {
 		try {
-			if (!orderId || !AwinService.isEnabled()) return
+			if (!AwinService.isEnabled()) {
+				console.warn('Conversão da Awin não registrada: awin.enabled desligado no remote config')
+				return
+			}
+
+			if (!orderId) {
+				console.warn('Conversão da Awin não registrada: pagamento sem orderId')
+				sendDatadogWarningLog(
+					{ message: 'Conversão da Awin não registrada: pagamento sem orderId' },
+					'sendConversion'
+				)
+				return
+			}
 
 			const merchantId = RemoteConfig.getContent('awin.merchantId')
-			if (!merchantId) return
+			if (!merchantId) {
+				console.warn('Conversão da Awin não registrada: awin.merchantId ausente no remote config')
+				sendDatadogWarningLog(
+					{ message: 'Conversão da Awin não registrada: awin.merchantId ausente', orderId },
+					'sendConversion'
+				)
+				return
+			}
 
+			// compra sem clique de afiliado válido é o caminho normal da maioria dos pedidos, não rende log
 			const click = await AwinService.getActiveClick()
 			if (!click) return
 
@@ -80,7 +102,7 @@ export default class AwinService {
 				tv: '2',
 				merchant: merchantId,
 				amount: ((cart?.value || 0) / 100).toFixed(2),
-				ch: 'aw', // canal padrão da Awin; o clique não carrega nada de UTM
+				ch: click.ch || AwinService.DEFAULT_CHANNEL, // utm_source do link do clique; clique antigo, sem canal gravado, usa o padrão da rede
 				parts: '', // grupo de comissão: sem uso por enquanto
 				vc: cart?.marketingData?.coupon || '',
 				cr: RemoteConfig.getContent('storePreferences.currencyCode') || 'BRL',
