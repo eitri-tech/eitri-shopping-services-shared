@@ -745,7 +745,11 @@ export default class VtexCustomerService {
 				} else {
 					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
 					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
-						await VtexCustomerService.logout()
+						// Outro refresh pode ter salvo tokens novos enquanto este rodava; só desloga se o token ainda é o usado aqui.
+						const currentToken = await VtexCustomerService.getStorageCustomerToken()
+						if (currentToken?.token === res.token) {
+							await VtexCustomerService.logout()
+						}
 					}
 					sendDatadogInfoLog(
 						{
