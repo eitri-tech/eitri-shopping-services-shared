@@ -744,11 +744,7 @@ export default class VtexCustomerService {
 					)
 				} else {
 					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
-					if (
-						loginRes?.data?.status === 'InvalidSession' &&
-						!loggedInSession &&
-						!(await VtexCustomerService.isLoggedIn())
-					) {
+					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
 						VtexCustomerService.logout()
 					}
 					sendDatadogInfoLog(
