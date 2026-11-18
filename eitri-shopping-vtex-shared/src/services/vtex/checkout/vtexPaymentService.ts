@@ -103,7 +103,6 @@ export default class VtexPaymentService {
 
 			sendLogOrderAccepted(cart)
 
-			// com await de propósito: é pixel de comissão, não pode ser cancelado pela navegação da tela de pedido
 			await AwinService.sendConversion(cart, paymentProcessed?.orderId)
 
 			return paymentProcessed
