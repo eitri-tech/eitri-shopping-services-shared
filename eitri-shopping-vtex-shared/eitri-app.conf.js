@@ -5,7 +5,7 @@ module.exports = {
 	'eitri-luminus': '1.78.2',
 	'eitri-bifrost': '4.2.0',
 	'version': '1.22.1',
-	'messageVersion': 'desloga quando o refresh token e a sessão VTEX estão inválidos',
+	'messageVersion': 'expira o login local quando o refresh falha e o token não responde',
 	'public-key': '0b837c87-a494-4521-9b0f-5ac49db5af9c',
 	'applicationId': '99c18c0a-4112-4937-b27c-802d03f4e9e9',
 	'id': '79465ce9-361c-4a35-9ed6-57feeb7c19d0',

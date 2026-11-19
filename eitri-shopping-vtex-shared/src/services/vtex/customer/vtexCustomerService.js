@@ -743,27 +743,24 @@ export default class VtexCustomerService {
 						'executeRefreshToken'
 					)
 				} else {
-					let loggedInSession
-					try {
-						loggedInSession = await VtexCustomerService.isSessionLoggedIn()
-					} catch (e) {}
+					const loggedIn = await VtexCustomerService.isLoggedIn()
 					let tokenAlive
-					if (loginRes?.data?.status === 'InvalidSession') {
-						// A sessão VTEX segue o cookie vtex_session, não o token de auth; o perfil é o que diz se o token vale.
-						// Token morto volta só com profile null; com errors na resposta o resultado é inconclusivo.
+					if (loggedIn) {
 						try {
-							const profile = await VtexCustomerService.getCustomerProfile(res.token)
-							if (profile?.data?.profile) {
-								tokenAlive = true
-							} else if (profile?.data && !profile?.errors?.length) {
-								tokenAlive = false
-							}
+							tokenAlive = !!(await VtexCustomerService.getCustomerProfile(res.token))?.data?.profile
 						} catch (e) {}
-						// Outro refresh pode ter salvo tokens novos enquanto este rodava.
 						const currentToken = await VtexCustomerService.getStorageCustomerToken()
-						if (tokenAlive === false && currentToken?.token === res.token) {
-							await VtexCustomerService.logout()
+						if (!tokenAlive && currentToken?.token === res.token) {
+							// Expira só o login local, como nas 24h; o refresh token fica salvo para retomar o login.
+							await StorageService.setStorageJSON(VtexCustomerService.STORAGE_USER_TOKEN_KEY, {
+								...currentToken,
+								creationTimeStamp: 0
+							})
 						}
+					}
+					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
+					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession && !loggedIn) {
+						await VtexCustomerService.logout()
 					}
 					sendDatadogInfoLog(
 						{
@@ -772,7 +769,6 @@ export default class VtexCustomerService {
 							response: loginRes?.data,
 							loggedInSession,
 							tokenAlive,
-							tokenAgeSec: Math.floor(Date.now() / 1000) - res.creationTimeStamp,
 							email: res?.email
 						},
 						'executeRefreshToken'
