@@ -650,7 +650,7 @@ export default class VtexCustomerService {
 		return {}
 	}
 
-	static async executeRefreshToken() {
+	static async executeRefreshToken(trigger = 'manual') {
 		let res
 
 		try {
@@ -738,6 +738,7 @@ export default class VtexCustomerService {
 					sendDatadogInfoLog(
 						{
 							message: 'Refresh token executado com sucesso',
+							trigger,
 							email: res?.email
 						},
 						'executeRefreshToken'
@@ -754,9 +755,16 @@ export default class VtexCustomerService {
 					sendDatadogInfoLog(
 						{
 							message: 'Erro ao executar refresh token',
+							trigger,
 							responseHeaders: loginRes?.headers,
 							response: loginRes?.data,
 							loggedInSession,
+							segmentToken: sessionToken?.segmentToken
+								? `${sessionToken.segmentToken.slice(0, 12)}...${sessionToken.segmentToken.slice(-12)}`
+								: null,
+							sessionToken: sessionToken?.sessionToken
+								? `${sessionToken.sessionToken.slice(0, 12)}...${sessionToken.sessionToken.slice(-12)}`
+								: null,
 							email: res?.email
 						},
 						'executeRefreshToken'
@@ -767,6 +775,7 @@ export default class VtexCustomerService {
 			sendDatadogInfoLog(
 				{
 					message: 'Erro ao executar refresh token',
+					trigger,
 					email: res?.email,
 					error: e
 				},
