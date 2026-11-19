@@ -73,10 +73,10 @@ export default class Vtex {
 
 		const startParams = await Eitri.getInitializationInfos().catch(() => null)
 		if (String(startParams?.tabIndex) === '0') {
+			await Vtex.customer.executeRefreshToken('startup')
 			Eitri.navigation.addOnResumeListener(() => {
 				Vtex.customer.executeRefreshToken('resume')
 			})
-			await Vtex.customer.executeRefreshToken('startup')
 		}
 	}
 

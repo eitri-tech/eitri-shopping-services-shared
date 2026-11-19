@@ -651,6 +651,12 @@ export default class VtexCustomerService {
 	}
 
 	static async executeRefreshToken(trigger = 'manual') {
+		if (VtexCustomerService._refreshingToken) {
+			Logger.log('executeRefreshToken: já existe um refresh em andamento, chamada ignorada', { trigger })
+			return
+		}
+		VtexCustomerService._refreshingToken = true
+
 		let res
 
 		try {
@@ -781,6 +787,8 @@ export default class VtexCustomerService {
 				},
 				'executeRefreshToken'
 			)
+		} finally {
+			VtexCustomerService._refreshingToken = false
 		}
 	}
 
