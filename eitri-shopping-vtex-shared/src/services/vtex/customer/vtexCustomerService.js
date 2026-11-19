@@ -744,10 +744,16 @@ export default class VtexCustomerService {
 					)
 				} else {
 					const loggedInSession = await VtexCustomerService.isSessionLoggedIn()
-					if (loginRes?.data?.status === 'InvalidSession' && !loggedInSession) {
-						// Outro refresh pode ter salvo tokens novos enquanto este rodava; só desloga se o token ainda é o usado aqui.
+					let tokenAlive
+					if (loginRes?.data?.status === 'InvalidSession') {
+						// A sessão VTEX segue o cookie vtex_session, não o token de auth; o perfil é o que diz se o token vale.
+						try {
+							const profile = await VtexCustomerService.getCustomerProfile(res.token)
+							tokenAlive = !!profile?.data?.profile
+						} catch (e) {}
+						// Outro refresh pode ter salvo tokens novos enquanto este rodava.
 						const currentToken = await VtexCustomerService.getStorageCustomerToken()
-						if (currentToken?.token === res.token) {
+						if (tokenAlive === false && currentToken?.token === res.token) {
 							await VtexCustomerService.logout()
 						}
 					}
@@ -757,6 +763,8 @@ export default class VtexCustomerService {
 							responseHeaders: loginRes?.headers,
 							response: loginRes?.data,
 							loggedInSession,
+							tokenAlive,
+							tokenAgeSec: Math.floor(Date.now() / 1000) - res.creationTimeStamp,
 							email: res?.email
 						},
 						'executeRefreshToken'
