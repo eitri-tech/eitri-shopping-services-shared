@@ -123,7 +123,7 @@ export default class VtexPaymentService {
 
 	static async startTransaction(cart: any, options?: PaymentOptions): Promise<StartTransactionReturn> {
 		const valuePayments = cart?.paymentData?.payments?.reduce((acc: number, payment: any) => payment.value + acc, 0)
-		const giftValuePayments = cart?.paymentData?.giftCards?.reduce((acc: number, giftCard: any) => giftCard.value + acc,0)
+		const giftValuePayments = cart?.paymentData?.giftCards?.reduce((acc: number, giftCard: any) => giftCard.value + acc, 0)
 		const value = valuePayments + giftValuePayments
 
 		try {
