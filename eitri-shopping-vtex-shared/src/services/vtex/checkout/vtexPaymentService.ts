@@ -177,7 +177,11 @@ export default class VtexPaymentService {
 		} catch (e: any) {
 			console.log('Erro no startPayment', e)
 			e.step = 'startTransaction'
-			e.stepContext = { orderFormId: cart?.orderFormId ?? null, value: cart?.value ?? null, paymentCount: cart?.paymentData?.payments?.length ?? null }
+			e.stepContext = {
+				orderFormId: cart?.orderFormId ?? null,
+				value: cart?.value ?? null,
+				paymentCount: cart?.paymentData?.payments?.length ?? null
+			}
 			throw e
 		}
 	}
@@ -273,7 +277,12 @@ export default class VtexPaymentService {
 		} catch (e: any) {
 			console.log('erro no setPaymentMethod', e)
 			e.step = 'setPaymentMethod'
-			e.stepContext = { orderFormId: cart?.orderFormId ?? null, transactionId: startTransactionReturn?.id ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, paymentCount: startTransactionReturn?.payments?.length ?? null }
+			e.stepContext = {
+				orderFormId: cart?.orderFormId ?? null,
+				transactionId: startTransactionReturn?.id ?? null,
+				orderGroup: startTransactionReturn?.orderGroup ?? null,
+				paymentCount: startTransactionReturn?.payments?.length ?? null
+			}
 			throw e
 		}
 	}
@@ -299,6 +308,8 @@ export default class VtexPaymentService {
 				orderId: startTransactionReturn.orderGroup,
 				transactionId: startTransactionReturn.id,
 				status: 'completed',
+				Vtex_CHKO_Auth: startTransactionReturn.Vtex_CHKO_Auth,
+				CheckoutDataAccess: startTransactionReturn.CheckoutDataAccess,
 				gatewayCallbackResult: result?.data ?? null
 			}
 		} catch (e: any) {
@@ -314,13 +325,20 @@ export default class VtexPaymentService {
 					orderId: startTransactionReturn.orderGroup,
 					transactionId: startTransactionReturn.id,
 					status: 'waiting_payment',
+					Vtex_CHKO_Auth: startTransactionReturn.Vtex_CHKO_Auth,
+					CheckoutDataAccess: startTransactionReturn.CheckoutDataAccess,
 					data: e.response.data ?? null,
 					...e.response.data
 				}
 			} else {
 				console.log('erro no processPayment', e)
 				e.step = 'processPayment'
-				e.stepContext = { orderFormId: (VtexCartService._CACHED_CART as any)?.orderFormId ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, transactionId: startTransactionReturn?.id ?? null, responseStatus: e?.response?.status ?? null }
+				e.stepContext = {
+					orderFormId: (VtexCartService._CACHED_CART as any)?.orderFormId ?? null,
+					orderGroup: startTransactionReturn?.orderGroup ?? null,
+					transactionId: startTransactionReturn?.id ?? null,
+					responseStatus: e?.response?.status ?? null
+				}
 				throw e
 			}
 		}

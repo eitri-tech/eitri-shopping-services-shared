@@ -14,6 +14,8 @@ export type PaymentResult = {
 	transactionId: string
 	status: string
 	gatewayCallbackResult?: GatewayCallbackData | null
+	Vtex_CHKO_Auth?: string | null
+	CheckoutDataAccess?: string | null
 } & {
 	[key: string]: any
 }
