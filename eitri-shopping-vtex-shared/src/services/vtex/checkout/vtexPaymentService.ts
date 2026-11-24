@@ -308,12 +308,14 @@ export default class VtexPaymentService {
 				console.log(
 					'=====> Pagamento processado com sucesso status 428',
 					startTransactionReturn.orderGroup,
-					e.response.data
+					e.response.data?.paymentAuthorizationAppCollection?.[0]?.appName
 				)
 				return {
 					orderId: startTransactionReturn.orderGroup,
 					transactionId: startTransactionReturn.id,
 					status: 'waiting_payment',
+					Vtex_CHKO_Auth: startTransactionReturn.Vtex_CHKO_Auth,
+					CheckoutDataAccess: startTransactionReturn.CheckoutDataAccess,
 					data: e.response.data ?? null,
 					...e.response.data
 				}
