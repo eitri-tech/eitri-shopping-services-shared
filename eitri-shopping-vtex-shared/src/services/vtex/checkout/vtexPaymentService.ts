@@ -123,7 +123,10 @@ export default class VtexPaymentService {
 
 	static async startTransaction(cart: any, options?: PaymentOptions): Promise<StartTransactionReturn> {
 		const valuePayments = cart?.paymentData?.payments?.reduce((acc: number, payment: any) => payment.value + acc, 0)
-		const giftValuePayments = cart?.paymentData?.giftCards?.reduce((acc: number, giftCard: any) => giftCard.value + acc, 0)
+		const giftValuePayments = cart?.paymentData?.giftCards?.reduce(
+			(acc: number, giftCard: any) => giftCard.value + acc,
+			0
+		)
 		const value = valuePayments + giftValuePayments
 
 		try {
@@ -177,7 +180,11 @@ export default class VtexPaymentService {
 		} catch (e: any) {
 			console.log('Erro no startPayment', e)
 			e.step = 'startTransaction'
-			e.stepContext = { orderFormId: cart?.orderFormId ?? null, value: cart?.value ?? null, paymentCount: cart?.paymentData?.payments?.length ?? null }
+			e.stepContext = {
+				orderFormId: cart?.orderFormId ?? null,
+				value: cart?.value ?? null,
+				paymentCount: cart?.paymentData?.payments?.length ?? null
+			}
 			throw e
 		}
 	}
@@ -273,7 +280,12 @@ export default class VtexPaymentService {
 		} catch (e: any) {
 			console.log('erro no setPaymentMethod', e)
 			e.step = 'setPaymentMethod'
-			e.stepContext = { orderFormId: cart?.orderFormId ?? null, transactionId: startTransactionReturn?.id ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, paymentCount: startTransactionReturn?.payments?.length ?? null }
+			e.stepContext = {
+				orderFormId: cart?.orderFormId ?? null,
+				transactionId: startTransactionReturn?.id ?? null,
+				orderGroup: startTransactionReturn?.orderGroup ?? null,
+				paymentCount: startTransactionReturn?.payments?.length ?? null
+			}
 			throw e
 		}
 	}
@@ -308,7 +320,7 @@ export default class VtexPaymentService {
 				console.log(
 					'=====> Pagamento processado com sucesso status 428',
 					startTransactionReturn.orderGroup,
-					e.response.data?.paymentAuthorizationAppCollection?.[0]?.appName
+					e.response.data
 				)
 				return {
 					orderId: startTransactionReturn.orderGroup,
@@ -322,7 +334,12 @@ export default class VtexPaymentService {
 			} else {
 				console.log('erro no processPayment', e)
 				e.step = 'processPayment'
-				e.stepContext = { orderFormId: (VtexCartService._CACHED_CART as any)?.orderFormId ?? null, orderGroup: startTransactionReturn?.orderGroup ?? null, transactionId: startTransactionReturn?.id ?? null, responseStatus: e?.response?.status ?? null }
+				e.stepContext = {
+					orderFormId: (VtexCartService._CACHED_CART as any)?.orderFormId ?? null,
+					orderGroup: startTransactionReturn?.orderGroup ?? null,
+					transactionId: startTransactionReturn?.id ?? null,
+					responseStatus: e?.response?.status ?? null
+				}
 				throw e
 			}
 		}
