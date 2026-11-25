@@ -7,6 +7,7 @@ export type NexusErrorCode =
 	| 'INVALID_FILTER'
 	| 'NOT_FOUND'
 	| 'LIMIT_REACHED'
+	| 'CONFLICT'
 	| 'UNSUPPORTED_PLATFORM'
 	| 'NETWORK_ERROR'
 
