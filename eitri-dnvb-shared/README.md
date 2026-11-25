@@ -109,12 +109,13 @@ API no estilo do driver do Mongo, tipada pelo genérico:
 ```ts
 interface Rotina extends RoutineRecord {
 	weeklyPhotoOptIn: boolean
+	progress?: { lastCheckin?: string }
 }
 
 const routines = Nexus.db.collection<Rotina>('routines')
 
 const ativas = await routines.find({ status: 'active' }, { sort: { startedAt: -1 } })
-const comLembrete = await routines.findOne({ 'reminder.pushOptIn': true })
+const comCheckin = await routines.findOne({ 'progress.lastCheckin': { $exists: true } })
 const recentes = await routines.countDocuments({ startedAt: { $gte: '2026-01-01' } })
 
 await routines.insertOne({ key: 'r1', routineSlug: 'r1', status: 'active', startedAt: '2026-11-10', durationDays: 30, weeklyPhotoOptIn: false })
@@ -138,11 +139,11 @@ await routines.deleteMany({ status: 'replaced' })
 | `upsert(doc com key)` | `T` |
 
 - **Filtro:** igualdade, `$eq`, `$ne`, `$in`, `$nin`, `$gt`, `$gte`, `$lt`, `$lte`, `$exists`, `$and`, `$or`
-  e caminhos com ponto (`'reminder.time'`). Em campo array, a igualdade casa quando o array contém o valor.
+  e caminhos com ponto (`'progress.lastCheckin'`). Em campo array, a igualdade casa quando o array contém o valor.
   A `query` também pode ser uma função `(doc) => boolean`. Operador desconhecido lança `INVALID_FILTER`.
 - **Tudo roda no device.** O Nexus devolve a coleção inteira e não filtra nem pagina: cada `find` faz um GET
   da coleção toda, e os `update*`/`delete*` por filtro fazem o GET e depois uma escrita por item.
-- **Patch:** o PATCH do Nexus mescla só as chaves de topo. Um objeto aninhado no patch (ex.: `reminder`)
+- **Patch:** o PATCH do Nexus mescla só as chaves de topo. Um objeto aninhado no patch (ex.: `progress`)
   substitui o anterior inteiro.
 - **Fila:** as escritas de uma coleção rodam em fila. Dois `upsert` da mesma `key` em paralelo não duplicam o item.
 - **`id`, `createdAt` e `updatedAt`** são do SDK e do Nexus. Para registro idempotente, use `key` com `upsert`.
@@ -169,9 +170,11 @@ da marca e pede o push. Só customer com conta vinculada recebe push: o lembrete
 entra na agenda depois do `link`.
 
 ```ts
+import { Nexus, reminderPeriod } from 'eitri-dnvb-shared'
+
 const { startsAt, endsAt } = reminderPeriod(routine.startedAt, routine.durationDays) ?? {}
 
-await Nexus.reminders.upsertForRoutine({
+const lembrete = await Nexus.reminders.upsertForRoutine({
 	routineKey: routine.routineSlug,
 	routineItemId: routine.id,
 	time: '08:30',
@@ -180,10 +183,12 @@ await Nexus.reminders.upsertForRoutine({
 	endsAt
 })
 
-const lembretes = await Nexus.reminders.list()
 await Nexus.reminders.update(lembrete.id, { time: '21:00' })
 await Nexus.reminders.update(lembrete.id, { enabled: false })
 await Nexus.reminders.remove(lembrete.id)
+
+const lembretes = await Nexus.reminders.list()
+const daRotina = await Nexus.reminders.findByRoutine(routine.routineSlug)
 ```
 
 | Método | O que faz |

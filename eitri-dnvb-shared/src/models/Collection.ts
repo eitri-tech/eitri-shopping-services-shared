@@ -20,7 +20,7 @@ export type FieldCondition<V> = V | ElementOf<V> | FieldOperators<V | ElementOf<
 
 type FieldFilter<T> = { [K in keyof T & string]?: FieldCondition<T[K]> }
 
-/** Caminho com ponto (ex.: `'reminder.pushOptIn'`) desce em objetos aninhados. */
+/** Caminho com ponto (ex.: `'progress.lastCheckin'`) desce em objetos aninhados. */
 type PathFilter = { [path: `${string}.${string}`]: FieldCondition<unknown> }
 
 export type Filter<T> = FieldFilter<T> &
