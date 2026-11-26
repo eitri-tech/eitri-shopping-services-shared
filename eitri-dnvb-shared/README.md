@@ -7,7 +7,7 @@ SDK da plataforma DNVB para Eitri-Apps: conteúdo do CMS (`eitri-dnvb-api`) e da
 
 ```js
 'eitri-app-dependencies': {
-	'eitri-dnvb-shared': { isEitriAppShared: true, version: '0.1.0' }
+	'eitri-dnvb-shared': { isEitriAppShared: true, version: '0.2.0' }
 }
 ```
 
@@ -109,12 +109,13 @@ API no estilo do driver do Mongo, tipada pelo genérico:
 ```ts
 interface Rotina extends RoutineRecord {
 	weeklyPhotoOptIn: boolean
+	progress?: { lastCheckin?: string }
 }
 
 const routines = Nexus.db.collection<Rotina>('routines')
 
 const ativas = await routines.find({ status: 'active' }, { sort: { startedAt: -1 } })
-const comLembrete = await routines.findOne({ 'reminder.pushOptIn': true })
+const comCheckin = await routines.findOne({ 'progress.lastCheckin': { $exists: true } })
 const recentes = await routines.countDocuments({ startedAt: { $gte: '2026-01-01' } })
 
 await routines.insertOne({ key: 'r1', routineSlug: 'r1', status: 'active', startedAt: '2026-11-10', durationDays: 30, weeklyPhotoOptIn: false })
@@ -138,11 +139,11 @@ await routines.deleteMany({ status: 'replaced' })
 | `upsert(doc com key)` | `T` |
 
 - **Filtro:** igualdade, `$eq`, `$ne`, `$in`, `$nin`, `$gt`, `$gte`, `$lt`, `$lte`, `$exists`, `$and`, `$or`
-  e caminhos com ponto (`'reminder.time'`). Em campo array, a igualdade casa quando o array contém o valor.
+  e caminhos com ponto (`'progress.lastCheckin'`). Em campo array, a igualdade casa quando o array contém o valor.
   A `query` também pode ser uma função `(doc) => boolean`. Operador desconhecido lança `INVALID_FILTER`.
 - **Tudo roda no device.** O Nexus devolve a coleção inteira e não filtra nem pagina: cada `find` faz um GET
   da coleção toda, e os `update*`/`delete*` por filtro fazem o GET e depois uma escrita por item.
-- **Patch:** o PATCH do Nexus mescla só as chaves de topo. Um objeto aninhado no patch (ex.: `reminder`)
+- **Patch:** o PATCH do Nexus mescla só as chaves de topo. Um objeto aninhado no patch (ex.: `progress`)
   substitui o anterior inteiro.
 - **Fila:** as escritas de uma coleção rodam em fila. Dois `upsert` da mesma `key` em paralelo não duplicam o item.
 - **`id`, `createdAt` e `updatedAt`** são do SDK e do Nexus. Para registro idempotente, use `key` com `upsert`.
@@ -151,11 +152,71 @@ await routines.deleteMany({ status: 'replaced' })
 
 #### Coleção `routines`
 
-É a única com formato fixo, porque o agendador de push do Nexus lê os itens dela. Ele agenda um push por
-item com `status: 'active'`, `reminder.pushOptIn: true` e `reminder.permission` diferente de `denied`, no
-`reminder.time`, de `startedAt` até `startedAt + durationDays`. Grave `durationDays: null` na rotina
-contínua, em vez de omitir: o upsert faz PATCH e manteria o prazo antigo. Só customer com conta vinculada
-recebe push.
+Grave `durationDays: null` na rotina contínua, em vez de omitir: o upsert faz PATCH e manteria o prazo
+antigo. O lembrete de push não fica mais no item: use `Nexus.reminders`.
+
+**Não grave `reminder` no item.** Para não quebrar versões antigas do app, o Nexus ainda lê o `reminder` do
+item e recria, a cada hora, o lembrete correspondente, mesmo depois de um `Nexus.reminders.remove`.
+
+Item gravado por versão antiga ainda tem `reminder`, e o upsert não o tira (mescla as chaves de topo).
+Ao migrar o app, grave `reminder: null` no item **antes** de criar o lembrete pela API: o `null` apaga o
+lembrete que o Nexus importou do item, e o `upsertForRoutine` cria o novo. Na ordem inversa, a próxima
+escrita do item sobrescreve o lembrete da API.
+
+### Lembretes (`Nexus.reminders`)
+
+O lembrete diz a que horas o customer quer ser lembrado e de qual rotina; o Nexus agenda, monta a mensagem
+da marca e pede o push. Só customer com conta vinculada recebe push: o lembrete do anônimo fica guardado e
+entra na agenda depois do `link`.
+
+```ts
+import { Nexus, reminderPeriod } from 'eitri-dnvb-shared'
+
+const { startsAt, endsAt } = reminderPeriod(routine.startedAt, routine.durationDays) ?? {}
+
+const lembrete = await Nexus.reminders.upsertForRoutine({
+	routineKey: routine.routineSlug,
+	routineItemId: routine.id,
+	time: '08:30',
+	pushPermission: 'granted',
+	startsAt,
+	endsAt
+})
+
+await Nexus.reminders.update(lembrete.id, { time: '21:00' })
+await Nexus.reminders.update(lembrete.id, { enabled: false })
+await Nexus.reminders.remove(lembrete.id)
+
+const lembretes = await Nexus.reminders.list()
+const daRotina = await Nexus.reminders.findByRoutine(routine.routineSlug)
+```
+
+| Método | O que faz |
+| --- | --- |
+| `list()` | Lembretes do customer, em ordem de criação. Use na abertura do app em vez de cache local. |
+| `findByRoutine(routineKey)` | O lembrete da rotina, ou `null`. |
+| `create(input)` | Só `time` é obrigatório. `CONFLICT` quando já existe lembrete da rotina ou o customer tem 50. |
+| `update(id, patch)` | `time`, `enabled`, `pushPermission`, `startsAt`, `endsAt`. `null` mantém o valor. |
+| `remove(id)` | Apaga o lembrete e o agendamento. `NOT_FOUND` para id de outro customer. |
+| `upsertForRoutine(input)` | Cria, ou atualiza o da mesma `routineKey`. Recria quando muda o item ou o período é limpo, que o PATCH não faz. |
+
+- **`routineKey` é o slug da rotina no CMS**: escolhe a mensagem de push e vai no deeplink. Com outro valor
+  sai a mensagem padrão. Um lembrete por `routineKey`; genéricos (`null`) podem ser vários.
+- **A rotina do lembrete não muda**: para trocar, `remove` e `create` (o `upsertForRoutine` já faz isso).
+- **Período:** `startsAt` e `endsAt` (exclusivo) são instantes. `reminderPeriod(startedAt, durationDays)`
+  devolve a meia-noite local do primeiro dia e a do dia seguinte ao último, no fuso da marca (`-03:00`).
+- **Fora da agenda:** `enabled: false`, `pushPermission: 'denied'`, customer sem vínculo ou período
+  encerrado. O lembrete fica guardado e volta quando a condição muda.
+- **Permissão** é por customer, não por aparelho: vale a última mandada. Confira ao abrir o app e mande
+  `update(id, { pushPermission })` quando mudar.
+
+| Situação no app | Chamada |
+| --- | --- |
+| Começou a rotina com lembrete | `upsertForRoutine` com `routineKey`, `routineItemId`, `time`, período e permissão |
+| Mudou o horário | `update(id, { time })` |
+| Silenciou ou pausou a rotina | `update(id, { enabled: false })`; para voltar, `{ enabled: true }` |
+| Encerrou ou abandonou a rotina | `remove(id)`, ou deixe o `endsAt` encerrar |
+| Recomeçou a rotina | `upsertForRoutine` com o novo período |
 
 ### Tracking
 

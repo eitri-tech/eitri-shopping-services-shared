@@ -20,6 +20,7 @@ export {
 	resolveRoutine
 } from './services/journeys/quizLogic'
 export { resolveReminderTime, timeOfDay } from './services/journeys/reminderTime'
+export { reminderPeriod } from './services/nexus/reminderPeriod'
 
 export type { DnvbConfig, DnvbConfigInput } from './models/Config'
 export type { CmsContent, CmsImage, CmsListOptions, CmsSection, Open } from './models/Cms'
@@ -73,7 +74,11 @@ export type {
 	NexusCustomerCollections,
 	NexusRecord,
 	NexusRecordInput,
+	NexusReminder,
+	NexusReminderInput,
+	NexusReminderPatch,
 	NexusSession,
+	PushPermission,
 	RoutineOrigin,
 	RoutineRecord,
 	RoutineReminderPref,
